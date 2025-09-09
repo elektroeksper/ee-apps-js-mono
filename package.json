@@ -1,0 +1,48 @@
+{
+  "name": "electro-expert",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electro Expert Apps Monorepo",
+  "workspaces": [
+    "web",
+    "functions",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "node scripts/build-shared-types.js && npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces && rm -rf node_modules",
+    "type:check": "npm run type:check --workspaces",
+    "build:shared": "node scripts/build-shared-types.js",
+    "build:shared:functions": "node scripts/build-shared-types.js functions",
+    "build:shared:web": "node scripts/build-shared-types.js web",
+    "web:dev": "npm run dev --workspace=web",
+    "web:build": "node scripts/build-shared-types.js web && npm run build --workspace=web",
+    "web:start": "npm run start --workspace=web",
+    "web:lint": "npm run lint --workspace=web",
+    "web:type:check": "npm run type:check --workspace=web",
+    "web:deploy:test": "node scripts/build-shared-types.js web && cd web && firebase deploy --only apphosting",
+    "functions:dev": "npm run serve --workspace=functions",
+    "functions:build": "node scripts/build-shared-types.js functions && npm run build --workspace=functions",
+    "functions:deploy": "node scripts/build-shared-types.js functions && npm run lint --workspace=functions -- --fix && npm run deploy --workspace=functions",
+    "functions:lint": "npm run lint --workspace=functions",
+    "functions:lint:fix": "npm run lint --workspace=functions -- --fix",
+    "functions:shell": "npm run shell --workspace=functions",
+    "shared:build": "npm run build --workspace=shared",
+    "shared:type:check": "npm run type:check --workspace=shared"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

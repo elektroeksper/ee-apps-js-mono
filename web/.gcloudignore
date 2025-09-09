@@ -1,0 +1,38 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore git files
+.git/
+.gitignore
+
+# Ignore build artifacts that shouldn't be uploaded
+.next/
+
+# Ignore local development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore any references to parent directories
+../functions/
+../shared/
+../scripts/
+../*.sh
+../.env*
+../package.json
+../pnpm-lock.yaml
+../firebase.json
+
+# Ignore logs
+*.log
+firebase-debug.log
+firebase-debug.*.log
+
+# Ignore OS files
+.DS_Store
+Thumbs.db

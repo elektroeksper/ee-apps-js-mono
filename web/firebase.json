@@ -1,0 +1,24 @@
+{
+  "apphosting": {
+    "backendId": "ee-next-test",
+    "rootDir": ".",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "scripts",
+      ".next",
+      "out",
+      ".vercel",
+      ".env*",
+      "dist",
+      "build",
+      "*.log",
+      ".DS_Store",
+      "coverage",
+      ".nyc_output",
+      ".cache"
+    ]
+  }
+}

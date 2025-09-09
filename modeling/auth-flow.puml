@@ -1,0 +1,24 @@
+@startuml AuthFlow
+actor User
+participant "AuthContext" as Auth
+participant "Firebase" as Firebase
+participant "UserService" as UserService
+
+User -> Auth: signIn(email, password)
+Auth -> Firebase: signInWithEmailAndPassword(email, password)
+Firebase --> Auth: user
+Auth -> UserService: getUserData(user.uid)
+UserService --> Auth: userData
+Auth --> User: onAuthStateChanged(user)
+
+User -> Auth: signOut()
+Auth -> Firebase: signOut()
+Firebase --> Auth: null
+Auth --> User: onAuthStateChanged(null)
+
+User -> Auth: resetPassword(email)
+Auth -> Firebase: sendPasswordResetEmail(email)
+Firebase --> Auth: success
+Auth --> User: password reset email sent
+
+@enduml

@@ -1,0 +1,114 @@
+# Settings for Backend (on Cloud Run).
+# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
+runConfig:
+  minInstances: 0
+  maxInstances: 100
+  concurrency: 80
+  cpu: 2
+  memoryMiB: 1024
+
+# Build configuration for monorepo setup
+# Build commands will run from web directory
+build:
+  commands:
+    # Install pnpm globally
+    - npm install -g pnpm@latest
+    # Install dependencies with frozen lockfile (standalone web lockfile)
+    - pnpm install --frozen-lockfile
+    # Verify shared types are present (should be copied before deployment)
+    - node scripts/verify-shared-types.js
+    # Build the Next.js application
+    - pnpm run build
+
+# Environment variables and secrets.
+env:
+  # Configure environment variables.
+  # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
+  - variable: NODE_ENV
+    value: production
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_TELEMETRY_DISABLED
+    value: "1"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_REST_API_ENDPOINT
+    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/
+    availability:
+      - BUILD
+      - RUNTIME
+  # Firebase Configuration
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyDHxSr5jys7NU5xnuZTXB9EOsB1JrJ_K94
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: elektro-ekspert-apps.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: elektro-ekspert-apps
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: elektro-ekspert-apps.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "494385427557"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:494385427557:web:27ee4a7bd96966c0e5028c
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-NS7WV19N5L
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_REGION
+    value: europe-west1
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    value: https://europe-west1-elektro-ekspert-apps.cloudfunctions.net
+    availability:
+      - BUILD
+      - RUNTIME
+  # Google Maps API Key
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    value: AIzaSyC06eYgOwcqm-CodnC_-jkilscQ7cLDQoQ
+    availability:
+      - BUILD
+      - RUNTIME
+  # Default map center coordinates (Istanbul)
+  - variable: NEXT_PUBLIC_DEFAULT_MAP_CENTER_LAT
+    value: "41.0082"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_DEFAULT_MAP_CENTER_LNG
+    value: "28.9784"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Grant access to secrets in Cloud Secret Manager.
+  # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
+  # - variable: MY_SECRET
+  #   secret: mySecretRef
