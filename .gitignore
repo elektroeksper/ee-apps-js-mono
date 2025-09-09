@@ -14,13 +14,28 @@ dist/
 */out/
 */build/
 
-# Environment variables
+# Environment variables and sensitive data
 .env
+.env.*
+!.env.example
+!.env.*.example
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 .env*.local
+*.env
+functions/.env
+web/.env
+*/.env
+
+# API Keys and sensitive configuration
+**/config/keys.js
+**/config/prod.js
+**/*-service-account.json
+**/service-account-*.json
+**/*-config.json
+**/*-credentials.json
 
 # IDE and editor files
 .vscode/
@@ -127,3 +142,4 @@ shared-generated/
 # Lock files (keep pnpm-lock.yaml but ignore others)
 package-lock.json
 yarn.lock
+functions/admin-service-account.json
