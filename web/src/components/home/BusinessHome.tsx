@@ -3,7 +3,9 @@
  * Dashboard for business accounts with statistics and management features
  */
 
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
+import { useVideosByLocation } from '@/hooks/useContentQueries'
 import { IExtendedAppUser, getBusinessName } from '@/types/user'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
@@ -29,6 +31,15 @@ const BusinessHome: React.FC = () => {
     reviewCount: 0,
   })
   const [loading, setLoading] = useState(true)
+
+  // Video fetch and client guard
+  const { data: videos, isLoading: videosLoading } =
+    useVideosByLocation('business-home')
+  const primaryVideo = videos?.find(v => v.isActive) || null
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Mock recent activities
   const [recentActivities, setRecentActivities] = useState<any[]>([])
@@ -499,6 +510,55 @@ const BusinessHome: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Video Section */}
+      {isClient && (videosLoading || primaryVideo) && (
+        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <div
+                className="relative bg-gray-100 rounded-lg overflow-hidden shadow-xl"
+                style={{ height: '500px' }}
+              >
+                {videosLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <LoadingSpinner />
+                    <span className="ml-2">Video yükleniyor...</span>
+                  </div>
+                ) : primaryVideo ? (
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full"
+                    src={`https://www.youtube.com/embed/${primaryVideo.youtubeVideoId}${primaryVideo.autoStart ? '?autoplay=1' : ''}${primaryVideo.loop ? '&loop=1&playlist=' + primaryVideo.youtubeVideoId : ''}`}
+                    title={primaryVideo.title || 'Yardım Videosu'}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <svg
+                        className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <p>Henüz video eklenmemiş</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

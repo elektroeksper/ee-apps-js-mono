@@ -6,19 +6,15 @@
 import AddressFilter from '@/components/filters/AddressFilter'
 import GoogleAddressAutocomplete, {
   extractAddressComponents,
-  getPlaceCoordinates
+  getPlaceCoordinates,
 } from '@/components/maps/GoogleAddressAutocomplete'
 import GoogleMapWithMarkers from '@/components/maps/GoogleMapWithMarkers'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { DEFAULT_MAP_CENTER } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
+import { useVideosByLocation } from '@/hooks/useContentQueries'
+import { IAddressComponentItem, ICoordinates, IMarkerData } from '@/types/maps'
 import { IExtendedAppUser, getExtendedAddress } from '@/types/user'
-import { 
-  AddressComponent,
-  IAddressComponentItem, 
-  ICoordinates, 
-  IMarkerData 
-} from '@/types/maps'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 const IndividualHome: React.FC = () => {
@@ -26,25 +22,41 @@ const IndividualHome: React.FC = () => {
   const extendedUser = appUser as IExtendedAppUser
   const userAddress = getExtendedAddress(extendedUser)
   const [loading, setLoading] = useState(true)
-  
+
+  // Video fetch and client guard
+  const { data: videos, isLoading: videosLoading } =
+    useVideosByLocation('individual-home')
+  const primaryVideo = videos?.find(v => v.isActive) || null
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   // Map and location states
   const [userLocation, setUserLocation] = useState<ICoordinates | null>(null)
   const [mapCenter, setMapCenter] = useState<ICoordinates>(DEFAULT_MAP_CENTER)
   const [selectedDealerId, setSelectedDealerId] = useState<string | null>(null)
-  
+
   // Address search states
   const [addressText, setAddressText] = useState('')
-  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null)
-  
+  const [selectedPlace, setSelectedPlace] =
+    useState<google.maps.places.PlaceResult | null>(null)
+
   // Filter states
-  const [availableAddressComponents, setAvailableAddressComponents] = useState<IAddressComponentItem[]>([])
-  const [selectedAddressComponents, setSelectedAddressComponents] = useState<IAddressComponentItem[]>([])
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined)
+  const [availableAddressComponents, setAvailableAddressComponents] = useState<
+    IAddressComponentItem[]
+  >([])
+  const [selectedAddressComponents, setSelectedAddressComponents] = useState<
+    IAddressComponentItem[]
+  >([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState<
+    string | undefined
+  >(undefined)
   const [onlyCertifiedDealers, setOnlyCertifiedDealers] = useState(false)
-  
+
   // View state
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map')
-  
+
   // Mock dealer data - In real app, this would come from service hooks
   const [dealers, setDealers] = useState<IMarkerData[]>([])
 
@@ -52,12 +64,12 @@ const IndividualHome: React.FC = () => {
   useEffect(() => {
     const initializeLocation = async () => {
       setLoading(true)
-      
+
       // Try to get user's saved address first
       if (userAddress?.coordinates) {
         setUserLocation(userAddress.coordinates)
         setMapCenter(userAddress.coordinates)
-        
+
         // Set initial address components from user's address
         const components: IAddressComponentItem[] = []
         if (userAddress.city) {
@@ -67,39 +79,42 @@ const IndividualHome: React.FC = () => {
           components.push({ key: 'district', value: userAddress.district })
         }
         if (userAddress.neighborhood) {
-          components.push({ key: 'neighborhood', value: userAddress.neighborhood })
+          components.push({
+            key: 'neighborhood',
+            value: userAddress.neighborhood,
+          })
         }
         if (userAddress.street) {
           components.push({ key: 'street', value: userAddress.street })
         }
-        
+
         setAvailableAddressComponents(components)
         setAddressText(userAddress.formattedAddress || '')
-      } 
+      }
       // Otherwise try geolocation
       else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          position => {
             const coords = {
               lat: position.coords.latitude,
-              lng: position.coords.longitude
+              lng: position.coords.longitude,
             }
             setUserLocation(coords)
             setMapCenter(coords)
           },
-          (error) => {
+          error => {
             console.log('Geolocation error:', error)
           }
         )
       }
-      
+
       // Load mock dealers - In real app, this would be an API call
       setTimeout(() => {
         setDealers(generateMockDealers())
         setLoading(false)
       }, 1000)
     }
-    
+
     initializeLocation()
   }, [appUser])
 
@@ -107,87 +122,102 @@ const IndividualHome: React.FC = () => {
   const generateMockDealers = (): IMarkerData[] => {
     const mockDealers: IMarkerData[] = []
     const baseLocation = userLocation || DEFAULT_MAP_CENTER
-    
+
     // Generate 10-15 random dealers around the user's location
     const dealerCount = Math.floor(Math.random() * 6) + 10
-    
+
     for (let i = 0; i < dealerCount; i++) {
       const latOffset = (Math.random() - 0.5) * 0.1
       const lngOffset = (Math.random() - 0.5) * 0.1
-      
+
       mockDealers.push({
         id: `dealer-${i}`,
         position: {
           lat: baseLocation.lat + latOffset,
-          lng: baseLocation.lng + lngOffset
+          lng: baseLocation.lng + lngOffset,
         },
         title: `Bayi ${i + 1}`,
         info: {
           name: `Elektronik Bayi ${i + 1}`,
           address: `Örnek Mahallesi, ${i + 1}. Sokak No: ${Math.floor(Math.random() * 100)}`,
           phone: `0555 ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 90) + 10} ${Math.floor(Math.random() * 90) + 10}`,
-          category: ['electronics', 'appliances', 'mobile'][Math.floor(Math.random() * 3)],
-          isCertified: Math.random() > 0.5
-        }
+          category: ['electronics', 'appliances', 'mobile'][
+            Math.floor(Math.random() * 3)
+          ],
+          isCertified: Math.random() > 0.5,
+        },
       })
     }
-    
+
     return mockDealers
   }
 
   // Handle place selection from autocomplete
-  const handlePlaceSelect = useCallback((place: google.maps.places.PlaceResult) => {
-    setSelectedPlace(place)
-    const components = extractAddressComponents(place)
-    const coordinates = getPlaceCoordinates(place)
-    
-    if (coordinates) {
-      setUserLocation(coordinates)
-      setMapCenter(coordinates)
-    }
-    
-    // Update available address components
-    const addressComponents: IAddressComponentItem[] = []
-    if (components.city) {
-      addressComponents.push({ key: 'city', value: components.city })
-    }
-    if (components.district) {
-      addressComponents.push({ key: 'district', value: components.district })
-    }
-    if (components.neighborhood) {
-      addressComponents.push({ key: 'neighborhood', value: components.neighborhood })
-    }
-    if (components.street) {
-      addressComponents.push({ key: 'street', value: components.street })
-    }
-    
-    setAvailableAddressComponents(addressComponents)
-    setSelectedAddressComponents(addressComponents.length > 0 ? [addressComponents[0]] : [])
-    setAddressText(components.formatted)
-    
-    // Refresh dealers based on new location
-    setDealers(generateMockDealers())
-  }, [userLocation])
+  const handlePlaceSelect = useCallback(
+    (place: google.maps.places.PlaceResult) => {
+      setSelectedPlace(place)
+      const components = extractAddressComponents(place)
+      const coordinates = getPlaceCoordinates(place)
+
+      if (coordinates) {
+        setUserLocation(coordinates)
+        setMapCenter(coordinates)
+      }
+
+      // Update available address components
+      const addressComponents: IAddressComponentItem[] = []
+      if (components.city) {
+        addressComponents.push({ key: 'city', value: components.city })
+      }
+      if (components.district) {
+        addressComponents.push({ key: 'district', value: components.district })
+      }
+      if (components.neighborhood) {
+        addressComponents.push({
+          key: 'neighborhood',
+          value: components.neighborhood,
+        })
+      }
+      if (components.street) {
+        addressComponents.push({ key: 'street', value: components.street })
+      }
+
+      setAvailableAddressComponents(addressComponents)
+      setSelectedAddressComponents(
+        addressComponents.length > 0 ? [addressComponents[0]] : []
+      )
+      setAddressText(components.formatted)
+
+      // Refresh dealers based on new location
+      setDealers(generateMockDealers())
+    },
+    [userLocation]
+  )
 
   // Filter dealers based on selected filters
   const filteredDealers = useMemo(() => {
     let filtered = [...dealers]
-    
+
     // Filter by category
     if (selectedCategoryId) {
       filtered = filtered.filter(d => d.info?.category === selectedCategoryId)
     }
-    
+
     // Filter by certified status
     if (onlyCertifiedDealers) {
       filtered = filtered.filter(d => d.info?.isCertified)
     }
-    
+
     // In real app, address component filtering would be done via API
     // Here we just simulate it
-    
+
     return filtered
-  }, [dealers, selectedCategoryId, onlyCertifiedDealers, selectedAddressComponents])
+  }, [
+    dealers,
+    selectedCategoryId,
+    onlyCertifiedDealers,
+    selectedAddressComponents,
+  ])
 
   // Handle dealer selection
   const handleDealerClick = (dealer: IMarkerData) => {
@@ -213,7 +243,9 @@ const IndividualHome: React.FC = () => {
       <div className="container mx-auto max-w-7xl px-4 py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Yakınımdaki Bayiler</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Yakınımdaki Bayiler
+          </h1>
           <p className="text-gray-600 mt-1">
             Size en yakın yetkili bayileri bulun ve hizmet alın
           </p>
@@ -246,10 +278,12 @@ const IndividualHome: React.FC = () => {
               onlyCertified={onlyCertifiedDealers}
               onCertifiedChange={setOnlyCertifiedDealers}
             />
-            
+
             {/* Stats */}
             <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">İstatistikler</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                İstatistikler
+              </h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Toplam Bayi:</span>
@@ -331,7 +365,7 @@ const IndividualHome: React.FC = () => {
                       </p>
                     </div>
                   ) : (
-                    filteredDealers.map((dealer) => (
+                    filteredDealers.map(dealer => (
                       <div
                         key={dealer.id}
                         className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -363,7 +397,7 @@ const IndividualHome: React.FC = () => {
                             )}
                           </div>
                           <button
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation()
                               setViewMode('map')
                               handleDealerClick(dealer)
@@ -401,23 +435,27 @@ const IndividualHome: React.FC = () => {
                     ×
                   </button>
                 </div>
-                
+
                 <div className="mt-4 space-y-2">
                   {selectedDealer.info?.address && (
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Adres:</span> {selectedDealer.info.address}
+                      <span className="font-medium">Adres:</span>{' '}
+                      {selectedDealer.info.address}
                     </p>
                   )}
                   {selectedDealer.info?.phone && (
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Telefon:</span>{' '}
-                      <a href={`tel:${selectedDealer.info.phone}`} className="text-blue-600 hover:underline">
+                      <a
+                        href={`tel:${selectedDealer.info.phone}`}
+                        className="text-blue-600 hover:underline"
+                      >
                         {selectedDealer.info.phone}
                       </a>
                     </p>
                   )}
                 </div>
-                
+
                 <div className="mt-4 flex space-x-2">
                   <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Hizmet Talep Et
@@ -431,6 +469,55 @@ const IndividualHome: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Video Section */}
+      {isClient && (videosLoading || primaryVideo) && (
+        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <div
+                className="relative bg-gray-100 rounded-lg overflow-hidden shadow-xl"
+                style={{ height: '500px' }}
+              >
+                {videosLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <LoadingSpinner />
+                    <span className="ml-2">Video yükleniyor...</span>
+                  </div>
+                ) : primaryVideo ? (
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full"
+                    src={`https://www.youtube.com/embed/${primaryVideo.youtubeVideoId}${primaryVideo.autoStart ? '?autoplay=1' : ''}${primaryVideo.loop ? '&loop=1&playlist=' + primaryVideo.youtubeVideoId : ''}`}
+                    title={primaryVideo.title || 'Yardım Videosu'}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <svg
+                        className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <p>Henüz video eklenmemiş</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
