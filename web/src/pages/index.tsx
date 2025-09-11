@@ -1,46 +1,45 @@
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import IndexVideoAndLoginSection from '@/components/ui/IndexVideoAndLoginSection'
 import { useAuth } from '@/contexts/AuthContext'
-import { AuthService } from '@/services/auth'
-import { getAuthErrorMessage } from '@/shared-generated'
+import { useVideosByLocation } from '@/hooks/useContentQueries'
+// Auth service and error helpers are not needed here because we use the
+// shared LoginForm component which handles submission and errors.
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function LandingPage() {
   const { appUser, isLoading } = useAuth()
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  // Local email/password state and handler removed in favor of the
+  // reusable <LoginForm /> component below.
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsSubmitting(true)
+  // Fetch videos for app-index location
+  const { data: appIndexVideos, isLoading: videosLoading } =
+    useVideosByLocation('app-index')
 
-    try {
-      const authService = new AuthService()
-      const result = await authService.login({ email, password })
-      if (result.success) {
-        router.push('/home')
-      } else {
-        const errorMessage = getAuthErrorMessage(result.error || '', 'tr')
-        setError(errorMessage)
-      }
-    } catch (err: any) {
-      const errorMessage = getAuthErrorMessage(
-        err.code || err.message || '',
-        'tr'
-      )
-      setError(errorMessage)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  // Avoid rendering the video iframe on the server to prevent
+  // SSR/CSR markup mismatches (Next.js hydration errors). We render
+  // a neutral placeholder during SSR and until the component mounts
+  // on the client, then show the actual video state.
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // login handled by LoginForm
+
+  // Get the first active video for the app-index location
+  const primaryVideo = appIndexVideos?.find(video => video.isActive) || null
+
+  // Decide whether to show the video column.
+  // - During SSR / initial render we keep the column (isClient=false) to avoid
+  //   hydration mismatches. After mount, showVideoColumn reflects actual data.
+  const showVideoColumn = isClient ? videosLoading || !!primaryVideo : true
+
+  // Show loading overlay for the whole content box (video + form)
+  const boxLoading = isClient && (videosLoading || isLoading)
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -184,177 +183,7 @@ export default function LandingPage() {
 
       {/* Video and Login Section */}
       <section className="py-16 bg-white">
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Video Section */}
-            <div className="w-full">
-              <h3 className="text-2xl font-bold mb-6 text-gray-800">
-                Nasıl Çalışır?
-              </h3>
-              <div className="relative aspect-video rounded-lg overflow-hidden shadow-xl bg-gray-100">
-                <iframe
-                  className="absolute top-0 left-0 w-full h-full"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                  title="ElectroExpert Tanıtım Videosu"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              </div>
-            </div>
-
-            {/* Login Form Section */}
-            <div className="w-full">
-              {!appUser ? (
-                <div className="bg-white rounded-lg shadow-lg p-8">
-                  <h3 className="text-2xl font-bold mb-6 text-gray-800 text-center">
-                    Hemen Giriş Yapın
-                  </h3>
-
-                  {error && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        E-Posta
-                      </label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        placeholder="E-posta adresinizi girin"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="password"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Şifre
-                      </label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        placeholder="Şifrenizi girin"
-                        required
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting || isLoading}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {isSubmitting || isLoading ? (
-                        <div className="flex items-center justify-center">
-                          <LoadingSpinner size="small" />
-                          <span className="ml-2">Giriş yapılıyor...</span>
-                        </div>
-                      ) : (
-                        'Giriş Yap'
-                      )}
-                    </Button>
-                  </form>
-
-                  <div className="mt-4 text-center">
-                    <Link
-                      href="/forgot-password"
-                      className="text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      Şifrenizi mi unuttunuz?
-                    </Link>
-                  </div>
-
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">
-                        veya devam et
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => console.log('Google login')}
-                    className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-md px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                    Google ile giriş yap
-                  </button>
-
-                  <div className="mt-6 text-center border-t pt-6">
-                    <p className="text-gray-600">
-                      Hesabınız yok mu?{' '}
-                      <Link
-                        href="/register"
-                        className="text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Kayıt Olun
-                      </Link>
-                    </p>
-                    <div className="mt-4 flex gap-4 justify-center">
-                      <Link href="/register?type=individual">
-                        <Button variant="outline" size="small">
-                          Bireysel Kayıt
-                        </Button>
-                      </Link>
-                      <Link href="/register?type=business">
-                        <Button variant="outline" size="small">
-                          İşletme Kaydı
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-8 text-center">
-                  <h3 className="text-2xl font-bold mb-4 text-gray-800">
-                    Hoş Geldiniz!
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Hesabınıza giriş yaptınız. Dashboard'a giderek
-                    hizmetlerimizden yararlanabilirsiniz.
-                  </p>
-                  <Link href="/home">
-                    <Button className="w-full max-w-xs">Dashboard'a Git</Button>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <IndexVideoAndLoginSection />
       </section>
 
       {/* Testimonials Section */}

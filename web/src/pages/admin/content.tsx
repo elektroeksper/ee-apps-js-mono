@@ -1,3 +1,9 @@
+import { VideoCard } from '@/components/admin/VideoCard'
+import {
+  IVideoItem,
+  VideoForm,
+  VideoLocation,
+} from '@/components/admin/VideoForm'
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog'
 import {
   useAbout,
@@ -5,8 +11,10 @@ import {
   useContact,
   useCreateServiceMutation,
   useCreateSliderMutation,
+  useCreateVideoMutation,
   useDeleteServiceMutation,
   useDeleteSliderMutation,
+  useDeleteVideoMutation,
   useServices,
   useSliders,
   useUpdateAboutMutation,
@@ -14,12 +22,15 @@ import {
   useUpdateContactMutation,
   useUpdateServiceMutation,
   useUpdateSliderMutation,
+  useUpdateVideoMutation,
+  useVideos,
 } from '@/hooks/useContentQueries'
 import Link from 'next/link'
 import { useState } from 'react'
 import {
   FiArrowLeft,
   FiEdit,
+  FiFilter,
   FiPlus,
   FiSave,
   FiSettings,
@@ -27,7 +38,13 @@ import {
   FiX,
 } from 'react-icons/fi'
 
-type TabType = 'sliders' | 'services' | 'contact' | 'about' | 'branding'
+type TabType =
+  | 'sliders'
+  | 'services'
+  | 'contact'
+  | 'about'
+  | 'branding'
+  | 'videos'
 
 const ContentManagementPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('sliders')
@@ -38,9 +55,17 @@ const ContentManagementPage = () => {
   } | null>(null)
   const [isCreating, setIsCreating] = useState(false)
 
+  // Video management state
+  const [locationFilter, setLocationFilter] = useState<VideoLocation | 'all'>(
+    'all'
+  )
+  const [editingVideo, setEditingVideo] = useState<IVideoItem | null>(null)
+  const [isCreatingVideo, setIsCreatingVideo] = useState(false)
+
   // Queries
   const { data: sliders = [], isLoading: slidersLoading } = useSliders()
   const { data: services = [], isLoading: servicesLoading } = useServices()
+  const { data: videos = [], isLoading: videosLoading } = useVideos()
   const { data: contact, isLoading: contactLoading } = useContact()
   const { data: about, isLoading: aboutLoading } = useAbout()
   const { data: branding, isLoading: brandingLoading } = useBranding()
@@ -52,6 +77,9 @@ const ContentManagementPage = () => {
   const createServiceMutation = useCreateServiceMutation()
   const updateServiceMutation = useUpdateServiceMutation()
   const deleteServiceMutation = useDeleteServiceMutation()
+  const createVideoMutation = useCreateVideoMutation()
+  const updateVideoMutation = useUpdateVideoMutation()
+  const deleteVideoMutation = useDeleteVideoMutation()
   const updateContactMutation = useUpdateContactMutation()
   const updateAboutMutation = useUpdateAboutMutation()
   const updateBrandingMutation = useUpdateBrandingMutation()
@@ -59,6 +87,7 @@ const ContentManagementPage = () => {
   const tabs = [
     { id: 'sliders' as TabType, label: 'Sliders', count: sliders.length },
     { id: 'services' as TabType, label: 'Services', count: services.length },
+    { id: 'videos' as TabType, label: 'Videos', count: videos.length },
     { id: 'contact' as TabType, label: 'Contact' },
     { id: 'about' as TabType, label: 'About Us' },
     { id: 'branding' as TabType, label: 'Branding' },
@@ -96,6 +125,15 @@ const ContentManagementPage = () => {
             data: editingItem,
           })
         }
+      } else if (activeTab === 'videos') {
+        if (isCreating) {
+          await createVideoMutation.mutateAsync(editingItem)
+        } else {
+          await updateVideoMutation.mutateAsync({
+            id: editingItem.id,
+            data: editingItem,
+          })
+        }
       } else if (activeTab === 'contact') {
         await updateContactMutation.mutateAsync(editingItem)
       } else if (activeTab === 'about') {
@@ -119,11 +157,79 @@ const ContentManagementPage = () => {
         await deleteSliderMutation.mutateAsync(deleteConfirm.id)
       } else if (deleteConfirm.type === 'service') {
         await deleteServiceMutation.mutateAsync(deleteConfirm.id)
+      } else if (deleteConfirm.type === 'video') {
+        await deleteVideoMutation.mutateAsync(deleteConfirm.id)
       }
       setDeleteConfirm(null)
     } catch (error) {
       console.error('Failed to delete:', error)
     }
+  }
+
+  // Video management functions
+  const VIDEO_LOCATIONS = {
+    'individual-setup': {
+      label: 'Individual Setup',
+      description: 'Setup tutorial videos',
+    },
+    'business-setup': {
+      label: 'Business Setup',
+      description: 'Business onboarding videos',
+    },
+    'app-index': {
+      label: 'App Index',
+      description: 'Main page promotional videos',
+    },
+    'individual-home': {
+      label: 'Individual Home',
+      description: 'Individual dashboard videos',
+    },
+    'business-home': {
+      label: 'Business Home',
+      description: 'Business dashboard videos',
+    },
+  }
+
+  const filteredVideos =
+    locationFilter === 'all'
+      ? videos
+      : videos.filter(video => video.location === locationFilter)
+
+  const getVideoCountByLocation = (location: VideoLocation) => {
+    return videos.filter(video => video.location === location).length
+  }
+
+  const handleEditVideo = (video: IVideoItem) => {
+    setEditingVideo(video)
+    setIsCreatingVideo(false)
+  }
+
+  const handleCreateVideo = () => {
+    setEditingVideo(null)
+    setIsCreatingVideo(true)
+  }
+
+  const handleSaveVideo = async (videoData: Partial<IVideoItem>) => {
+    try {
+      if (isCreatingVideo) {
+        await createVideoMutation.mutateAsync(
+          videoData as Omit<IVideoItem, 'id' | 'createdAt' | 'updatedAt'>
+        )
+      } else if (editingVideo?.id) {
+        await updateVideoMutation.mutateAsync({
+          id: editingVideo.id,
+          data: videoData,
+        })
+      }
+      setEditingVideo(null)
+      setIsCreatingVideo(false)
+    } catch (error) {
+      console.error('Failed to save video:', error)
+    }
+  }
+
+  const handleDeleteVideo = (video: IVideoItem) => {
+    setDeleteConfirm({ type: 'video', id: video.id || '' })
   }
 
   const renderSliders = () => (
@@ -424,6 +530,103 @@ const ContentManagementPage = () => {
     </div>
   )
 
+  const renderVideos = () => (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Video Management</h2>
+          <p className="text-gray-600 mt-1">
+            Manage YouTube videos displayed across your application
+          </p>
+        </div>
+        <button
+          onClick={handleCreateVideo}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <FiPlus className="w-4 h-4" />
+          Add Video
+        </button>
+      </div>
+
+      {/* Location Filters */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <FiFilter className="w-4 h-4 text-gray-500" />
+        <button
+          onClick={() => setLocationFilter('all')}
+          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            locationFilter === 'all'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          All Locations ({videos.length})
+        </button>
+        {Object.entries(VIDEO_LOCATIONS).map(([locationKey, location]) => {
+          const count = getVideoCountByLocation(locationKey as VideoLocation)
+          return (
+            <button
+              key={locationKey}
+              onClick={() => setLocationFilter(locationKey as VideoLocation)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                locationFilter === locationKey
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {location.label} ({count})
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Loading State */}
+      {videosLoading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-2">Loading videos...</p>
+        </div>
+      ) : (
+        <>
+          {/* Videos List */}
+          {filteredVideos.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <div className="text-gray-400 mb-4 text-4xl">📹</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {locationFilter === 'all'
+                  ? 'No videos found'
+                  : `No videos for ${VIDEO_LOCATIONS[locationFilter as VideoLocation]?.label}`}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {locationFilter === 'all'
+                  ? 'Get started by adding your first video'
+                  : 'Add videos for this location to get started'}
+              </p>
+              <button
+                onClick={handleCreateVideo}
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <FiPlus className="w-4 h-4" />
+                Add Video
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredVideos.map(video => (
+                <VideoCard
+                  key={video.id}
+                  video={video}
+                  onEdit={handleEditVideo}
+                  onDelete={handleDeleteVideo}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+
   const renderEditForm = () => {
     if (!editingItem) return null
 
@@ -432,6 +635,8 @@ const ContentManagementPage = () => {
       updateSliderMutation.isPending ||
       createServiceMutation.isPending ||
       updateServiceMutation.isPending ||
+      createVideoMutation.isPending ||
+      updateVideoMutation.isPending ||
       updateContactMutation.isPending ||
       updateAboutMutation.isPending ||
       updateBrandingMutation.isPending
@@ -950,6 +1155,7 @@ const ContentManagementPage = () => {
         <div className="bg-gray-50 rounded-lg p-6">
           {activeTab === 'sliders' && renderSliders()}
           {activeTab === 'services' && renderServices()}
+          {activeTab === 'videos' && renderVideos()}
           {activeTab === 'contact' && renderContact()}
           {activeTab === 'about' && renderAbout()}
           {activeTab === 'branding' && renderBranding()}
@@ -958,6 +1164,19 @@ const ContentManagementPage = () => {
 
       {/* Edit Form Modal */}
       {renderEditForm()}
+
+      {/* Video Form Modal */}
+      <VideoForm
+        video={editingVideo}
+        isOpen={isCreatingVideo || !!editingVideo}
+        isCreating={isCreatingVideo}
+        onClose={() => {
+          setEditingVideo(null)
+          setIsCreatingVideo(false)
+        }}
+        onSave={handleSaveVideo}
+        isLoading={false} // Mock loading state
+      />
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog

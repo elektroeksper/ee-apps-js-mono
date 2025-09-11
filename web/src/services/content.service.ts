@@ -3,10 +3,13 @@ import {
   IAboutInfo,
   IBrandingInfo,
   IContactInfo,
-  IOperationResult as IContentOperationResult,
+  IContentOperationResult,
   IContentService,
   IServiceItem,
-  ISliderItem
+  ISliderItem,
+  IVideoItem,
+  IVideoSettings,
+  VideoLocation
 } from "@/shared-generated";
 import {
   addDoc,
@@ -19,13 +22,16 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  where
 } from "firebase/firestore";
 
 class ContentService implements IContentService {
   private slidersRef = collection(db, 'sliders');
   private servicesRef = collection(db, 'services');
   private contentRef = collection(db, 'content');
+  private videosRef = collection(db, 'videos');
+  private videoSettingsRef = collection(db, 'video-settings');
 
   // Helper method for error handling
   private handleError(error: any, operation: string): IContentOperationResult {
@@ -33,7 +39,7 @@ class ContentService implements IContentService {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Operation failed',
-      details: `${operation} operation failed`
+      message: `${operation} operation failed`
     };
   }
 
@@ -312,6 +318,188 @@ class ContentService implements IContentService {
       return { success: true };
     } catch (error) {
       return this.handleError(error, 'Update branding info');
+    }
+  }
+
+  // Video Management
+  async getVideos(): Promise<IContentOperationResult<IVideoItem[]>> {
+    try {
+      console.log('🔍 Fetching videos...');
+      const q = query(this.videosRef, orderBy('location', 'asc'), orderBy('order', 'asc'));
+      const snapshot = await getDocs(q);
+
+      const videos: IVideoItem[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate(),
+      } as IVideoItem));
+
+      console.log('✅ Videos fetched:', videos.length);
+      return { success: true, data: videos };
+    } catch (error) {
+      return this.handleError(error, 'Get videos');
+    }
+  }
+
+  async getVideosByLocation(location: VideoLocation): Promise<IContentOperationResult<IVideoItem[]>> {
+    try {
+      console.log('🔍 Fetching videos for location:', location);
+      const q = query(
+        this.videosRef,
+        where('location', '==', location),
+        where('isActive', '==', true),
+        orderBy('order', 'asc')
+      );
+      const snapshot = await getDocs(q);
+
+      const videos: IVideoItem[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate(),
+      } as IVideoItem));
+
+      console.log('✅ Videos fetched for location:', { location, count: videos.length });
+      return { success: true, data: videos };
+    } catch (error) {
+      return this.handleError(error, 'Get videos by location');
+    }
+  }
+
+  async addVideo(video: Omit<IVideoItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<IContentOperationResult<void>> {
+    try {
+      console.log('➕ Adding video:', video);
+
+      // Auto-fetch YouTube metadata if not provided
+      const videoData = { ...video };
+      if (!videoData.title || !videoData.thumbnailUrl) {
+        try {
+          const metadata = await this.fetchYouTubeMetadata(video.youtubeVideoId);
+          if (metadata) {
+            videoData.title = videoData.title || metadata.title;
+            videoData.thumbnailUrl = videoData.thumbnailUrl || metadata.thumbnail_url;
+            videoData.description = videoData.description || metadata.author_name;
+          }
+        } catch (metadataError) {
+          console.warn('Failed to fetch YouTube metadata:', metadataError);
+          // Continue without metadata
+        }
+      }
+
+      const docData = {
+        ...videoData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      await addDoc(this.videosRef, docData);
+      console.log('✅ Video added successfully');
+      return { success: true };
+    } catch (error) {
+      return this.handleError(error, 'Add video');
+    }
+  }
+
+  async updateVideo(id: string, video: Partial<IVideoItem>): Promise<IContentOperationResult<void>> {
+    try {
+      console.log('📝 Updating video:', { id, video });
+      const docRef = doc(this.videosRef, id);
+
+      // Auto-fetch YouTube metadata if video ID changed
+      const updateData: any = { ...video };
+      if (video.youtubeVideoId && (!video.title || !video.thumbnailUrl)) {
+        try {
+          const metadata = await this.fetchYouTubeMetadata(video.youtubeVideoId);
+          if (metadata) {
+            updateData.title = updateData.title || metadata.title;
+            updateData.thumbnailUrl = updateData.thumbnailUrl || metadata.thumbnail_url;
+            updateData.description = updateData.description || metadata.author_name;
+          }
+        } catch (metadataError) {
+          console.warn('Failed to fetch YouTube metadata:', metadataError);
+          // Continue without metadata
+        }
+      }
+
+      updateData.updatedAt = serverTimestamp();
+
+      await updateDoc(docRef, updateData);
+      console.log('✅ Video updated successfully');
+      return { success: true };
+    } catch (error) {
+      return this.handleError(error, 'Update video');
+    }
+  }
+
+  async deleteVideo(id: string): Promise<IContentOperationResult<void>> {
+    try {
+      console.log('🗑️ Deleting video:', id);
+      await deleteDoc(doc(this.videosRef, id));
+      console.log('✅ Video deleted successfully');
+      return { success: true };
+    } catch (error) {
+      return this.handleError(error, 'Delete video');
+    }
+  }
+
+  // Video Settings Management
+  async getVideoSettings(): Promise<IContentOperationResult<IVideoSettings[]>> {
+    try {
+      console.log('🔍 Fetching video settings...');
+      const snapshot = await getDocs(this.videoSettingsRef);
+
+      const settings: IVideoSettings[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        location: doc.id as VideoLocation, // Use document ID as location
+        ...doc.data(),
+        updatedAt: doc.data().updatedAt?.toDate(),
+      } as IVideoSettings));
+
+      console.log('✅ Video settings fetched:', settings.length);
+      return { success: true, data: settings };
+    } catch (error) {
+      return this.handleError(error, 'Get video settings');
+    }
+  }
+
+  async updateVideoSettings(location: VideoLocation, settings: Partial<IVideoSettings>): Promise<IContentOperationResult<void>> {
+    try {
+      console.log('📝 Updating video settings:', { location, settings });
+      const docRef = doc(this.videoSettingsRef, location);
+      const updateData = {
+        location,
+        ...settings,
+        updatedAt: serverTimestamp(),
+      };
+
+      await setDoc(docRef, updateData, { merge: true });
+      console.log('✅ Video settings updated successfully');
+      return { success: true };
+    } catch (error) {
+      return this.handleError(error, 'Update video settings');
+    }
+  }
+
+  // Helper method to fetch YouTube metadata
+  private async fetchYouTubeMetadata(videoId: string): Promise<{
+    title: string;
+    author_name: string;
+    thumbnail_url: string;
+  } | null> {
+    try {
+      const oEmbedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+
+      const response = await fetch(oEmbedUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch YouTube metadata:', error);
+      throw error;
     }
   }
 }
