@@ -4,11 +4,13 @@
  */
 
 import { Button } from '@/components/ui/Button'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
+import { useVideosByLocation } from '@/hooks/useContentQueries'
 import { storageClientService } from '@/services/storageClientService'
 import { UserDocument } from '@/shared-generated'
 import { useRouter } from 'next/router'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -23,6 +25,17 @@ const BusinessSetup: React.FC = () => {
   // Document upload states
   const [taxCertificate, setTaxCertificate] = useState<File | null>(null)
   const [placePhotos, setPlacePhotos] = useState<File[]>([])
+
+  // Video fetch and client guard
+  const { data: videos, isLoading: videosLoading } =
+    useVideosByLocation('business-setup')
+  const primaryVideo = videos?.find(v => v.isActive) || null
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  const showVideo = isClient ? videosLoading || !!primaryVideo : true
+  const boxLoading = isClient && videosLoading
 
   // Handle tax certificate selection
   const handleTaxCertificateChange = (
@@ -154,162 +167,380 @@ const BusinessSetup: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-2xl px-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            İşletme Belgelerini Yükleyin
-          </h1>
-          <p className="text-gray-600">
-            İşletme hesabınızı onaylatabilmek için belgelerinizi yüklemeniz
-            gerekmektedir
-          </p>
-        </div>
-
-        {/* Success Message */}
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-            Profiliniz başarıyla güncellendi! Onay sürecine
-            yönlendiriliyorsunuz...
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
-
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-lg shadow-md p-6"
-        >
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                <strong>Not:</strong> Belgeleriniz incelendikten sonra
-                profilinizde "Yetkili Bayi" rozeti görüntülenecektir. Ayrıca
-                hesabınızın yönetici tarafından onaylanması gerekmektedir.
-                <strong> Belge yükleme işlemi zorunludur.</strong>
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center bg-gray-50">
+      {showVideo ? (
+        <div className="bg-white rounded-lg shadow-md p-8 w-full max-w-6xl relative">
+          {boxLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-lg">
+              <LoadingSpinner size="large" />
+            </div>
+          )}
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                İşletme Belgelerini Yükleyin
+              </h1>
+              <p className="text-gray-600">
+                İşletme hesabınızı onaylatabilmek için belgelerinizi yüklemeniz
+                gerekmektedir
               </p>
             </div>
 
-            {/* Tax Certificate */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Vergi Levhası (PDF)
-              </label>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleTaxCertificateChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-              />
-              {taxCertificate && (
-                <div className="flex items-center justify-between mt-2 p-2 bg-green-50 rounded">
-                  <p className="text-sm text-green-600">
-                    ✓ {taxCertificate.name}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setTaxCertificate(null)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              )}
-              <p className="text-xs text-gray-500 mt-1">
-                Maksimum dosya boyutu: 10MB
-              </p>
-            </div>
-
-            {/* Place Photos */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                İşletme Fotoğrafları (Max 5)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handlePlacePhotosChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-              />
-              {placePhotos.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-sm text-green-600 mb-2">
-                    ✓ {placePhotos.length} fotoğraf yüklendi
-                  </p>
-                  <div className="grid grid-cols-5 gap-2">
-                    {placePhotos.map((photo, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={URL.createObjectURL(photo)}
-                          alt={`İşletme ${index + 1}`}
-                          className="w-full h-20 object-cover rounded"
+            {/* Video Section */}
+            <div className="mb-8">
+              <div className="relative aspect-video rounded-lg overflow-hidden shadow-xl bg-gray-100 max-w-2xl mx-auto">
+                {!isClient ? (
+                  <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      {/* video placeholder icon */}
+                      <svg
+                        className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                         />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPlacePhotos(prev =>
-                              prev.filter((_, i) => i !== index)
-                            )
-                          }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+                      </svg>
+                      <p>Henüz video eklenmemiş</p>
+                    </div>
                   </div>
-                </div>
-              )}
-              <p className="text-xs text-gray-500 mt-1">
-                Her fotoğraf maksimum 5MB olmalıdır
-              </p>
+                ) : videosLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <LoadingSpinner />
+                    <span className="ml-2">Video yükleniyor...</span>
+                  </div>
+                ) : primaryVideo ? (
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full"
+                    src={`https://www.youtube.com/embed/${primaryVideo.youtubeVideoId}${primaryVideo.autoStart ? '?autoplay=1' : ''}${primaryVideo.loop ? '&loop=1&playlist=' + primaryVideo.youtubeVideoId : ''}`}
+                    title={primaryVideo.title || 'Kurulum Videosu'}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      {/* video placeholder icon */}
+                      <svg
+                        className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <p>Henüz video eklenmemiş</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Additional Info */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                Neden Belge Yüklemeliyim?
-              </h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Müşteri güvenini artırır</li>
-                <li>• Arama sonuçlarında üst sıralarda yer alırsınız</li>
-                <li>• "Yetkili Bayi" rozetine sahip olursunuz</li>
-                <li>• Daha fazla müşteriye ulaşırsınız</li>
-              </ul>
-            </div>
+            {/* Success Message */}
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+                Profiliniz başarıyla güncellendi! Onay sürecine
+                yönlendiriliyorsunuz...
+              </div>
+            )}
 
-            {/* Submit Button */}
-            <div className="flex justify-end pt-4">
-              <Button
-                type="submit"
-                disabled={
-                  loading || (!taxCertificate && placePhotos.length === 0)
-                }
-              >
-                {loading ? 'Yükleniyor...' : 'Belgeleri Yükle ve Devam Et'}
-              </Button>
-            </div>
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {error}
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>Not:</strong> Belgeleriniz incelendikten sonra
+                  profilinizde "Yetkili Bayi" rozeti görüntülenecektir. Ayrıca
+                  hesabınızın yönetici tarafından onaylanması gerekmektedir.
+                  <strong> Belge yükleme işlemi zorunludur.</strong>
+                </p>
+              </div>
+
+              {/* Tax Certificate */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Vergi Levhası (PDF)
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleTaxCertificateChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+                {taxCertificate && (
+                  <div className="flex items-center justify-between mt-2 p-2 bg-green-50 rounded">
+                    <p className="text-sm text-green-600">
+                      ✓ {taxCertificate.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setTaxCertificate(null)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Maksimum dosya boyutu: 10MB
+                </p>
+              </div>
+
+              {/* Place Photos */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  İşletme Fotoğrafları (Max 5)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePlacePhotosChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+                {placePhotos.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-green-600 mb-2">
+                      ✓ {placePhotos.length} fotoğraf yüklendi
+                    </p>
+                    <div className="grid grid-cols-5 gap-2">
+                      {placePhotos.map((photo, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={URL.createObjectURL(photo)}
+                            alt={`İşletme ${index + 1}`}
+                            className="w-full h-20 object-cover rounded"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPlacePhotos(prev =>
+                                prev.filter((_, i) => i !== index)
+                              )
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Her fotoğraf maksimum 5MB olmalıdır
+                </p>
+              </div>
+
+              {/* Additional Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                  Neden Belge Yüklemeliyim?
+                </h3>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Müşteri güvenini artırır</li>
+                  <li>• Arama sonuçlarında üst sıralarda yer alırsınız</li>
+                  <li>• "Yetkili Bayi" rozetine sahip olursunuz</li>
+                  <li>• Daha fazla müşteriye ulaşırsınız</li>
+                </ul>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex justify-end pt-4">
+                <Button
+                  type="submit"
+                  disabled={
+                    loading || (!taxCertificate && placePhotos.length === 0)
+                  }
+                >
+                  {loading ? 'Yükleniyor...' : 'Belgeleri Yükle ve Devam Et'}
+                </Button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              İşletme Belgelerini Yükleyin
+            </h1>
+            <p className="text-gray-600">
+              İşletme hesabınızı onaylatabilmek için belgelerinizi yüklemeniz
+              gerekmektedir
+            </p>
+          </div>
+
+          {/* Success Message */}
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+              Profiliniz başarıyla güncellendi! Onay sürecine
+              yönlendiriliyorsunuz...
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6">
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>Not:</strong> Belgeleriniz incelendikten sonra
+                  profilinizde "Yetkili Bayi" rozeti görüntülenecektir. Ayrıca
+                  hesabınızın yönetici tarafından onaylanması gerekmektedir.
+                  <strong> Belge yükleme işlemi zorunludur.</strong>
+                </p>
+              </div>
+
+              {/* Tax Certificate */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Vergi Levhası (PDF)
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleTaxCertificateChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+                {taxCertificate && (
+                  <div className="flex items-center justify-between mt-2 p-2 bg-green-50 rounded">
+                    <p className="text-sm text-green-600">
+                      ✓ {taxCertificate.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setTaxCertificate(null)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Maksimum dosya boyutu: 10MB
+                </p>
+              </div>
+
+              {/* Place Photos */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  İşletme Fotoğrafları (Max 5)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePlacePhotosChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+                {placePhotos.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-green-600 mb-2">
+                      ✓ {placePhotos.length} fotoğraf yüklendi
+                    </p>
+                    <div className="grid grid-cols-5 gap-2">
+                      {placePhotos.map((photo, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={URL.createObjectURL(photo)}
+                            alt={`İşletme ${index + 1}`}
+                            className="w-full h-20 object-cover rounded"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPlacePhotos(prev =>
+                                prev.filter((_, i) => i !== index)
+                              )
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Her fotoğraf maksimum 5MB olmalıdır
+                </p>
+              </div>
+
+              {/* Additional Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                  Neden Belge Yüklemeliyim?
+                </h3>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Müşteri güvenini artırır</li>
+                  <li>• Arama sonuçlarında üst sıralarda yer alırsınız</li>
+                  <li>• "Yetkili Bayi" rozetine sahip olursunuz</li>
+                  <li>• Daha fazla müşteriye ulaşırsınız</li>
+                </ul>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex justify-end pt-4">
+                <Button
+                  type="submit"
+                  disabled={
+                    loading || (!taxCertificate && placePhotos.length === 0)
+                  }
+                >
+                  {loading ? 'Yükleniyor...' : 'Belgeleri Yükle ve Devam Et'}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   )
 }
