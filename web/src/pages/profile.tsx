@@ -1,11 +1,12 @@
 'use client'
 
-import { AuthGuard } from '@/components/auth'
+import { AuthGuard, PasswordChangeForm } from '@/components/auth'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import Modal from '@/components/ui/Modal'
 import { useAuth } from '@/contexts/AuthContext'
+import { logoutAndRedirect } from '@/lib/auth-utils'
 import { userService } from '@/services/auth/UserService'
 import { AccountType } from '@/shared-generated'
 import Link from 'next/link'
@@ -17,6 +18,8 @@ import {
   FiCheck,
   FiClock,
   FiFileText,
+  FiLogOut,
+  FiLock,
   FiUpload,
   FiUser,
   FiX,
@@ -299,12 +302,21 @@ function ProfileContent() {
   const { appUser, isLoading: authLoading, refreshUser } = useAuth()
   const router = useRouter()
   const [showDocumentModal, setShowDocumentModal] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
 
   const handleDocumentUploadSuccess = () => {
     // Refresh user data to get updated business info
     if (refreshUser) {
       refreshUser()
     }
+  }
+
+  const handlePasswordChangeSuccess = () => {
+    setShowPasswordModal(false)
+  }
+
+  const handleLogout = async () => {
+    await logoutAndRedirect(router, '/login')
   }
 
   if (authLoading) {
@@ -399,15 +411,42 @@ function ProfileContent() {
               </h2>
               <p className="text-gray-600">{appUser.email}</p>
             </div>
-            <div className="text-right">
-              <Button
-                variant="outline"
-                size="small"
-                onClick={() => router.push('/profile/edit')}
-              >
-                Profili Düzenle
-              </Button>
-            </div>
+          </div>
+        </div>
+
+        {/* Account Operations - Moved to top */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Hesap İşlemleri
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              variant="outline" 
+              size="small"
+              onClick={() => setShowPasswordModal(true)}
+              className="flex items-center"
+            >
+              <FiLock className="h-4 w-4 mr-2" />
+              Şifre Değiştir
+            </Button>
+            <Button
+              variant="outline"
+              size="small"
+              onClick={() => router.push('/profile/edit')}
+              className="flex items-center"
+            >
+              <FiUser className="h-4 w-4 mr-2" />
+              Profili Düzenle
+            </Button>
+            <Button
+              variant="outline"
+              size="small"
+              onClick={handleLogout}
+              className="text-red-600 border-red-300 hover:bg-red-50 flex items-center"
+            >
+              <FiLogOut className="h-4 w-4 mr-2" />
+              Çıkış Yap
+            </Button>
           </div>
         </div>
 
@@ -617,28 +656,6 @@ function ProfileContent() {
               </div>
             </div>
           )}
-
-          {/* Account Operations */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Hesap İşlemleri
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              <Button variant="outline" size="small">
-                Şifre Değiştir
-              </Button>
-              <Button variant="outline" size="small" disabled>
-                İki Faktörlü Kimlik Doğrulama
-              </Button>
-              <Button
-                variant="outline"
-                size="small"
-                className="text-red-600 border-red-300 hover:bg-red-50"
-              >
-                Çıkış Yap
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -649,6 +666,18 @@ function ProfileContent() {
         userId={appUser?.id || ''}
         onSuccess={handleDocumentUploadSuccess}
       />
+
+      {/* Password Change Modal */}
+      <Modal 
+        isOpen={showPasswordModal} 
+        onClose={() => setShowPasswordModal(false)} 
+        title=""
+      >
+        <PasswordChangeForm
+          onSuccess={handlePasswordChangeSuccess}
+          onCancel={() => setShowPasswordModal(false)}
+        />
+      </Modal>
     </div>
   )
 }
