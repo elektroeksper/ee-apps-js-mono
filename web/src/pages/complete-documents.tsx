@@ -1,11 +1,10 @@
 /**
- * Pending Approval Page
- * Displayed to business users while their account is awaiting admin approval
- * Redirects to complete-documents if user was rejected
+ * Complete Documents Page
+ * Displayed to business users whose account was rejected and need to re-submit documents
  */
 
 import { AuthGuard } from '@/components/auth'
-import { PendingApproval } from '@/components/business'
+import { CompleteDocuments } from '@/components/business'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -16,7 +15,7 @@ import {
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 
-function PendingApprovalContent() {
+function CompleteDocumentsContent() {
   const { appUser, isLoading } = useAuth()
   const router = useRouter()
 
@@ -27,17 +26,19 @@ function PendingApprovalContent() {
     if (appUser.accountType === 'business') {
       const extendedUser = appUser as IExtendedAppUser
 
-      // If rejected, redirect to complete-documents
-      if (isBusinessRejected(extendedUser)) {
-        console.log('Business user rejected, redirecting to complete-documents')
-        router.replace('/complete-documents')
-        return
-      }
-
       // If approved, redirect to home
       if (isBusinessApproved(extendedUser)) {
         console.log('Business user approved, redirecting to home')
         router.replace('/home')
+        return
+      }
+
+      // If not rejected, redirect to pending approval
+      if (!isBusinessRejected(extendedUser)) {
+        console.log(
+          'Business user not rejected, redirecting to pending-approval'
+        )
+        router.replace('/pending-approval')
         return
       }
     }
@@ -51,17 +52,17 @@ function PendingApprovalContent() {
     )
   }
 
-  return <PendingApproval />
+  return <CompleteDocuments />
 }
 
-export default function PendingApprovalPage() {
+export default function CompleteDocumentsPage() {
   return (
     <AuthGuard
       requireAuth={true}
       requireEmailVerification={true}
       requireProfileComplete={true}
     >
-      <PendingApprovalContent />
+      <CompleteDocumentsContent />
     </AuthGuard>
   )
 }

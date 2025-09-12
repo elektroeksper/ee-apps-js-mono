@@ -96,6 +96,64 @@ export function AuthGuard({
     }
   }, [mounted, loading, appUser, isProfileComplete, router])
 
+  // Handle business user redirects when profile is complete but they need approval handling
+  useEffect(() => {
+    if (
+      mounted &&
+      !loading &&
+      appUser &&
+      isProfileComplete &&
+      appUser.accountType === 'business' &&
+      requireProfileComplete &&
+      router.pathname !== '/home' &&
+      router.pathname !== '/pending-approval' &&
+      router.pathname !== '/complete-documents'
+    ) {
+      // Import the helper functions locally to avoid circular dependencies
+      const isBusinessRejected = (user: any) => {
+        return (
+          user?.businessInfo?.isApproved === false &&
+          user?.businessInfo?.rejectionReason
+        )
+      }
+
+      const isBusinessApproved = (user: any) => {
+        return user?.businessInfo?.isApproved === true
+      }
+
+      if (isBusinessRejected(appUser)) {
+        console.log('🚨 AuthGuard Business Redirect:', {
+          reason: 'Business rejected - direct to complete-documents',
+          redirectTo: '/complete-documents',
+          pathname: router.pathname,
+        })
+        router.replace('/complete-documents')
+      } else if (isBusinessApproved(appUser)) {
+        console.log('🚨 AuthGuard Business Redirect:', {
+          reason: 'Business approved - direct to home',
+          redirectTo: '/home',
+          pathname: router.pathname,
+        })
+        router.replace('/home')
+      } else {
+        // Business is pending
+        console.log('🚨 AuthGuard Business Redirect:', {
+          reason: 'Business pending - direct to pending-approval',
+          redirectTo: '/pending-approval',
+          pathname: router.pathname,
+        })
+        router.replace('/pending-approval')
+      }
+    }
+  }, [
+    mounted,
+    loading,
+    appUser,
+    isProfileComplete,
+    router,
+    requireProfileComplete,
+  ])
+
   // Show loading spinner while checking authentication or during hydration
   if (!mounted || loading) {
     return (

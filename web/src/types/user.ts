@@ -55,3 +55,23 @@ export function getExtendedAddress(user: IExtendedAppUser | null): IAddress | un
   if (!user?.address) return undefined;
   return user.address as IAddress;
 }
+
+// Helper to check if business user is approved
+export function isBusinessApproved(user: IExtendedAppUser | null): boolean {
+  if (!user || !isBusinessUser(user)) return false;
+  return user.businessInfo?.isApproved === true;
+}
+
+// Helper to check if business user is rejected
+export function isBusinessRejected(user: IExtendedAppUser | null): boolean {
+  if (!user || !isBusinessUser(user)) return false;
+  return !!user.businessInfo?.rejectedAt && !user.businessInfo?.isApproved;
+}
+
+// Helper to check if business user is pending approval
+export function isBusinessPending(user: IExtendedAppUser | null): boolean {
+  if (!user || !isBusinessUser(user)) return false;
+  const businessInfo = user.businessInfo;
+  // Pending if not rejected and not approved
+  return !businessInfo?.rejectedAt && !businessInfo?.isApproved;
+}

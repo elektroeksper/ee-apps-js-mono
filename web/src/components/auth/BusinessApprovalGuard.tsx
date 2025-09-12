@@ -29,9 +29,22 @@ const BusinessApprovalGuard: React.FC<BusinessApprovalGuardProps> = ({
     if (isBusinessUser(appUser) && requireApproval) {
       const extendedUser = appUser as any
       const isApproved = extendedUser?.businessInfo?.isApproved
+      const rejectionReason = extendedUser?.businessInfo?.rejectionReason
 
-      // If business user is not approved, redirect to pending approval page
+      // If business user is rejected (isApproved === false with rejection reason), redirect to complete-documents
+      if (isApproved === false && rejectionReason) {
+        console.log(
+          'BusinessApprovalGuard: Business rejected, redirecting to complete-documents'
+        )
+        router.replace('/complete-documents')
+        return
+      }
+
+      // If business user is not approved and not explicitly rejected, redirect to pending approval page
       if (!isApproved) {
+        console.log(
+          'BusinessApprovalGuard: Business pending approval, redirecting to pending-approval'
+        )
         router.replace('/pending-approval')
         return
       }
@@ -59,9 +72,10 @@ const BusinessApprovalGuard: React.FC<BusinessApprovalGuardProps> = ({
   if (isBusinessUser(appUser) && requireApproval) {
     const extendedUser = appUser as any
     const isApproved = extendedUser?.businessInfo?.isApproved
+    const rejectionReason = extendedUser?.businessInfo?.rejectionReason
 
-    // If not approved, return nothing (will redirect above)
-    if (!isApproved) {
+    // If rejected or not approved, return nothing (will redirect above)
+    if (isApproved === false || !isApproved) {
       return null
     }
   }
