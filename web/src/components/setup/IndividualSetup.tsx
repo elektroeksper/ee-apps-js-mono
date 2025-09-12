@@ -267,12 +267,26 @@ const IndividualSetup: React.FC = () => {
     setLoading(true)
 
     try {
+      // Convert local address format to shared address format
+      const sharedAddress: import('@/shared-generated').IAddress = {
+        street: formData.address.street,
+        city: formData.address.city,
+        state: formData.address.state,
+        zipCode: formData.address.zipCode,
+        country: formData.address.country,
+        apartment: formData.address.apartment,
+        district: formData.address.district,
+        neighborhood: formData.address.neighborhood,
+        postalCode: formData.address.postalCode,
+        formattedAddress: formData.address.formattedAddress,
+      }
+
       // Update user profile
       await updateUser({
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
-        address: formData.address,
+        address: sharedAddress,
       })
 
       setSuccess(true)

@@ -45,6 +45,12 @@ interface IAddress {
   state: string;
   zipCode: string;
   country: string;
+  apartment?: string;
+  district?: string;
+  neighborhood?: string;
+  postalCode?: string;
+  formattedAddress?: string;
+  [key: string]: string | undefined;
 }
 
 interface IApiResponse<T> {

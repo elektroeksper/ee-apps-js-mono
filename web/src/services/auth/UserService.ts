@@ -149,6 +149,69 @@ export class UserService implements IUserService {
     }
   }
 
+  async clearBusinessRejection(userId: string): Promise<IOperationResult<IAppUser>> {
+    try {
+      console.log('clearBusinessRejection: Starting for user:', userId);
+
+      // First, get current user data to access existing businessInfo
+      const getCurrentUser = await this.getById(userId);
+      if (!getCurrentUser.success || !getCurrentUser.data) {
+        console.error('clearBusinessRejection: User not found:', userId);
+        return {
+          success: false,
+          error: 'User not found'
+        };
+      }
+
+      const currentUser = getCurrentUser.data as any;
+      const currentBusinessInfo = currentUser.businessInfo || {};
+      console.log('clearBusinessRejection: Current businessInfo:', currentBusinessInfo);
+
+      // Create updated businessInfo object with rejection fields cleared
+      const { rejectedAt, rejectedBy, rejectionReason, ...cleanBusinessInfo } = currentBusinessInfo;
+      const updatedBusinessInfo = {
+        ...cleanBusinessInfo,
+        isApproved: false, // Reset to pending status
+        submittedAt: new Date().toISOString() // Track re-submission
+      };
+
+      console.log('clearBusinessRejection: Updated businessInfo:', updatedBusinessInfo);
+
+      // Use direct Firestore update instead of Firebase Function to avoid permission issues
+      const { updateDoc } = await import('firebase/firestore');
+      const userDocRef = doc(this.colRef, userId);
+
+      await updateDoc(userDocRef, {
+        businessInfo: updatedBusinessInfo,
+        updatedAt: new Date().toISOString()
+      });
+
+      console.log('clearBusinessRejection: Firestore update completed');
+
+      // Return the updated user
+      const updatedUserResult = await this.getById(userId);
+      if (updatedUserResult.success) {
+        console.log('clearBusinessRejection: Successfully retrieved updated user');
+        return {
+          success: true,
+          data: updatedUserResult.data
+        };
+      } else {
+        console.error('clearBusinessRejection: Failed to retrieve updated user');
+        return {
+          success: false,
+          error: 'Failed to retrieve updated user data'
+        };
+      }
+    } catch (error: any) {
+      console.error('UserService: Error in clearBusinessRejection:', error)
+      return {
+        success: false,
+        error: error.message || 'Failed to clear business rejection status'
+      };
+    }
+  }
+
 }
 
 // Export a singleton instance

@@ -8,6 +8,8 @@ export const FB_FUNCTIONS: {
   removeUserClaims: "removeUserClaims",
   approveBusinessAccount: "approveBusinessAccount",
   rejectBusinessAccount: "rejectBusinessAccount",
+  updateBusinessProfile: "updateBusinessProfile",
+  updateUserProfile: "updateUserProfile",
 };
 
 export const FB_COLL_NAMES = {
