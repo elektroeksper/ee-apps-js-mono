@@ -8,21 +8,17 @@ runConfig:
   memoryMiB: 1024
 
 # Build configuration for monorepo setup
-# Build commands will run from repository root, then build the web app
+# Build commands will run from repository root
 build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Install dependencies for the entire monorepo from root
+    # Install dependencies for the entire monorepo from root (single lockfile)
     - pnpm install --frozen-lockfile
     # Build shared types and copy to web directory
     - node scripts/build-shared-types.js web
-    # Change to web directory where buildpack expects to run
-    - cd web
-    # Install dependencies in web directory (uses copied lockfile)
-    - pnpm install --frozen-lockfile
-    # Build the Next.js application
-    - pnpm run build
+    # Build the Next.js application from root using workspace commands
+    - pnpm run web:build
 
 # Environment variables and secrets.
 env:

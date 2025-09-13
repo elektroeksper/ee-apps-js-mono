@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['react-icons'],
   },
+  transpilePackages: ['@uiw/react-md-editor', '@uiw/react-markdown-preview'],
   images: {
     formats: ['image/webp', 'image/avif'],
     remotePatterns: [

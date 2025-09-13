@@ -263,7 +263,7 @@ function AdminSettingsPageContent() {
       <button
         onClick={onChange}
         disabled={disabled}
-        className={`flex items-center justify-center w-12 h-6 rounded-full transition-colors ${
+        className={`flex items-center justify-center w-10 h-5 rounded-full transition-colors ${
           disabled
             ? 'bg-slate-200 cursor-not-allowed'
             : enabled
@@ -272,14 +272,14 @@ function AdminSettingsPageContent() {
         }`}
       >
         <div
-          className={`w-5 h-5 bg-white rounded-full transition-transform ${
-            enabled ? 'translate-x-3' : '-translate-x-3'
+          className={`w-4 h-4 bg-white rounded-full transition-transform ${
+            enabled ? 'translate-x-2.5' : '-translate-x-2.5'
           }`}
         />
       </button>
       {loading && <LoadingSpinner size="small" className="text-blue-600" />}
       {showSuccess && !loading && (
-        <FiCheckCircle className="h-4 w-4 text-green-600 animate-pulse" />
+        <FiCheckCircle className="h-3 w-3 text-green-600 animate-pulse" />
       )}
     </div>
   )
@@ -297,7 +297,7 @@ function AdminSettingsPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -307,7 +307,6 @@ function AdminSettingsPageContent() {
                 className="inline-flex items-center text-slate-600 hover:text-slate-900 transition-colors"
               >
                 <FiArrowLeft className="h-5 w-5 mr-2" />
-                Yönetici Paneli
               </Link>
               <div className="h-6 w-px bg-slate-300"></div>
               <div>
@@ -329,25 +328,25 @@ function AdminSettingsPageContent() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* General Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <div className="flex items-center space-x-3 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-blue-50 rounded-lg">
-                <FiSettings className="h-5 w-5 text-blue-600" />
+                <FiSettings className="h-4 w-4 text-blue-600" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-slate-900">
                 Genel Ayarlar
               </h2>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-slate-900 text-sm">
                     Kullanıcı Kaydı
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Yeni kullanıcıların kayıt olmasına izin ver
                   </p>
                 </div>
@@ -368,12 +367,12 @@ function AdminSettingsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-slate-900 text-sm">
                     Email Doğrulama Zorunlu
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Kullanıcıların email adreslerini doğrulaması zorunlu
                   </p>
                 </div>
@@ -396,12 +395,12 @@ function AdminSettingsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-slate-900 text-sm">
                     İşletme Hesap Onayı
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs text-slate-500">
                     İşletme hesapları için manuel onay gerektir
                   </p>
                 </div>
@@ -424,10 +423,12 @@ function AdminSettingsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">Bakım Modu</h3>
-                  <p className="text-sm text-slate-500">
+                  <h3 className="font-medium text-slate-900 text-sm">
+                    Bakım Modu
+                  </h3>
+                  <p className="text-xs text-slate-500">
                     Sistemde bakım çalışması yapılıyor mesajı göster
                   </p>
                 </div>
@@ -451,23 +452,23 @@ function AdminSettingsPageContent() {
           </div>
 
           {/* Notification Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <div className="flex items-center space-x-3 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-green-50 rounded-lg">
-                <FiBell className="h-5 w-5 text-green-600" />
+                <FiBell className="h-4 w-4 text-green-600" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-slate-900">
                 Bildirim Ayarları
               </h2>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-slate-900 text-sm">
                     Email Bildirimleri
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Sistem email bildirimlerini etkinleştir
                   </p>
                 </div>
@@ -491,23 +492,23 @@ function AdminSettingsPageContent() {
           </div>
 
           {/* Security Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <div className="flex items-center space-x-3 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-purple-50 rounded-lg">
-                <FiShield className="h-5 w-5 text-purple-600" />
+                <FiShield className="h-4 w-4 text-purple-600" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-slate-900">
                 Güvenlik Ayarları
               </h2>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-slate-900 text-sm">
                     Oturum Zaman Aşımı
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Kullanıcı oturumlarının otomatik olarak kapanma süresi
                     (saat)
                   </p>
@@ -528,7 +529,7 @@ function AdminSettingsPageContent() {
                           )
                         }
                       }}
-                      className="w-20 px-3 py-1 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
+                      className="w-16 px-2 py-1 border border-slate-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
                       min="1"
                       max="168"
                       disabled={updateSessionTimeout.isPending}
@@ -544,23 +545,23 @@ function AdminSettingsPageContent() {
           </div>
 
           {/* System Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <div className="flex items-center space-x-3 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-orange-50 rounded-lg">
-                <FiServer className="h-5 w-5 text-orange-600" />
+                <FiServer className="h-4 w-4 text-orange-600" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-slate-900">
                 Sistem Ayarları
               </h2>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-slate-900 text-sm">
                     Otomatik Yedekleme
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Veritabanının otomatik yedeklenmesi
                   </p>
                 </div>
@@ -581,12 +582,12 @@ function AdminSettingsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-slate-900 text-sm">
                     Analitik Takibi
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Kullanıcı davranışı ve sistem analitiği
                   </p>
                 </div>
@@ -607,12 +608,12 @@ function AdminSettingsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-slate-900 text-sm">
                     Maksimum Dosya Boyutu
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Yüklenebilecek maksimum dosya boyutu (MB)
                   </p>
                 </div>
@@ -632,7 +633,7 @@ function AdminSettingsPageContent() {
                           )
                         }
                       }}
-                      className="w-20 px-3 py-1 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
+                      className="w-16 px-2 py-1 border border-slate-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
                       min="1"
                       max="100"
                       disabled={updateMaxFileSize.isPending}
@@ -648,21 +649,21 @@ function AdminSettingsPageContent() {
           </div>
 
           {/* File Upload Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <div className="flex items-center space-x-3 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 lg:col-span-2">
+            <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-indigo-50 rounded-lg">
-                <FiDatabase className="h-5 w-5 text-indigo-600" />
+                <FiDatabase className="h-4 w-4 text-indigo-600" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-slate-900">
                 Dosya Yükleme Ayarları
               </h2>
             </div>
 
             <div>
-              <h3 className="font-medium text-slate-900 mb-2">
+              <h3 className="font-medium text-slate-900 mb-2 text-sm">
                 İzin Verilen Dosya Türleri
               </h3>
-              <p className="text-sm text-slate-500 mb-4">
+              <p className="text-xs text-slate-500 mb-3">
                 Kullanıcıların yükleyebileceği dosya türleri
               </p>
               <div className="flex flex-wrap gap-2">
@@ -671,14 +672,14 @@ function AdminSettingsPageContent() {
                     (type, index) => (
                       <span
                         key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                       >
                         .{type}
                       </span>
                     )
                   )
                 ) : (
-                  <span className="text-sm text-slate-500">
+                  <span className="text-xs text-slate-500">
                     Henüz dosya türü ayarlanmamış
                   </span>
                 )}

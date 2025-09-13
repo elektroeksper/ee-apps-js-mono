@@ -36,7 +36,6 @@ function AdminAnalyticsPageContent() {
               className="inline-flex items-center text-slate-600 hover:text-slate-900 transition-colors"
             >
               <FiArrowLeft className="h-5 w-5 mr-2" />
-              Yönetici Paneli
             </Link>
             <div className="h-6 w-px bg-slate-300"></div>
             <div>

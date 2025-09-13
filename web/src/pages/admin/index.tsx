@@ -88,7 +88,7 @@ function AdminDashboardContent() {
 
   if (userLoading || authChecking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="min-h-screen bg-gradient-admin p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center space-y-4">
@@ -105,9 +105,9 @@ function AdminDashboardContent() {
 
   if (statsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="min-h-screen bg-gradient-admin p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-xl shadow-sm border border-red-200 p-6">
+          <div className="bg-gradient-admin-card rounded-xl shadow-sm border border-red-200 p-6">
             <div className="flex items-center space-x-3">
               <FiAlertTriangle className="h-6 w-6 text-red-500" />
               <p className="text-red-700 font-medium">
@@ -197,26 +197,28 @@ function AdminDashboardContent() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-admin">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-900 mb-2">
-                Yönetici Paneli
-              </h1>
-              <p className="text-slate-600">
-                Hoş geldiniz, {user?.displayName || user?.firstName}
-              </p>
+          <div className="bg-gradient-admin-card rounded-2xl shadow-xl p-8 border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                  Yönetici Paneli
+                </h1>
+                <p className="text-slate-600">
+                  Hoş geldiniz, {user?.displayName || user?.firstName}
+                </p>
+              </div>
+              <button
+                onClick={refetch}
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium shadow-lg transform transition-all hover:scale-105"
+              >
+                <FiRefreshCw className="h-4 w-4 mr-2" />
+                Yenile
+              </button>
             </div>
-            <button
-              onClick={refetch}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
-              <FiRefreshCw className="h-4 w-4 mr-2" />
-              Yenile
-            </button>
           </div>
         </div>
 
@@ -227,27 +229,27 @@ function AdminDashboardContent() {
               {statCards.map((card, index) => {
                 const IconComponent = card.icon
                 const colorClasses = {
-                  blue: 'bg-blue-50 text-blue-600 border-blue-200',
-                  green: 'bg-green-50 text-green-600 border-green-200',
-                  purple: 'bg-purple-50 text-purple-600 border-purple-200',
-                  orange: 'bg-orange-50 text-orange-600 border-orange-200',
-                  indigo: 'bg-indigo-50 text-indigo-600 border-indigo-200',
-                  emerald: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+                  blue: 'from-blue-500 to-blue-600',
+                  green: 'from-green-500 to-green-600',
+                  purple: 'from-purple-500 to-purple-600',
+                  orange: 'from-orange-500 to-orange-600',
+                  indigo: 'from-indigo-500 to-indigo-600',
+                  emerald: 'from-emerald-500 to-emerald-600',
                 }
 
                 return (
                   <div
                     key={index}
-                    className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow"
+                    className="bg-gradient-admin-card rounded-2xl shadow-xl border border-white/20 p-6 card-float"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div
-                        className={`p-3 rounded-lg border ${colorClasses[card.color as keyof typeof colorClasses]}`}
+                        className={`p-3 rounded-xl bg-gradient-to-br ${colorClasses[card.color as keyof typeof colorClasses]} text-white shadow-lg`}
                       >
                         <IconComponent className="h-6 w-6" />
                       </div>
                       {card.trend && (
-                        <div className="flex items-center text-sm text-emerald-600">
+                        <div className="flex items-center text-sm bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1 rounded-full shadow-lg">
                           <FiTrendingUp className="h-4 w-4 mr-1" />+{card.trend}
                           %
                         </div>
@@ -257,7 +259,7 @@ function AdminDashboardContent() {
                       <p className="text-sm font-medium text-slate-600">
                         {card.title}
                       </p>
-                      <p className="text-3xl font-bold text-slate-900">
+                      <p className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent">
                         {statsLoading ? (
                           <div className="h-8 w-16 bg-slate-200 rounded animate-pulse"></div>
                         ) : (
@@ -276,11 +278,11 @@ function AdminDashboardContent() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-xl font-semibold text-slate-900 mb-6">
+            <div className="bg-gradient-admin-card rounded-2xl shadow-xl border border-white/20 p-6">
+              <h2 className="text-xl font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent mb-6">
                 Hızlı İşlemler
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {quickActions.map((action, index) => {
                   const IconComponent = action.icon
                   const colorClasses = {
@@ -297,7 +299,7 @@ function AdminDashboardContent() {
                     <Link
                       key={index}
                       href={action.href}
-                      className={`group relative overflow-hidden rounded-lg bg-gradient-to-r ${colorClasses[action.color as keyof typeof colorClasses]} p-6 text-white transition-all hover:shadow-lg hover:scale-105`}
+                      className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${colorClasses[action.color as keyof typeof colorClasses]} p-6 text-white transition-all hover:shadow-xl hover:scale-105 card-float`}
                     >
                       <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
                       <div className="relative">
@@ -316,8 +318,8 @@ function AdminDashboardContent() {
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-xl font-semibold text-slate-900 mb-6">
+            <div className="bg-gradient-admin-card rounded-2xl shadow-xl border border-white/20 p-6">
+              <h2 className="text-xl font-semibold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent mb-6">
                 Son Aktivite
               </h2>
               <div className="text-center py-12">
@@ -334,7 +336,7 @@ function AdminDashboardContent() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-red-200 p-6">
+          <div className="bg-gradient-admin-card rounded-2xl shadow-xl border border-red-200 p-6">
             <div className="flex items-center space-x-3">
               <FiAlertTriangle className="h-6 w-6 text-red-500" />
               <div>

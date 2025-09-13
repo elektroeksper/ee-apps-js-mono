@@ -186,12 +186,15 @@ export const useUpdateContactMutation = () => {
 
 // About Hooks
 export const useAbout = () => {
-  return useQuery({
+  return useQuery<IAboutInfo>({
     queryKey: contentQueryKeys.about,
-    queryFn: async () => {
+    queryFn: async (): Promise<IAboutInfo> => {
       const result = await contentService.getAboutInfo();
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch about info');
+      }
+      if (!result.data) {
+        throw new Error('About info not found');
       }
       return result.data;
     },

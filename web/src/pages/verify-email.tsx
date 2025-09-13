@@ -54,7 +54,7 @@ export default function VerifyEmailPage() {
           <div className="absolute -bottom-8 -left-4 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
         </div>
-        
+
         <div className="relative z-10 max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
@@ -78,8 +78,8 @@ export default function VerifyEmailPage() {
                 E-postanızı Doğrulayın
               </h1>
               <p className="mt-2 text-lg text-gray-600">
-                Hesabınızı güvence altına almak için size bir doğrulama e-postası
-                gönderdik
+                Hesabınızı güvence altına almak için size bir doğrulama
+                e-postası gönderdik
               </p>
             </div>
           </div>

@@ -53,15 +53,9 @@ export interface IContactInfo {
 }
 
 export interface IAboutInfo {
-  title: string;
-  description: string;
-  mission?: string;
-  vision?: string;
-  values?: string[];
-  teamDescription?: string;
-  establishedYear?: number;
-  experienceYears?: number;
+  mdContent: string;
   updatedAt?: Date;
+  updatedBy: string;
 }
 
 export interface IBrandingInfo {

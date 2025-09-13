@@ -41,7 +41,10 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 Ev ve işyeri elektrik tesisatı kurulum ve bakım hizmetleri
               </p>
-              <Button variant="outline" className="w-full hover:bg-blue-50 border-blue-200">
+              <Button
+                variant="outline"
+                className="w-full hover:bg-blue-50 border-blue-200"
+              >
                 Detaylar
               </Button>
             </div>
@@ -70,7 +73,10 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 Her türlü elektronik cihaz tamir ve bakım hizmetleri
               </p>
-              <Button variant="outline" className="w-full hover:bg-green-50 border-green-200">
+              <Button
+                variant="outline"
+                className="w-full hover:bg-green-50 border-green-200"
+              >
                 Detaylar
               </Button>
             </div>
@@ -100,7 +106,10 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 Kamera ve alarm sistemleri kurulum ve bakımı
               </p>
-              <Button variant="outline" className="w-full hover:bg-purple-50 border-purple-200">
+              <Button
+                variant="outline"
+                className="w-full hover:bg-purple-50 border-purple-200"
+              >
                 Detaylar
               </Button>
             </div>
@@ -129,7 +138,10 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 LED ve modern aydınlatma çözümleri
               </p>
-              <Button variant="outline" className="w-full hover:bg-yellow-50 border-yellow-200">
+              <Button
+                variant="outline"
+                className="w-full hover:bg-yellow-50 border-yellow-200"
+              >
                 Detaylar
               </Button>
             </div>
@@ -158,7 +170,10 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 7/24 acil elektrik ve elektronik arıza hizmetleri
               </p>
-              <Button variant="outline" className="w-full hover:bg-red-50 border-red-200">
+              <Button
+                variant="outline"
+                className="w-full hover:bg-red-50 border-red-200"
+              >
                 Detaylar
               </Button>
             </div>
@@ -187,7 +202,10 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 Elektrik ve elektronik proje danışmanlık hizmetleri
               </p>
-              <Button variant="outline" className="w-full hover:bg-indigo-50 border-indigo-200">
+              <Button
+                variant="outline"
+                className="w-full hover:bg-indigo-50 border-indigo-200"
+              >
                 Detaylar
               </Button>
             </div>

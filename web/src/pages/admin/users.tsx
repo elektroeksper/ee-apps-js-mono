@@ -285,7 +285,7 @@ function AdminUsersPageContent() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="min-h-screen bg-gradient-admin p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center space-y-4">
@@ -299,41 +299,42 @@ function AdminUsersPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-admin">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/admin"
-                className="inline-flex items-center text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                <FiArrowLeft className="h-5 w-5 mr-2" />
-                Yönetici Paneli
-              </Link>
-              <div className="h-6 w-px bg-slate-300"></div>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900">
-                  Kullanıcı Yönetimi
-                </h1>
-                <p className="text-slate-600">
-                  Toplam {filteredUsers.length} kullanıcı
-                </p>
+          <div className="bg-gradient-admin-card rounded-2xl shadow-xl p-6 border border-white/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center text-slate-600 hover:text-blue-600 transition-colors"
+                >
+                  <FiArrowLeft className="h-5 w-5 mr-2" />
+                </Link>
+                <div className="h-6 w-px bg-slate-300"></div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    Kullanıcı Yönetimi
+                  </h1>
+                  <p className="text-slate-600">
+                    Toplam {filteredUsers.length} kullanıcı
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={fetchUsers}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium shadow-lg transform transition-all hover:scale-105"
+              >
+                <FiRefreshCw className="h-4 w-4 mr-2" />
+                Yenile
+              </button>
             </div>
-            <button
-              onClick={fetchUsers}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            >
-              <FiRefreshCw className="h-4 w-4 mr-2" />
-              Yenile
-            </button>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-gradient-admin-card rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
             <div className="relative">
@@ -345,7 +346,7 @@ function AdminUsersPageContent() {
                 onChange={e =>
                   setFilters(prev => ({ ...prev, search: e.target.value }))
                 }
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
               />
             </div>
 
@@ -358,7 +359,7 @@ function AdminUsersPageContent() {
                   accountType: e.target.value as any,
                 }))
               }
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
             >
               <option value="all">Tüm Hesap Türleri</option>
               <option value={AccountType.INDIVIDUAL}>Bireysel</option>

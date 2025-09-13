@@ -1,13 +1,66 @@
 import { useAbout, useBranding, useContact } from '@/hooks/useContentQueries'
 import Link from 'next/link'
-import {
-  FiAward,
-  FiCalendar,
-  FiCheckCircle,
-  FiEye,
-  FiTarget,
-  FiUsers,
-} from 'react-icons/fi'
+import { FiAward, FiCalendar, FiCheckCircle, FiUsers } from 'react-icons/fi'
+import ReactMarkdown from 'react-markdown'
+
+// Component to render markdown content with proper styling
+const MarkdownContent = ({ content }: { content: string }) => {
+  return (
+    <div className="prose prose-gray max-w-none prose-lg">
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => (
+            <p className="text-gray-600 leading-relaxed mb-4">{children}</p>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-semibold text-gray-800">{children}</strong>
+          ),
+          em: ({ children }) => (
+            <em className="italic text-gray-700">{children}</em>
+          ),
+          ul: ({ children }) => (
+            <ul className="list-disc list-inside space-y-2 text-gray-600 mb-4">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal list-inside space-y-2 text-gray-600 mb-4">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => <li className="text-gray-600">{children}</li>,
+          h1: ({ children }) => (
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              {children}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-xl font-medium text-gray-800 mb-2">
+              {children}
+            </h3>
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-blue-300 pl-6 italic text-gray-700 my-4 bg-blue-50 py-2">
+              {children}
+            </blockquote>
+          ),
+          code: ({ children }) => (
+            <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800">
+              {children}
+            </code>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
+}
 
 const AboutPage = () => {
   const {
@@ -20,7 +73,7 @@ const AboutPage = () => {
 
   if (aboutLoading || brandingLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-services flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading about information...</p>
@@ -31,7 +84,7 @@ const AboutPage = () => {
 
   if (aboutError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-services flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Failed to load about information</p>
           <Link href="/" className="text-blue-600 hover:text-blue-700">
@@ -42,27 +95,6 @@ const AboutPage = () => {
     )
   }
 
-  const defaultAbout = {
-    title: 'About Us',
-    description:
-      'We are a leading provider of electrical services, committed to delivering excellence in every project.',
-    mission:
-      'To provide high-quality electrical services that ensure safety, reliability, and customer satisfaction.',
-    vision: 'To be the most trusted electrical service provider in our region.',
-    values: [
-      'Quality',
-      'Safety',
-      'Reliability',
-      'Customer Satisfaction',
-      'Innovation',
-    ],
-    teamDescription:
-      'Our team consists of certified electricians with years of experience.',
-    establishedYear: 2010,
-    experienceYears: 13,
-  }
-
-  const about = aboutInfo || defaultAbout
   const companyName = brandingInfo?.companyName || 'Electro Expert'
 
   return (
@@ -71,184 +103,81 @@ const AboutPage = () => {
       <div className="py-16 bg-gradient-hero text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-overlay"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">
-            {about.title || 'Hakkımızda'}
-          </h1>
+          <h1 className="text-4xl font-bold mb-6">Hakkımızda</h1>
           <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-            {about.description}
+            ElectroExpert olarak elektrik alanında güvenilir çözümler sunuyoruz.
           </p>
         </div>
       </div>
 
+      {/* About Content */}
+      <div className="py-16 bg-gradient-section-light">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
+            {aboutInfo?.mdContent ? (
+              <MarkdownContent content={aboutInfo.mdContent} />
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4 text-4xl">📄</div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  İçerik Bulunamadı
+                </h3>
+                <p className="text-gray-600">
+                  Hakkımızda sayfası içeriği henüz oluşturulmamış. Lütfen daha
+                  sonra tekrar ziyaret edin.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Stats Section */}
-      {(about.establishedYear || about.experienceYears) && (
-        <div className="py-16 bg-gradient-section-light">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {about.establishedYear && (
-                <div className="text-center bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
-                  <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full mx-auto mb-4 shadow-lg">
-                    <FiCalendar className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mb-2">
-                    {about.establishedYear}
-                  </h3>
-                  <p className="text-gray-600">Kuruluş Yılı</p>
-                </div>
-              )}
-              {about.experienceYears && (
-                <div className="text-center bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
-                  <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-full mx-auto mb-4 shadow-lg">
-                    <FiAward className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent mb-2">
-                    {about.experienceYears}+
-                  </h3>
-                  <p className="text-gray-600">Yıllık Deneyim</p>
-                </div>
-              )}
-              <div className="text-center bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
-                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-full mx-auto mb-4 shadow-lg">
-                  <FiUsers className="w-8 h-8" />
-                </div>
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent mb-2">1000+</h3>
-                <p className="text-gray-600">Mutlu Müşteri</p>
+      <div className="py-16 bg-gradient-section-blue">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
+              <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full mx-auto mb-4 shadow-lg">
+                <FiCalendar className="w-8 h-8" />
               </div>
-              <div className="text-center bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
-                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-full mx-auto mb-4 shadow-lg">
-                  <FiCheckCircle className="w-8 h-8" />
-                </div>
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent mb-2">99%</h3>
-                <p className="text-gray-600">Başarı Oranı</p>
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mb-2">
+                2010
+              </h3>
+              <p className="text-gray-600">Kuruluş Yılı</p>
+            </div>
+
+            <div className="text-center bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
+              <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-full mx-auto mb-4 shadow-lg">
+                <FiAward className="w-8 h-8" />
               </div>
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent mb-2">
+                13+
+              </h3>
+              <p className="text-gray-600">Yıllık Deneyim</p>
+            </div>
+
+            <div className="text-center bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
+              <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-full mx-auto mb-4 shadow-lg">
+                <FiUsers className="w-8 h-8" />
+              </div>
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent mb-2">
+                1000+
+              </h3>
+              <p className="text-gray-600">Mutlu Müşteri</p>
+            </div>
+
+            <div className="text-center bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
+              <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-full mx-auto mb-4 shadow-lg">
+                <FiCheckCircle className="w-8 h-8" />
+              </div>
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent mb-2">
+                99%
+              </h3>
+              <p className="text-gray-600">Başarı Oranı</p>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Mission & Vision */}
-      {(about.mission || about.vision) && (
-        <div className="py-16 bg-gradient-section-blue">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12">
-              {about.mission && (
-                <div className="bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
-                  <div className="flex items-center mb-6">
-                    <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg mr-4 shadow-lg">
-                      <FiTarget className="w-6 h-6" />
-                    </div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                      Misyonumuz
-                    </h2>
-                  </div>
-                  <p className="text-gray-600 leading-relaxed">
-                    {about.mission}
-                  </p>
-                </div>
-              )}
-              {about.vision && (
-                <div className="bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
-                  <div className="flex items-center mb-6">
-                    <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg mr-4 shadow-lg">
-                      <FiEye className="w-6 h-6" />
-                    </div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
-                      Vizyonumuz
-                    </h2>
-                  </div>
-                  <p className="text-gray-600 leading-relaxed">
-                    {about.vision}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Values Section */}
-      {about.values && about.values.length > 0 && (
-        <div className="py-16 bg-gradient-section-light">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-                Değerlerimiz
-              </h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Bu temel değerler yaptığımız her şeye rehberlik eder ve mükemmellik taahhüdümüzü şekillendirir.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {about.values.map((value, index) => (
-                <div
-                  key={index}
-                  className="bg-gradient-service-card p-6 rounded-2xl shadow-xl text-center card-float border border-white/20"
-                >
-                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 text-white rounded-full mx-auto mb-4 shadow-lg">
-                    <FiCheckCircle className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {value}
-                  </h3>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Team Section */}
-      {about.teamDescription && (
-        <div className="py-16 bg-gradient-section-blue">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-                Ekibimiz
-              </h2>
-              <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                {about.teamDescription}
-              </p>
-            </div>
-
-            {/* Team Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="bg-gradient-service-card p-6 rounded-2xl shadow-xl text-center card-float border border-white/20">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-                  <FiUsers className="w-12 h-12 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Sertifikalı Elektrikçiler
-                </h3>
-                <p className="text-gray-600">
-                  Kapsamlı eğitime sahip lisanslı profesyoneller
-                </p>
-              </div>
-              <div className="bg-gradient-service-card p-6 rounded-2xl shadow-xl text-center card-float border border-white/20">
-                <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-                  <FiAward className="w-12 h-12 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Uzman Teknisyenler
-                </h3>
-                <p className="text-gray-600">
-                  En güncel elektrik teknolojilerinde yetkin
-                </p>
-              </div>
-              <div className="bg-gradient-service-card p-6 rounded-2xl shadow-xl text-center card-float border border-white/20">
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-                  <FiCheckCircle className="w-12 h-12 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Kalite Güvencesi
-                </h3>
-                <p className="text-gray-600">
-                  Kusursuz sonuçlar sunmaya adanmış
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* CTA Section */}
       <div

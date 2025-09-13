@@ -241,11 +241,8 @@ class ContentService implements IContentService {
       } else {
         console.log('ℹ️ No about info found, returning defaults');
         const defaultAbout: IAboutInfo = {
-          title: '',
-          description: '',
-          mission: '',
-          vision: '',
-          values: [],
+          mdContent: '',
+          updatedBy: '',
         };
         return { success: true, data: defaultAbout };
       }

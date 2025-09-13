@@ -4,15 +4,16 @@
 
 /* Custom gradient backgrounds */
 @layer utilities {
+
   /* Primary gradients */
   .bg-gradient-primary {
     @apply bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800;
   }
-  
+
   .bg-gradient-primary-light {
     @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50;
   }
-  
+
   .bg-gradient-primary-dark {
     @apply bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900;
   }
@@ -21,7 +22,7 @@
   .bg-gradient-auth {
     @apply bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100;
   }
-  
+
   .bg-gradient-auth-dark {
     @apply bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900;
   }
@@ -30,11 +31,11 @@
   .bg-gradient-admin {
     @apply bg-gradient-to-br from-slate-50 to-blue-50;
   }
-  
+
   .bg-gradient-admin-card {
     @apply bg-gradient-to-br from-white to-slate-50;
   }
-  
+
   .bg-gradient-admin-header {
     @apply bg-gradient-to-r from-blue-600 to-indigo-600;
   }
@@ -43,7 +44,7 @@
   .bg-gradient-services {
     @apply bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50;
   }
-  
+
   .bg-gradient-service-card {
     @apply bg-gradient-to-br from-white to-blue-50;
   }
@@ -52,11 +53,11 @@
   .bg-gradient-hero {
     @apply bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900;
   }
-  
+
   .bg-gradient-section-light {
     @apply bg-gradient-to-br from-white to-gray-50;
   }
-  
+
   .bg-gradient-section-blue {
     @apply bg-gradient-to-br from-blue-50 to-indigo-50;
   }
@@ -65,7 +66,7 @@
   .bg-gradient-contact {
     @apply bg-gradient-to-br from-blue-600 to-indigo-700;
   }
-  
+
   .bg-gradient-footer {
     @apply bg-gradient-to-br from-gray-800 to-gray-900;
   }
@@ -84,7 +85,7 @@
   .bg-gradient-overlay {
     @apply bg-gradient-to-t from-black/60 via-black/30 to-transparent;
   }
-  
+
   .bg-gradient-overlay-blue {
     @apply bg-gradient-to-t from-blue-900/60 via-blue-800/30 to-transparent;
   }
@@ -96,9 +97,17 @@
   }
 
   @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
   }
 
   /* Blob animations for auth pages */
@@ -118,12 +127,15 @@
     0% {
       transform: translate(0px, 0px) scale(1);
     }
+
     33% {
       transform: translate(30px, -50px) scale(1.1);
     }
+
     66% {
       transform: translate(-20px, 20px) scale(0.9);
     }
+
     100% {
       transform: translate(0px, 0px) scale(1);
     }
@@ -135,7 +147,7 @@
   .card-gradient-border {
     @apply relative bg-white rounded-lg overflow-hidden;
   }
-  
+
   .card-gradient-border::before {
     content: '';
     @apply absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg;
@@ -149,7 +161,7 @@
   .card-float {
     @apply transform transition-transform duration-300 ease-in-out;
   }
-  
+
   .card-float:hover {
     @apply -translate-y-2 shadow-xl;
   }
