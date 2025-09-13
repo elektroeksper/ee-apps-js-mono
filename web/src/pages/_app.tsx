@@ -1,3 +1,4 @@
+import Layout from '@/components/Layout'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { AppProps } from 'next/app'
@@ -22,7 +23,9 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Component {...pageProps} />
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
           <Toaster
             position="top-right"
             toastOptions={{

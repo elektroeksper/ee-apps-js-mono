@@ -1,6 +1,5 @@
 import { AuthGuard, BusinessApprovalGuard } from '@/components/auth'
 import ProfileCompletionGuard from '@/components/auth/ProfileCompletionGuard'
-import Header from '@/components/Header'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
@@ -10,8 +9,6 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">

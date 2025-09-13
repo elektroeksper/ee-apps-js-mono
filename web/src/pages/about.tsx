@@ -67,48 +67,8 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="text-blue-600 hover:text-blue-700">
-                ← Back to Home
-              </Link>
-            </div>
-            {brandingInfo?.logoUrl && (
-              <img
-                src={brandingInfo.logoUrl}
-                alt={brandingInfo.logoAltText}
-                className="h-8"
-              />
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Hero Section */}
-      <div
-        className="relative py-20 bg-gradient-to-r from-blue-600 to-blue-800 text-white"
-        style={
-          brandingInfo?.brandColors
-            ? {
-                background: `linear-gradient(to right, ${brandingInfo.brandColors.primary}, ${brandingInfo.brandColors.secondary})`,
-              }
-            : undefined
-        }
-      >
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">{about.title}</h1>
-          <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
-            {about.description}
-          </p>
-        </div>
-      </div>
-
-      {/* Stats Section */}
       {(about.establishedYear || about.experienceYears) && (
-        <div className="py-16 bg-white">
+        <div className="pb-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {about.establishedYear && (

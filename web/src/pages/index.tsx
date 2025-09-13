@@ -1,4 +1,3 @@
-import Header from '@/components/Header'
 import { Button } from '@/components/ui/Button'
 import IndexVideoAndLoginSection from '@/components/ui/IndexVideoAndLoginSection'
 import { useAuth } from '@/contexts/AuthContext'
@@ -43,9 +42,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <Header />
-
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">
         <div className="absolute inset-0 bg-black opacity-50"></div>

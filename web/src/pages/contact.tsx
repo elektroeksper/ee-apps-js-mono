@@ -97,15 +97,9 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="text-blue-600 hover:text-blue-700">
-                ← Ana Sayfaya Dön
-              </Link>
-            </div>
             {brandingInfo?.logoUrl && (
               <img
                 src={brandingInfo.logoUrl}

@@ -1,7 +1,6 @@
 'use client'
 
 import { AuthGuard, PasswordChangeForm } from '@/components/auth'
-import Header from '@/components/Header'
 import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import Modal from '@/components/ui/Modal'
@@ -14,7 +13,6 @@ import { useRouter } from 'next/router'
 import { useState } from 'react'
 import {
   FiAlertTriangle,
-  FiArrowLeft,
   FiCheck,
   FiClock,
   FiFileText,
@@ -374,30 +372,7 @@ function ProfileContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
-      <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center mb-6">
-          <button
-            onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-4"
-          >
-            <FiArrowLeft className="h-5 w-5 text-gray-600" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">Profil</h1>
-            <nav className="text-sm text-gray-500">
-              <Link href="/home" className="hover:text-blue-600">
-                Dashboard
-              </Link>
-              <span className="mx-2">/</span>
-              <span>Profil</span>
-            </nav>
-          </div>
-        </div>
-
-        {/* Profile Header Card */}
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
@@ -450,212 +425,222 @@ function ProfileContent() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Account Status */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Hesap Durumu
-            </h3>
-            <div className="space-y-3">
-              {/* Account Type */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Hesap Türü</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  <FiUser className="h-3 w-3 mr-1" />
-                  {isBusinessAccount ? 'İş Hesabı' : 'Bireysel Hesap'}
-                </span>
-              </div>
-
-              {/* Email Verification */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">E-posta Doğrulama</span>
-                {appUser.isEmailVerified ? (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <FiCheck className="h-3 w-3 mr-1" />
-                    Doğrulandı
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    <FiX className="h-3 w-3 mr-1" />
-                    Doğrulanmadı
-                  </span>
-                )}
-              </div>
-
-              {/* Business Approval Status */}
-              {isBusinessAccount && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Account Status */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Hesap Durumu
+              </h3>
+              <div className="space-y-3">
+                {/* Account Type */}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">İşletme Onayı</span>
-                  {isBusinessApproved ? (
+                  <span className="text-sm text-gray-600">Hesap Türü</span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <FiUser className="h-3 w-3 mr-1" />
+                    {isBusinessAccount ? 'İş Hesabı' : 'Bireysel Hesap'}
+                  </span>
+                </div>
+
+                {/* Email Verification */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">
+                    E-posta Doğrulama
+                  </span>
+                  {appUser.isEmailVerified ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       <FiCheck className="h-3 w-3 mr-1" />
-                      Onaylandı
-                    </span>
-                  ) : isBusinessRejected ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      <FiX className="h-3 w-3 mr-1" />
-                      Reddedildi
+                      Doğrulandı
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      <FiClock className="h-3 w-3 mr-1" />
-                      Beklemede
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <FiX className="h-3 w-3 mr-1" />
+                      Doğrulanmadı
                     </span>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Business Rejection Reason */}
-          {isBusinessAccount && isBusinessRejected && rejectionReason && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <div className="flex items-start space-x-3">
-                <FiAlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-red-900 mb-2">
-                    İşletme Başvurusu Reddedildi
-                  </h3>
-                  <p className="text-red-800 mb-4">{rejectionReason}</p>
-                  <Button
-                    onClick={() => setShowDocumentModal(true)}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <FiUpload className="h-4 w-4 mr-2" />
-                    Belgeleri Tekrar Yükle
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Personal Information */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Profil Bilgileri
-            </h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Ad Soyad
-                  </label>
-                  <p className="text-gray-900">
-                    {`${appUser.firstName || ''} ${appUser.lastName || ''}`.trim() ||
-                      'Belirtilmemiş'}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
-                    E-posta Adresi
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <p className="text-gray-900">{appUser.email}</p>
-                    {appUser.isEmailVerified ? (
-                      <span className="inline-flex items-center text-green-600">
-                        <FiCheck className="h-4 w-4" />
+                {/* Business Approval Status */}
+                {isBusinessAccount && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">İşletme Onayı</span>
+                    {isBusinessApproved ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <FiCheck className="h-3 w-3 mr-1" />
+                        Onaylandı
+                      </span>
+                    ) : isBusinessRejected ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <FiX className="h-3 w-3 mr-1" />
+                        Reddedildi
                       </span>
                     ) : (
-                      <span className="inline-flex items-center text-red-600">
-                        <FiX className="h-4 w-4" />
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        <FiClock className="h-3 w-3 mr-1" />
+                        Beklemede
                       </span>
                     )}
                   </div>
-                </div>
+                )}
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Telefon Numarası
-                  </label>
-                  <p className="text-gray-900">
-                    {appUser.phone || 'Belirtilmemiş'}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Hesap Oluşturma Tarihi
-                  </label>
-                  <p className="text-gray-900">
-                    {appUser.createdAt
-                      ? new Date(appUser.createdAt).toLocaleDateString('tr-TR')
-                      : 'Bilinmiyor'}
-                  </p>
-                </div>
-              </div>
-
-              {appUser.address && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Adres
-                  </label>
-                  <p className="text-gray-900">
-                    {formatAddress(appUser.address)}
-                  </p>
-                </div>
-              )}
             </div>
-          </div>
 
-          {/* Business Information (if business account) */}
-          {isBusinessAccount && (
+            {/* Personal Information */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                İşletme Bilgileri
+                Profil Bilgileri
               </h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
-                      İşletme Adı
+                      Ad Soyad
                     </label>
                     <p className="text-gray-900">
-                      {businessInfo?.businessName || 'Belirtilmemiş'}
+                      {`${appUser.firstName || ''} ${appUser.lastName || ''}`.trim() ||
+                        'Belirtilmemiş'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
-                      Vergi Numarası
+                      E-posta Adresi
                     </label>
-                    <p className="text-gray-900">
-                      {businessInfo?.taxNumber || 'Belirtilmemiş'}
-                    </p>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-gray-900">{appUser.email}</p>
+                      {appUser.isEmailVerified ? (
+                        <span className="inline-flex items-center text-green-600">
+                          <FiCheck className="h-4 w-4" />
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-red-600">
+                          <FiX className="h-4 w-4" />
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
-                      Ticaret Sicil No
+                      Telefon Numarası
                     </label>
                     <p className="text-gray-900">
-                      {businessInfo?.tradeRegistryNumber || 'Belirtilmemiş'}
+                      {appUser.phone || 'Belirtilmemiş'}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
-                      İşletme Telefonu
+                      Hesap Oluşturma Tarihi
                     </label>
                     <p className="text-gray-900">
-                      {businessInfo?.businessPhone || 'Belirtilmemiş'}
+                      {appUser.createdAt
+                        ? new Date(appUser.createdAt).toLocaleDateString(
+                            'tr-TR'
+                          )
+                        : 'Bilinmiyor'}
                     </p>
                   </div>
                 </div>
 
-                {businessInfo?.businessAddress && (
+                {appUser.address && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
-                      İşletme Adresi
+                      Adres
                     </label>
                     <p className="text-gray-900">
-                      {formatAddress(businessInfo.businessAddress)}
+                      {formatAddress(appUser.address)}
                     </p>
                   </div>
                 )}
               </div>
             </div>
-          )}
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Business Rejection Reason */}
+            {isBusinessAccount && isBusinessRejected && rejectionReason && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <div className="flex items-start space-x-3">
+                  <FiAlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-red-900 mb-2">
+                      İşletme Başvurusu Reddedildi
+                    </h3>
+                    <p className="text-red-800 mb-4">{rejectionReason}</p>
+                    <Button
+                      onClick={() => setShowDocumentModal(true)}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      <FiUpload className="h-4 w-4 mr-2" />
+                      Belgeleri Tekrar Yükle
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Business Information (if business account) */}
+            {isBusinessAccount && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  İşletme Bilgileri
+                </h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 mb-1">
+                        İşletme Adı
+                      </label>
+                      <p className="text-gray-900">
+                        {businessInfo?.businessName || 'Belirtilmemiş'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 mb-1">
+                        Vergi Numarası
+                      </label>
+                      <p className="text-gray-900">
+                        {businessInfo?.taxNumber || 'Belirtilmemiş'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 mb-1">
+                        Ticaret Sicil No
+                      </label>
+                      <p className="text-gray-900">
+                        {businessInfo?.tradeRegistryNumber || 'Belirtilmemiş'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 mb-1">
+                        İşletme Telefonu
+                      </label>
+                      <p className="text-gray-900">
+                        {businessInfo?.businessPhone || 'Belirtilmemiş'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {businessInfo?.businessAddress && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 mb-1">
+                        İşletme Adresi
+                      </label>
+                      <p className="text-gray-900">
+                        {formatAddress(businessInfo.businessAddress)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
