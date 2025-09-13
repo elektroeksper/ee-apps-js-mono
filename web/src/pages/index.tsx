@@ -41,22 +41,22 @@ export default function LandingPage() {
   const boxLoading = isClient && (videosLoading || isLoading)
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-gradient-section-light flex flex-col">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+      <section className="relative bg-gradient-hero text-white">
+        <div className="absolute inset-0 bg-gradient-overlay"></div>
         <div className="relative container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in">
               Elektrik ve Elektronik Hizmetleri
             </h1>
-            <p className="text-xl sm:text-2xl mb-8 text-gray-200">
+            <p className="text-xl sm:text-2xl mb-8 text-gray-200 animate-fade-in">
               Güvenilir ustalar, kaliteli hizmet, uygun fiyat
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
               <Button
                 onClick={() => router.push('/services')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg transform transition-all hover:scale-105"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -74,7 +74,7 @@ export default function LandingPage() {
               </Button>
               <Button
                 onClick={() => router.push('/register?type=business')}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg"
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg transform transition-all hover:scale-105"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +89,7 @@ export default function LandingPage() {
               {!appUser && (
                 <Button
                   onClick={() => router.push('/login?type=business')}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg"
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg transform transition-all hover:scale-105"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -112,14 +112,14 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gradient-section-blue">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
             Sayılarla Biz
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center transform hover:scale-105 transition-transform">
-              <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-gradient-service-card rounded-2xl shadow-xl p-8 text-center card-float border border-white/20">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <svg
                   className="w-10 h-10 text-white"
                   fill="currentColor"
@@ -131,11 +131,11 @@ export default function LandingPage() {
               <h3 className="text-2xl font-bold mb-2 text-gray-800">
                 Toplam Kullanıcı
               </h3>
-              <p className="text-4xl font-bold text-blue-600">123,456</p>
+              <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">123,456</p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center transform hover:scale-105 transition-transform">
-              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-gradient-service-card rounded-2xl shadow-xl p-8 text-center card-float border border-white/20">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <svg
                   className="w-10 h-10 text-white"
                   fill="currentColor"
@@ -151,11 +151,11 @@ export default function LandingPage() {
               <h3 className="text-2xl font-bold mb-2 text-gray-800">
                 Toplam Bayi
               </h3>
-              <p className="text-4xl font-bold text-green-600">456</p>
+              <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">456</p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center transform hover:scale-105 transition-transform">
-              <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-gradient-service-card rounded-2xl shadow-xl p-8 text-center card-float border border-white/20">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <svg
                   className="w-10 h-10 text-white"
                   fill="currentColor"
@@ -171,29 +171,29 @@ export default function LandingPage() {
               <h3 className="text-2xl font-bold mb-2 text-gray-800">
                 Tamamlanan İşler
               </h3>
-              <p className="text-4xl font-bold text-purple-600">7,890</p>
+              <p className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">7,890</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Video and Login Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gradient-section-light">
         <IndexVideoAndLoginSection />
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gradient-section-blue">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
             Müşterilerimiz Ne Diyor?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-gradient-service-card p-6 rounded-2xl shadow-xl card-float border border-white/20">
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 bg-gray-300 rounded-full flex-shrink-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex-shrink-0 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-gray-600"
+                    className="w-8 h-8 text-white"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -215,11 +215,11 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-gradient-service-card p-6 rounded-2xl shadow-xl card-float border border-white/20">
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 bg-gray-300 rounded-full flex-shrink-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex-shrink-0 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-gray-600"
+                    className="w-8 h-8 text-white"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -245,7 +245,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-blue-600">
+      <section className="py-16 bg-gradient-contact">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Hemen Başlayın</h2>
           <p className="text-xl text-blue-100 mb-8">
@@ -254,12 +254,12 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register?type=individual">
-              <Button className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-full text-lg font-medium">
+              <Button className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-full text-lg font-medium transform transition-all hover:scale-105 shadow-lg">
                 Bireysel Üyelik
               </Button>
             </Link>
             <Link href="/register?type=business">
-              <Button className="bg-green-500 text-white hover:bg-green-600 px-8 py-3 rounded-full text-lg font-medium">
+              <Button className="bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 px-8 py-3 rounded-full text-lg font-medium transform transition-all hover:scale-105 shadow-lg">
                 İşletme Üyeliği
               </Button>
             </Link>
@@ -268,7 +268,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12">
+      <footer className="bg-gradient-footer text-white py-12">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
@@ -283,7 +283,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     href="/services"
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
                     Hizmetler
                   </Link>
@@ -291,7 +291,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     href="/about"
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
                     Hakkımızda
                   </Link>
@@ -299,7 +299,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     href="/contact"
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
                     İletişim
                   </Link>
@@ -312,7 +312,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     href="/login"
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
                     Giriş Yap
                   </Link>
@@ -320,7 +320,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     href="/register"
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
                     Kayıt Ol
                   </Link>
@@ -328,7 +328,7 @@ export default function LandingPage() {
                 <li>
                   <Link
                     href="/forgot-password"
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
                     Şifremi Unuttum
                   </Link>
@@ -338,7 +338,7 @@ export default function LandingPage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Sosyal Medya</h4>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors transform hover:scale-110">
                   <svg
                     className="w-6 h-6"
                     fill="currentColor"
@@ -347,7 +347,7 @@ export default function LandingPage() {
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors transform hover:scale-110">
                   <svg
                     className="w-6 h-6"
                     fill="currentColor"
@@ -356,7 +356,7 @@ export default function LandingPage() {
                     <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
                   </svg>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors transform hover:scale-110">
                   <svg
                     className="w-6 h-6"
                     fill="currentColor"

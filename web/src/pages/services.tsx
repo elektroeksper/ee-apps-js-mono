@@ -3,21 +3,27 @@ import Link from 'next/link'
 
 export default function ServicesPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-services">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
-          <p className="text-xl text-gray-600">
-            Profesyonel elektrik ve elektronik hizmetleri
-          </p>
+          <div className="bg-gradient-service-card rounded-2xl shadow-xl p-8 border border-white/20">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+              Hizmetlerimiz
+            </h1>
+            <p className="text-xl text-gray-600">
+              Profesyonel elektrik ve elektronik hizmetleri
+            </p>
+          </div>
         </div>
 
         {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {/* Service Card 1 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+          <div className="bg-gradient-service-card rounded-2xl shadow-xl overflow-hidden card-float border border-white/20">
+            <div className="h-48 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-overlay-blue opacity-30"></div>
               <svg
-                className="w-20 h-20 text-white"
+                className="w-20 h-20 text-white relative z-10"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -35,17 +41,18 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 Ev ve işyeri elektrik tesisatı kurulum ve bakım hizmetleri
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full hover:bg-blue-50 border-blue-200">
                 Detaylar
               </Button>
             </div>
           </div>
 
           {/* Service Card 2 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+          <div className="bg-gradient-service-card rounded-2xl shadow-xl overflow-hidden card-float border border-white/20">
+            <div className="h-48 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-overlay opacity-30"></div>
               <svg
-                className="w-20 h-20 text-white"
+                className="w-20 h-20 text-white relative z-10"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -63,17 +70,18 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 Her türlü elektronik cihaz tamir ve bakım hizmetleri
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full hover:bg-green-50 border-green-200">
                 Detaylar
               </Button>
             </div>
           </div>
 
           {/* Service Card 3 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+          <div className="bg-gradient-service-card rounded-2xl shadow-xl overflow-hidden card-float border border-white/20">
+            <div className="h-48 bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-overlay opacity-30"></div>
               <svg
-                className="w-20 h-20 text-white"
+                className="w-20 h-20 text-white relative z-10"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -92,17 +100,18 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 Kamera ve alarm sistemleri kurulum ve bakımı
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full hover:bg-purple-50 border-purple-200">
                 Detaylar
               </Button>
             </div>
           </div>
 
           {/* Service Card 4 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+          <div className="bg-gradient-service-card rounded-2xl shadow-xl overflow-hidden card-float border border-white/20">
+            <div className="h-48 bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-overlay opacity-30"></div>
               <svg
-                className="w-20 h-20 text-white"
+                className="w-20 h-20 text-white relative z-10"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -120,17 +129,18 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 LED ve modern aydınlatma çözümleri
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full hover:bg-yellow-50 border-yellow-200">
                 Detaylar
               </Button>
             </div>
           </div>
 
           {/* Service Card 5 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+          <div className="bg-gradient-service-card rounded-2xl shadow-xl overflow-hidden card-float border border-white/20">
+            <div className="h-48 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-overlay opacity-30"></div>
               <svg
-                className="w-20 h-20 text-white"
+                className="w-20 h-20 text-white relative z-10"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -148,17 +158,18 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 7/24 acil elektrik ve elektronik arıza hizmetleri
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full hover:bg-red-50 border-red-200">
                 Detaylar
               </Button>
             </div>
           </div>
 
           {/* Service Card 6 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+          <div className="bg-gradient-service-card rounded-2xl shadow-xl overflow-hidden card-float border border-white/20">
+            <div className="h-48 bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-overlay opacity-30"></div>
               <svg
-                className="w-20 h-20 text-white"
+                className="w-20 h-20 text-white relative z-10"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -176,7 +187,7 @@ export default function ServicesPage() {
               <p className="text-gray-600 mb-4">
                 Elektrik ve elektronik proje danışmanlık hizmetleri
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full hover:bg-indigo-50 border-indigo-200">
                 Detaylar
               </Button>
             </div>
@@ -184,7 +195,7 @@ export default function ServicesPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-blue-600 rounded-lg p-8 text-center text-white">
+        <div className="bg-gradient-contact rounded-2xl p-8 text-center text-white shadow-2xl border border-white/20">
           <h2 className="text-2xl font-bold mb-4">
             Size Nasıl Yardımcı Olabiliriz?
           </h2>
@@ -192,7 +203,7 @@ export default function ServicesPage() {
             İhtiyacınız olan hizmeti bulamadıysanız, bizimle iletişime geçin.
           </p>
           <Link href="/contact">
-            <Button className="bg-white text-blue-600 hover:bg-gray-100">
+            <Button className="bg-white text-blue-600 hover:bg-gray-100 transform transition-all hover:scale-105 shadow-lg">
               İletişime Geç
             </Button>
           </Link>

@@ -2,4 +2,155 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles can be added here */
+/* Custom gradient backgrounds */
+@layer utilities {
+  /* Primary gradients */
+  .bg-gradient-primary {
+    @apply bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800;
+  }
+  
+  .bg-gradient-primary-light {
+    @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50;
+  }
+  
+  .bg-gradient-primary-dark {
+    @apply bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900;
+  }
+
+  /* Auth page gradients */
+  .bg-gradient-auth {
+    @apply bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100;
+  }
+  
+  .bg-gradient-auth-dark {
+    @apply bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900;
+  }
+
+  /* Admin panel gradients */
+  .bg-gradient-admin {
+    @apply bg-gradient-to-br from-slate-50 to-blue-50;
+  }
+  
+  .bg-gradient-admin-card {
+    @apply bg-gradient-to-br from-white to-slate-50;
+  }
+  
+  .bg-gradient-admin-header {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600;
+  }
+
+  /* Service section gradients */
+  .bg-gradient-services {
+    @apply bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50;
+  }
+  
+  .bg-gradient-service-card {
+    @apply bg-gradient-to-br from-white to-blue-50;
+  }
+
+  /* Landing page gradients */
+  .bg-gradient-hero {
+    @apply bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900;
+  }
+  
+  .bg-gradient-section-light {
+    @apply bg-gradient-to-br from-white to-gray-50;
+  }
+  
+  .bg-gradient-section-blue {
+    @apply bg-gradient-to-br from-blue-50 to-indigo-50;
+  }
+
+  /* Contact and footer gradients */
+  .bg-gradient-contact {
+    @apply bg-gradient-to-br from-blue-600 to-indigo-700;
+  }
+  
+  .bg-gradient-footer {
+    @apply bg-gradient-to-br from-gray-800 to-gray-900;
+  }
+
+  /* Error page gradients */
+  .bg-gradient-error {
+    @apply bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50;
+  }
+
+  /* Success page gradients */
+  .bg-gradient-success {
+    @apply bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50;
+  }
+
+  /* Overlay gradients */
+  .bg-gradient-overlay {
+    @apply bg-gradient-to-t from-black/60 via-black/30 to-transparent;
+  }
+  
+  .bg-gradient-overlay-blue {
+    @apply bg-gradient-to-t from-blue-900/60 via-blue-800/30 to-transparent;
+  }
+
+  /* Animation utilities for gradients */
+  .gradient-animate {
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Blob animations for auth pages */
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+}
+
+/* Custom card with gradient border */
+@layer components {
+  .card-gradient-border {
+    @apply relative bg-white rounded-lg overflow-hidden;
+  }
+  
+  .card-gradient-border::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg;
+    padding: 2px;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+  }
+
+  /* Floating animation for cards */
+  .card-float {
+    @apply transform transition-transform duration-300 ease-in-out;
+  }
+  
+  .card-float:hover {
+    @apply -translate-y-2 shadow-xl;
+  }
+}
