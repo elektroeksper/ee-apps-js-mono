@@ -18,8 +18,8 @@ import {
   FiCheck,
   FiClock,
   FiFileText,
-  FiLogOut,
   FiLock,
+  FiLogOut,
   FiUpload,
   FiUser,
   FiX,
@@ -420,8 +420,8 @@ function ProfileContent() {
             Hesap İşlemleri
           </h3>
           <div className="flex flex-wrap gap-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="small"
               onClick={() => setShowPasswordModal(true)}
               className="flex items-center"
@@ -668,9 +668,9 @@ function ProfileContent() {
       />
 
       {/* Password Change Modal */}
-      <Modal 
-        isOpen={showPasswordModal} 
-        onClose={() => setShowPasswordModal(false)} 
+      <Modal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
         title=""
       >
         <PasswordChangeForm
