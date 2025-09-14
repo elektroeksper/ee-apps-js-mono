@@ -3,7 +3,7 @@
  * Shared across web and functions packages
  */
 
-import { AccountType, AuthRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType } from '../enums';
+import { AccountType, AuthRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType, TaxNumberType } from '../enums';
 import { IAddress, IEntity, IOperationResult } from './common-types';
 
 // Base Operation Result Interface
@@ -39,6 +39,7 @@ interface IRegisterData {
   confirmPassword: string;
   firstName: string;
   lastName: string;
+  identityNumber?: string; // For individual users
   accountType: AccountType;
   phone?: string;
   acceptTerms: boolean;
@@ -49,11 +50,44 @@ interface IRegisterData {
 interface IBusinessRegisterData extends IRegisterData {
   companyName: string;
   taxNumber?: string;
+  taxNumberType?: TaxNumberType;
   businessAddress?: IAddress;
   businessPhone?: string;
   website?: string;
   industry?: string;
   companySize?: CompanySize;
+}
+
+interface IBusinessInfo {
+  name: string;
+  taxNumber?: string;
+  taxNumberType?: TaxNumberType;
+  identityNumber?: string;
+  address?: IAddress;
+  phone?: string;
+  contactInfo: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  website?: string;
+  industry?: string;
+  companySize?: CompanySize;
+  mainCategoryId: string; //
+  subCategoryIds?: string[];
+  rejectionReason?: string;
+  documents: IBusinessDocument[];
+  verification: {
+    status: BusinessVerificationStatus;
+    history: {
+      approvedAt?: Date;
+      approvedBy?: string; // Admin user ID who approved
+      rejectedAt?: Date;
+      rejectedBy?: string; // Admin user ID who rejected
+      rejectionReason?: string;
+    },
+    lastUpdatedAt: Date;
+  }[];
 }
 
 interface IAppUser extends IEntity {
@@ -70,19 +104,24 @@ interface IAppUser extends IEntity {
   isEmailVerified: boolean;
   preferences: IUserPreferences;
   address?: IAddress;
-  createdAt: Date;
-  updatedAt: Date;
   lastLoginAt?: Date;
+  businessInfo?: IBusinessInfo; // For business profile data
 }
 
 // Business Profile Interface
 interface IBusinessProfile extends IAppUser {
   companyName: string;
   taxNumber?: string;
-  businessAddress?: IAddress;
-  businessPhone?: string;
+  taxNumberType?: TaxNumberType;
+  identityNumber?: string;
+  address?: IAddress;
+  phone?: string;
+  contactInfo: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
   website?: string;
-  industry?: string;
   companySize?: CompanySize;
   documents?: IBusinessDocument[];
   verificationStatus: BusinessVerificationStatus;
@@ -263,8 +302,33 @@ interface IAuthConfig {
   rememberMeDuration: number;
 }
 
+interface IBusinessRegisterFormData extends IRegisterData {
+  companyName: string;
+  taxNumber?: string;
+  taxOffice?: string;
+  businessAddress?: {
+    street: string;
+    doorNumber: string;
+    neighborhood?: string;
+    district: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
+  businessPhone?: string;
+  website?: string;
+  industry?: string;
+  companySize?: CompanySize;
+  mainCategoryId: string; // New field for main category selection
+}
+
 export type {
-  IAppUser, IAuthConfig, IAuthContextType, IAuthError, IAuthService, IAuthValidationSchemas, IBusinessDocument, IBusinessProfile, IBusinessRegisterData, IFirebaseUser,
+  IAppUser, IAuthConfig, IAuthContextType, IAuthError, IAuthService, IAuthValidationSchemas, IBusinessDocument, IBusinessInfo, IBusinessProfile, IBusinessRegisterData, IBusinessRegisterFormData, IFirebaseUser,
   ILoginData, INotificationPreferences, IPasswordChangeData, IPasswordResetData, IPrivacyPreferences, IRegisterData, IRouteGuard, IUserFilter, IUserPreferences, IUserService
 };
 

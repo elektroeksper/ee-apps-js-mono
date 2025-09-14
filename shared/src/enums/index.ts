@@ -7,6 +7,11 @@ enum UserRole {
   SUPPORT = 'support'
 }
 
+enum TaxNumberType {
+  TAX = 'tax',
+  ID = 'identity'
+}
+
 enum OrderStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
@@ -135,7 +140,6 @@ export {
   BusinessVerificationStatus,
   CompanySize, DocumentStatus, DocumentType, NotificationType,
   OperationStatus, OrderStatus,
-  PaymentStatus,
-  ProductCategory, UserRole
+  PaymentStatus, ProductCategory, TaxNumberType, UserRole
 };
 

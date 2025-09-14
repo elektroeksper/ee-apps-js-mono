@@ -1,5 +1,5 @@
 import { AccountType, AuthRole } from "../enums";
-import { IAddress, IAppUser, IBusinessDocument, IUserPreferences } from "../types";
+import { IAddress, IAppUser, IBusinessInfo, IUserPreferences } from "../types";
 
 class AppUser implements IAppUser {
   id: string;
@@ -16,10 +16,7 @@ class AppUser implements IAppUser {
   preferences: IUserPreferences;
   address?: IAddress | undefined;
   lastLoginAt?: Date | undefined;
-
-  // Business-specific fields (for business accounts)
-  documents?: IBusinessDocument[] | undefined;
-  businessInfo?: any; // For business profile data
+  businessInfo?: IBusinessInfo | undefined; // For business profile data
 
   constructor(id: string, data: Partial<IAppUser> = {}) {
     this.id = id;
@@ -39,14 +36,8 @@ class AppUser implements IAppUser {
     this.updatedAt = data.updatedAt || new Date();
     this.lastLoginAt = data.lastLoginAt;
 
-    // Preserve any additional fields from Firebase document
-    // This ensures documents and businessInfo are not lost
-    const anyData = data as any;
-    if (anyData.documents) {
-      this.documents = anyData.documents as IBusinessDocument[];
-    }
-    if (anyData.businessInfo) {
-      this.businessInfo = anyData.businessInfo;
+    if (data?.businessInfo) {
+      this.businessInfo = data.businessInfo;
     }
   }
   createdAt: Date;

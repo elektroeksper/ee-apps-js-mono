@@ -6,7 +6,13 @@ import {
   businessRegisterSchema,
   type BusinessRegisterFormData,
 } from '@/lib/validations/auth'
-import { AccountType, getAuthErrorMessage } from '@/shared-generated'
+import type { IBusinessRegisterData } from '@/shared-generated'
+import {
+  AccountType,
+  CompanySize,
+  TaxNumberType,
+  getAuthErrorMessage,
+} from '@/shared-generated'
 import { ICoordinates } from '@/types/maps'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
@@ -52,7 +58,7 @@ export const BusinessRegisterForm: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
     watch,
     setError,
     setValue,
@@ -68,7 +74,7 @@ export const BusinessRegisterForm: React.FC = () => {
       lastName: '',
       email: '',
       phoneNumber: '',
-      address: {
+      businessAddress: {
         street: '',
         doorNumber: '',
         neighborhood: '',
@@ -93,8 +99,8 @@ export const BusinessRegisterForm: React.FC = () => {
       clearError()
 
       // Check if door number is required but missing
-      if (hasSufficientAddressInfo && !data.address.doorNumber) {
-        setError('address.doorNumber', {
+      if (hasSufficientAddressInfo && !data.businessAddress?.doorNumber) {
+        setError('businessAddress.doorNumber', {
           type: 'manual',
           message: 'Kapı numarası gereklidir',
         })
@@ -102,7 +108,7 @@ export const BusinessRegisterForm: React.FC = () => {
       }
 
       // Transform data to match the registration interface
-      const registrationData = {
+      const registrationData: IBusinessRegisterData = {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -113,15 +119,32 @@ export const BusinessRegisterForm: React.FC = () => {
         acceptTerms: data.acceptTerms,
         companyName: data.businessName,
         taxNumber: data.taxNumber,
-        businessAddress: {
-          street: data.address.street,
-          city: data.address.city,
-          state: data.address.state,
-          country: data.address.country,
-          zipCode: data.address.postalCode,
-          coordinates: data.address.coordinates,
-        },
+        taxNumberType:
+          data.taxNumberType === 'tax'
+            ? TaxNumberType.TAX
+            : data.taxNumberType === 'identity'
+              ? TaxNumberType.ID
+              : undefined,
+        identityNumber: data.identityNumber,
+        businessAddress: data.businessAddress
+          ? {
+              street: data.businessAddress.street,
+              city: data.businessAddress.city,
+              state: data.businessAddress.state,
+              country: data.businessAddress.country,
+              zipCode: data.businessAddress.postalCode,
+              district: data.businessAddress.district,
+              neighborhood: data.businessAddress.neighborhood,
+              // Convert coordinates object to string for IAddress interface
+              formattedAddress: data.businessAddress.coordinates
+                ? `${data.businessAddress.coordinates.lat},${data.businessAddress.coordinates.lng}`
+                : undefined,
+            }
+          : undefined,
         businessPhone: data.phoneNumber,
+        website: data.website,
+        industry: data.industry,
+        companySize: data.companySize as CompanySize,
       }
 
       const result = await registerUser(registrationData)
@@ -164,17 +187,17 @@ export const BusinessRegisterForm: React.FC = () => {
       console.log('🗺️ Coordinates:', coordinates)
 
       // Update form values
-      setValue('address.street', components.street || '')
-      setValue('address.doorNumber', components.streetNumber || '')
-      setValue('address.neighborhood', components.neighborhood || '')
-      setValue('address.district', components.district || '')
-      setValue('address.city', components.city || '')
-      setValue('address.state', components.city || '') // Using city as state for Turkey
-      setValue('address.postalCode', components.postalCode || '')
-      setValue('address.country', components.country || 'Turkey')
+      setValue('businessAddress.street', components.street || '')
+      setValue('businessAddress.doorNumber', components.streetNumber || '')
+      setValue('businessAddress.neighborhood', components.neighborhood || '')
+      setValue('businessAddress.district', components.district || '')
+      setValue('businessAddress.city', components.city || '')
+      setValue('businessAddress.state', components.city || '') // Using city as state for Turkey
+      setValue('businessAddress.postalCode', components.postalCode || '')
+      setValue('businessAddress.country', components.country || 'Turkey')
 
       if (coordinates) {
-        setValue('address.coordinates', coordinates)
+        setValue('businessAddress.coordinates', coordinates)
         setMapCenter(coordinates)
         setMarkerPosition(coordinates)
         console.log('🗺️ Map centered at:', coordinates)
@@ -191,7 +214,7 @@ export const BusinessRegisterForm: React.FC = () => {
   const handleMarkerDragEnd = useCallback(
     (position: ICoordinates) => {
       setMarkerPosition(position)
-      setValue('address.coordinates', position)
+      setValue('businessAddress.coordinates', position)
     },
     [setValue]
   )
@@ -201,13 +224,13 @@ export const BusinessRegisterForm: React.FC = () => {
     (place: google.maps.places.PlaceResult | null) => {
       if (place) {
         const components = extractAddressComponents(place)
-        setValue('address.street', components.street || '')
-        setValue('address.doorNumber', components.streetNumber || '')
-        setValue('address.neighborhood', components.neighborhood || '')
-        setValue('address.district', components.district || '')
-        setValue('address.city', components.city || '')
-        setValue('address.state', components.city || '')
-        setValue('address.postalCode', components.postalCode || '')
+        setValue('businessAddress.street', components.street || '')
+        setValue('businessAddress.doorNumber', components.streetNumber || '')
+        setValue('businessAddress.neighborhood', components.neighborhood || '')
+        setValue('businessAddress.district', components.district || '')
+        setValue('businessAddress.city', components.city || '')
+        setValue('businessAddress.state', components.city || '')
+        setValue('businessAddress.postalCode', components.postalCode || '')
         setAddressText(components.formatted)
       }
     },
@@ -215,17 +238,80 @@ export const BusinessRegisterForm: React.FC = () => {
   )
 
   // Watch address parts for dynamic full address & geocoding on door number change
-  const doorNumber = watch('address.doorNumber')
-  const street = watch('address.street')
-  const district = watch('address.district')
-  const city = watch('address.city')
-  const neighborhood = watch('address.neighborhood')
+  const doorNumber = watch('businessAddress.doorNumber')
+  const street = watch('businessAddress.street')
+  const district = watch('businessAddress.district')
+  const city = watch('businessAddress.city')
+  const neighborhood = watch('businessAddress.neighborhood')
+
+  // Watch required form fields for submit button state
+  const businessName = watch('businessName')
+  const taxNumber = watch('taxNumber')
+  const identityNumber = watch('identityNumber')
+  const taxNumberType = watch('taxNumberType')
+  const taxOffice = watch('taxOffice')
+  const userTitle = watch('userTitle')
+  const mainCategoryId = watch('mainCategoryId')
+  const firstName = watch('firstName')
+  const lastName = watch('lastName')
+  const email = watch('email')
+  const phoneNumber = watch('phoneNumber')
+  const password = watch('password')
+  const confirmPassword = watch('confirmPassword')
+  const acceptTerms = watch('acceptTerms')
 
   // Check if sufficient address info is available to show door number field
   const hasSufficientAddressInfo = React.useMemo(() => {
     // For Turkish addresses, we need at least street and either neighborhood or district
     return !!(street && (neighborhood || district) && city)
   }, [street, neighborhood, district, city])
+
+  // Check if all required fields are filled
+  const isFormValid = React.useMemo(() => {
+    const hasRequiredBusinessInfo = !!(
+      businessName &&
+      ((taxNumberType === 'tax' && taxNumber) ||
+        (taxNumberType === 'identity' && identityNumber)) &&
+      taxOffice &&
+      userTitle &&
+      mainCategoryId
+    )
+
+    const hasRequiredPersonalInfo = !!(
+      firstName &&
+      lastName &&
+      email &&
+      phoneNumber
+    )
+
+    const hasRequiredSecurity = !!(password && confirmPassword && acceptTerms)
+
+    const hasRequiredAddress = !hasSufficientAddressInfo || !!doorNumber
+
+    return (
+      hasRequiredBusinessInfo &&
+      hasRequiredPersonalInfo &&
+      hasRequiredSecurity &&
+      hasRequiredAddress
+    )
+  }, [
+    businessName,
+    taxNumber,
+    identityNumber,
+    taxNumberType,
+    taxOffice,
+    userTitle,
+    mainCategoryId,
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    password,
+    confirmPassword,
+    acceptTerms,
+    hasSufficientAddressInfo,
+    doorNumber,
+  ])
 
   const fullAddressPreview = React.useMemo(() => {
     if (!street && !city) return ''
@@ -253,7 +339,7 @@ export const BusinessRegisterForm: React.FC = () => {
             const coords = { lat: loc.lat(), lng: loc.lng() }
             setMapCenter(coords)
             setMarkerPosition(coords)
-            setValue('address.coordinates', coords)
+            setValue('businessAddress.coordinates', coords)
             // Update displayed address text with formatted result including door number
             setAddressText(results[0].formatted_address)
           }
@@ -265,15 +351,29 @@ export const BusinessRegisterForm: React.FC = () => {
   }, [doorNumber, street, district, city, setValue])
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md max-w-4xl mx-auto">
+    <div className="bg-white  max-w-4xl mx-auto">
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           İşletme Hesabı Oluştur
         </h1>
-        <p className="text-sm text-gray-600">İşletmenizi kaydederek başlayın</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={handleSubmit(onSubmit, errors => {
+          console.log('Form validation errors:', errors)
+          // Find the first error field and scroll to it
+          const firstErrorField = Object.keys(errors)[0]
+          if (firstErrorField) {
+            const element = document.querySelector(
+              `[name="${firstErrorField}"]`
+            )
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+          }
+        })}
+        className="space-y-6"
+      >
         {/* Display general errors */}
         {(error || errors.root) && (
           <div className="bg-red-50 border border-red-200 rounded-md p-3">
@@ -296,13 +396,51 @@ export const BusinessRegisterForm: React.FC = () => {
             placeholder="İşletme adınızı girin"
           />
 
+          {/* Toggle between Vergi No and TC Kimlik No */}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Vergi Numarası"
-              {...register('taxNumber')}
-              error={errors.taxNumber?.message}
-              placeholder="Vergi numaranızı girin (10-11 haneli)"
-            />
+            <div>
+              <div className="flex items-center justify-between mb-1 h-5">
+                <label className="text-sm font-medium text-gray-700">
+                  {watch('taxNumberType') === 'tax'
+                    ? 'Vergi Numarası'
+                    : 'TC Kimlik Numarası'}
+                </label>
+                <div className="inline">
+                  <span className="mr-1 text-gray-700 text-sm-center">TC</span>
+                  <button
+                    type="button"
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      watch('taxNumberType') === 'identity'
+                        ? 'bg-indigo-600'
+                        : 'bg-gray-300'
+                    }`}
+                    onClick={() => setValue('taxNumberType', 'identity')}
+                  >
+                    <span
+                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
+                        watch('taxNumberType') === 'identity'
+                          ? 'translate-x-4'
+                          : 'translate-x-0.5'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+              {watch('taxNumberType') === 'tax' ? (
+                <Input
+                  {...register('taxNumber')}
+                  error={errors.taxNumber?.message}
+                  placeholder={'Vergi numaranızı girin (10 haneli)'}
+                />
+              ) : (
+                <Input
+                  {...register('identityNumber')}
+                  error={errors.identityNumber?.message}
+                  placeholder={'TC Kimlik numaranızı girin (11 haneli)'}
+                />
+              )}
+            </div>
             <Input
               label="Vergi Dairesi"
               {...register('taxOffice')}
@@ -406,14 +544,9 @@ export const BusinessRegisterForm: React.FC = () => {
         {/* Address Information Section */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900">
-            İşletme Adresi
+            {`İşletme Adresi`}
           </h2>
-
-          {/* Address Autocomplete */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Adres Arama
-            </label>
             <GoogleAddressAutocomplete
               value={addressText}
               onChange={value => {
@@ -423,18 +556,12 @@ export const BusinessRegisterForm: React.FC = () => {
                 }
               }}
               onPlaceSelect={handlePlaceSelect}
-              placeholder="İşletme adresinizi arayın"
+              placeholder="İşletme adresinizi arayın veya haritada konum seçin"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Adresinizi aramak için yazmaya başlayın
-            </p>
           </div>
 
           {/* Map */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Haritada Konum Seçin
-            </label>
             <GoogleMapWithMarker
               center={mapCenter}
               markerPosition={markerPosition}
@@ -456,8 +583,8 @@ export const BusinessRegisterForm: React.FC = () => {
                 Kapı No *
               </label>
               <Input
-                {...register('address.doorNumber')}
-                error={errors.address?.doorNumber?.message}
+                {...register('businessAddress.doorNumber')}
+                error={errors.businessAddress?.doorNumber?.message}
                 placeholder="Kapı numaranızı girin"
                 required
               />
@@ -487,8 +614,6 @@ export const BusinessRegisterForm: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Password Section */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900">
             Hesap Güvenliği
@@ -631,11 +756,7 @@ export const BusinessRegisterForm: React.FC = () => {
         {/* Submit Button */}
         <Button
           type="submit"
-          disabled={
-            isSubmitting ||
-            isLoading ||
-            (hasSufficientAddressInfo && !doorNumber)
-          }
+          disabled={isSubmitting || isLoading || !isFormValid}
           className="w-full"
         >
           {isSubmitting || isLoading ? (
