@@ -23,6 +23,7 @@ import {
 
 import { auth } from '@/config/firebase';
 import {
+  AccountType,
   AuthErrorCode,
   getAuthErrorMessage,
   IAuthService,
@@ -91,7 +92,9 @@ export class AuthService implements IAuthService {
 
       // Update the user's display name
       await updateProfile(userCredential.user, {
-        displayName: `${data.firstName} ${data.lastName}`,
+        displayName: data.accountType === AccountType.INDIVIDUAL
+          ? data.email?.split('@')[0]
+          : (data as IBusinessRegisterData).companyName || data.email?.split('@')[0],
       });
 
       // Send email verification
@@ -173,7 +176,8 @@ export class AuthService implements IAuthService {
   async resetPassword(email: string): Promise<IOperationResult<void>> {
     try {
       await sendPasswordResetEmail(auth, email, {
-        url: `${window.location.origin}/login`,
+        url: `${window.location.origin
+          } / login`,
         handleCodeInApp: false,
       });
 

@@ -56,24 +56,7 @@ export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
 
 // Individual Registration Schema
 export const individualRegisterSchema = z.object({
-  firstName: z
-    .string()
-    .min(2, 'Ad en az 2 karakter olmalıdır')
-    .max(50, 'Ad en fazla 50 karakter olabilir'),
-  lastName: z
-    .string()
-    .min(2, 'Soyad en az 2 karakter olmalıdır')
-    .max(50, 'Soyad en fazla 50 karakter olabilir'),
-  email: z
-    .string()
-    .email('Geçerli bir e-posta adresi girin'),
-  phoneNumber: z
-    .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, 'Geçerli bir telefon numarası girin'),
-  identityNumber: z
-    .string()
-    .regex(/^[1-9][0-9]{10}$/, 'Geçerli bir TC kimlik numarası girin (11 haneli)')
-    .optional(),
+  email: z.email('Geçerli bir e-posta adresi girin'),
   password: z
     .string()
     .min(6, 'Şifre en az 6 karakter olmalıdır')
@@ -175,13 +158,13 @@ export const businessRegisterSchema = z.object({
   if (data.taxNumberType === 'tax') {
     if (!data.taxNumber) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: 'Vergi numarası gereklidir',
         path: ['taxNumber'],
       });
     } else if (!/^\d{10}$/.test(data.taxNumber)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: 'Vergi numarası 10 haneli olmalıdır',
         path: ['taxNumber'],
       });
@@ -189,13 +172,13 @@ export const businessRegisterSchema = z.object({
   } else if (data.taxNumberType === 'identity') {
     if (!data.identityNumber) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: 'TC kimlik numarası gereklidir',
         path: ['identityNumber'],
       });
     } else if (!/^[1-9][0-9]{10}$/.test(data.identityNumber)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: 'TC kimlik numarası 11 haneli olmalıdır',
         path: ['identityNumber'],
       });

@@ -1,9 +1,9 @@
 // Common enums for the Electro Expert application
 
-enum UserRole {
-  ADMIN = 'admin',
-  CUSTOMER = 'customer',
-  VENDOR = 'vendor',
+enum BusinessUserRole {
+  OWNER = 'owner',
+  MANAGER = 'manager',
+  TECHNICIAN = 'technician',
   SUPPORT = 'support'
 }
 
@@ -62,13 +62,6 @@ enum OperationStatus {
 enum AccountType {
   INDIVIDUAL = 'individual',
   BUSINESS = 'business'
-}
-
-// User Roles
-enum AuthRole {
-  USER = 'user',
-  ADMIN = 'admin',
-  MODERATOR = 'moderator'
 }
 
 // Authentication States
@@ -136,10 +129,9 @@ enum BusinessVerificationStatus {
 
 
 export {
-  AccountType, AuthErrorCode, AuthRole, AuthState,
-  BusinessVerificationStatus,
+  AccountType, AuthErrorCode, AuthState, BusinessUserRole, BusinessVerificationStatus,
   CompanySize, DocumentStatus, DocumentType, NotificationType,
   OperationStatus, OrderStatus,
-  PaymentStatus, ProductCategory, TaxNumberType, UserRole
+  PaymentStatus, ProductCategory, TaxNumberType
 };
 

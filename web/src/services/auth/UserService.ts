@@ -5,6 +5,8 @@
 
 import { db, functions } from '@/config/firebase';
 import {
+  AccountType,
+  BusinessUserRole,
   IAppUser,
   IBusinessRegisterData,
   IOperationResult,
@@ -14,7 +16,7 @@ import {
 } from '@/shared-generated';
 import { FB_FUNCTIONS } from '@/shared-generated/configs/contants';
 import { AppUser } from '@/shared-generated/models/auth-models';
-import { collection, doc, Query } from 'firebase/firestore';
+import { collection, doc, Query, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 
 export class UserService implements IUserService {
@@ -86,11 +88,31 @@ export class UserService implements IUserService {
       throw new Error(error.message);
     }
   }
+
+  getUserData(data: Partial<IRegisterData | IBusinessRegisterData>): IAppUser {
+    return {
+      email: data.email || '',
+      accountType: data.accountType ?? AccountType.INDIVIDUAL,
+      role: data.accountType === AccountType.BUSINESS ? (data as IBusinessRegisterData).role : BusinessUserRole.MANAGER,
+      isDeleted: false,
+      createdAt: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp() as Timestamp,
+      businessInfo: data.accountType === AccountType.BUSINESS ? {
+        name: (data as IBusinessRegisterData).companyName || '',
+        address: (data as IBusinessRegisterData).address || '',
+        taxNumber: (data as IBusinessRegisterData).taxNumber || '',
+        mainCategoryId: (data as IBusinessRegisterData).mainCategoryId || '',
+        verification: (data as IBusinessRegisterData).verification || {}
+      } : undefined
+    };
+  }
+
   async create(data: Partial<IRegisterData | IBusinessRegisterData>): Promise<IOperationResult<IAppUser>> {
     try {
       const { addDoc } = await import('firebase/firestore');
-      const newDoc = await addDoc(this.colRef, data);
-      return { success: true, data: new AppUser(newDoc.id, data as IAppUser) };
+      const getUserData = this.getUserData(data);
+      const newDoc = await addDoc(this.colRef, getUserData);
+      return { success: true, data: new AppUser(newDoc.id, getUserData) };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

@@ -3,7 +3,7 @@
  * Shared across web and functions packages
  */
 
-import { AccountType, AuthRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType, TaxNumberType } from '../enums';
+import { AccountType, BusinessUserRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType, TaxNumberType } from '../enums';
 import { IAddress, IEntity, IOperationResult } from './common-types';
 
 // Base Operation Result Interface
@@ -37,25 +37,41 @@ interface IRegisterData {
   email: string;
   password: string;
   confirmPassword: string;
-  firstName: string;
-  lastName: string;
-  identityNumber?: string; // For individual users
   accountType: AccountType;
-  phone?: string;
-  acceptTerms: boolean;
-  marketingConsent?: boolean;
 }
 
 // Business Registration Data
 interface IBusinessRegisterData extends IRegisterData {
   companyName: string;
+  title?: string;
+  firstName: string;
+  lastName: string;
   taxNumber?: string;
-  taxNumberType?: TaxNumberType;
-  businessAddress?: IAddress;
-  businessPhone?: string;
-  website?: string;
-  industry?: string;
+  address?: IAddress;
+  mainCategoryId: string; // New field for main category selection
+}
+
+interface IBusinessSetupData {
+  subCategoryIds: string[];
   companySize?: CompanySize;
+  address?: IAddress;
+  phone?: string;
+  documents: IBusinessDocument[];
+  otherAddresses?: IAddress[];
+  website?: string;
+  contactInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  };
+}
+
+interface IIndividualSetupData {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  address?: IAddress;
 }
 
 interface IBusinessInfo {
@@ -63,7 +79,7 @@ interface IBusinessInfo {
   taxNumber?: string;
   taxNumberType?: TaxNumberType;
   identityNumber?: string;
-  address?: IAddress;
+  address?: IAddress[];
   phone?: string;
   contactInfo: {
     name: string;
@@ -99,8 +115,7 @@ interface IAppUser extends IEntity {
   photoURL?: string;
   phone?: string;
   accountType: AccountType;
-  roles: AuthRole[]; // Legacy enum roles for compatibility
-  rolesList?: string[]; // New string-based roles array (synced from Firebase Auth claims)
+  role?: BusinessUserRole;
   isEmailVerified: boolean;
   preferences: IUserPreferences;
   address?: IAddress;
@@ -282,7 +297,6 @@ interface IRouteGuard {
   requireEmailVerification?: boolean;
   requireProfileComplete?: boolean;
   allowedAccountTypes?: AccountType[];
-  allowedRoles?: AuthRole[];
   redirectTo?: string;
 }
 
@@ -306,7 +320,7 @@ interface IBusinessRegisterFormData extends IRegisterData {
   companyName: string;
   taxNumber?: string;
   taxOffice?: string;
-  businessAddress?: {
+  address?: {
     street: string;
     doorNumber: string;
     neighborhood?: string;
@@ -320,7 +334,7 @@ interface IBusinessRegisterFormData extends IRegisterData {
       lng: number;
     };
   };
-  businessPhone?: string;
+  phone?: string;
   website?: string;
   industry?: string;
   companySize?: CompanySize;

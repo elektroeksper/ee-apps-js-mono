@@ -52,21 +52,15 @@ export const IndividualRegisterForm: React.FC = () => {
 
       // Transform data to match the registration interface
       const registrationData: IRegisterData = {
-        firstName: data.firstName,
-        lastName: data.lastName,
         email: data.email,
         password: data.password,
         confirmPassword: data.confirmPassword,
         accountType: AccountType.INDIVIDUAL,
-        phone: data.phoneNumber,
-        acceptTerms: data.acceptTerms,
-        identityNumber: data.identityNumber,
       }
 
       const result = await registerUser(registrationData)
       if (result.success) {
-        // All users need to verify email first, then complete setup
-        router.push('/verify-email')
+        router.replace('/verify-email')
       } else {
         setError('root', {
           type: 'manual',
@@ -89,7 +83,7 @@ export const IndividualRegisterForm: React.FC = () => {
       setIsGoogleLoading(true)
       clearError()
       await loginWithGoogle()
-      router.push('/setup')
+      router.replace('/setup')
     } catch (err: any) {
       setError('root', {
         type: 'manual',

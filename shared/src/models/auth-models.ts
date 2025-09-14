@@ -1,4 +1,4 @@
-import { AccountType, AuthRole } from "../enums";
+import { AccountType, BusinessUserRole } from "../enums";
 import { IAddress, IAppUser, IBusinessInfo, IUserPreferences } from "../types";
 
 class AppUser implements IAppUser {
@@ -6,7 +6,7 @@ class AppUser implements IAppUser {
   email: string;
   firstName: string;
   lastName: string;
-  roles: AuthRole[];
+  role?: BusinessUserRole;
   isDeleted?: boolean | undefined;
   displayName: string;
   photoURL?: string | undefined;
@@ -23,8 +23,7 @@ class AppUser implements IAppUser {
     this.email = data.email || '';
     this.firstName = data.firstName || '';
     this.lastName = data.lastName || '';
-    this.roles = data.roles || [];
-
+    this.role = data.role || BusinessUserRole.OWNER;
     this.displayName = data.displayName || `${this.firstName} ${this.lastName}`.trim();
     this.photoURL = data.photoURL;
     this.phone = data.phone;
@@ -45,10 +44,6 @@ class AppUser implements IAppUser {
 
   get fullName(): string {
     return `${this.firstName} ${this.lastName}`.trim();
-  }
-
-  hasRole(role: string): boolean {
-    return this.roles.includes(role as AuthRole);
   }
 }
 

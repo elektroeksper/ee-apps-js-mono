@@ -7,12 +7,7 @@ import {
   type BusinessRegisterFormData,
 } from '@/lib/validations/auth'
 import type { IBusinessRegisterData } from '@/shared-generated'
-import {
-  AccountType,
-  CompanySize,
-  TaxNumberType,
-  getAuthErrorMessage,
-} from '@/shared-generated'
+import { AccountType, getAuthErrorMessage } from '@/shared-generated'
 import { ICoordinates } from '@/types/maps'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
@@ -115,18 +110,9 @@ export const BusinessRegisterForm: React.FC = () => {
         password: data.password,
         confirmPassword: data.confirmPassword,
         accountType: AccountType.BUSINESS,
-        phone: data.phoneNumber,
-        acceptTerms: data.acceptTerms,
         companyName: data.businessName,
         taxNumber: data.taxNumber,
-        taxNumberType:
-          data.taxNumberType === 'tax'
-            ? TaxNumberType.TAX
-            : data.taxNumberType === 'identity'
-              ? TaxNumberType.ID
-              : undefined,
-        identityNumber: data.identityNumber,
-        businessAddress: data.businessAddress
+        address: data.businessAddress
           ? {
               street: data.businessAddress.street,
               city: data.businessAddress.city,
@@ -141,10 +127,7 @@ export const BusinessRegisterForm: React.FC = () => {
                 : undefined,
             }
           : undefined,
-        businessPhone: data.phoneNumber,
-        website: data.website,
-        industry: data.industry,
-        companySize: data.companySize as CompanySize,
+        mainCategoryId: data.mainCategoryId,
       }
 
       const result = await registerUser(registrationData)
