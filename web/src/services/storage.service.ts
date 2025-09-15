@@ -3,17 +3,9 @@
  * Implements the IStorageService interface for consistent API
  */
 
-import { functions } from '@/config/firebase'
-import {
-  DeleteDocumentResponse,
-  GetUserDocumentsResponse,
-  IStorageService,
-  UploadDocumentResponse,
-  UserDocument,
-  UserDocumentCategory,
-  UserDocumentFileType
-} from '@/shared-generated'
 import { httpsCallable } from 'firebase/functions'
+import { functions } from '../../../shared/src/configs/firebase'
+import { DeleteDocumentResponse, GetUserDocumentsResponse, IStorageService, UploadDocumentResponse, UserDocument, UserDocumentCategory, UserDocumentFileType } from '../../../shared/src/types'
 
 /**
  * Client storage service implementation
@@ -224,10 +216,14 @@ export class StorageClientService implements IStorageService {
    */
   private fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = error => reject(error)
+      if (typeof window !== 'undefined' && typeof window.FileReader !== 'undefined') {
+        const reader = new window.FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = error => reject(error)
+      } else {
+        reject(new Error('FileReader is not available in this environment'))
+      }
     })
   }
 }

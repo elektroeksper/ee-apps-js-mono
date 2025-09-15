@@ -3,14 +3,9 @@
  * Helpers for working with YouTube videos in the admin panel
  */
 
-export interface YouTubeVideoMetadata {
-  title: string
-  author_name: string
-  thumbnail_url: string
-  thumbnail_width: number
-  thumbnail_height: number
-  html: string
-}
+import { YouTubeVideoMetadata } from "../types"
+
+
 
 /**
  * Extract video ID from various YouTube URL formats
@@ -80,7 +75,7 @@ export const fetchYouTubeMetadata = async (videoId: string): Promise<YouTubeVide
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    const data: YouTubeVideoMetadata = await response.json()
+    const data = await response.json() as YouTubeVideoMetadata
     return data
   } catch (error) {
     console.error('Failed to fetch YouTube metadata:', error)

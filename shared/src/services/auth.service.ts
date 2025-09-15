@@ -20,20 +20,10 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth';
-
-import { auth } from '@/config/firebase';
-import {
-  AccountType,
-  AuthErrorCode,
-  getAuthErrorMessage,
-  IAuthService,
-  IBusinessRegisterData,
-  IFirebaseUser,
-  ILoginData,
-  IOperationResult,
-  IPasswordChangeData,
-  IRegisterData,
-} from '@/shared-generated';
+import { getAuthErrorMessage } from '../configs';
+import { auth } from '../configs/firebase';
+import { AccountType, AuthErrorCode } from '../enums';
+import { IAuthService, IBusinessRegistrationData, IFirebaseUser, ILoginData, IOperationResult, IPasswordChangeData, IRegisterData } from '../types';
 
 export class AuthService implements IAuthService {
   /**
@@ -82,7 +72,7 @@ export class AuthService implements IAuthService {
    * Register new user with email and password
    * Supports both individual and business registration
    */
-  async register(data: IRegisterData | IBusinessRegisterData): Promise<IOperationResult<IFirebaseUser>> {
+  async register(data: IRegisterData | IBusinessRegistrationData): Promise<IOperationResult<IFirebaseUser>> {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -94,12 +84,12 @@ export class AuthService implements IAuthService {
       await updateProfile(userCredential.user, {
         displayName: data.accountType === AccountType.INDIVIDUAL
           ? data.email?.split('@')[0]
-          : (data as IBusinessRegisterData).companyName || data.email?.split('@')[0],
+          : (data as IBusinessRegistrationData).companyName || data.email?.split('@')[0],
       });
 
       // Send email verification
       await sendEmailVerification(userCredential.user, {
-        url: `${window.location.origin}/verify-email`,
+        url: `/verify-email`,
         handleCodeInApp: false,
       });
 
@@ -173,11 +163,10 @@ export class AuthService implements IAuthService {
   /**
    * Send password reset email
    */
-  async resetPassword(email: string): Promise<IOperationResult<void>> {
+  async resetPassword(email: string, url: string, path?: string): Promise<IOperationResult<void>> {
     try {
       await sendPasswordResetEmail(auth, email, {
-        url: `${window.location.origin
-          } / login`,
+        url,
         handleCodeInApp: false,
       });
 
@@ -223,7 +212,7 @@ export class AuthService implements IAuthService {
   /**
    * Send email verification to current user
    */
-  async sendEmailVerification(): Promise<IOperationResult<void>> {
+  async sendEmailVerification(url?: string): Promise<IOperationResult<void>> {
     try {
       const user = auth.currentUser;
       if (!user) {
@@ -235,7 +224,7 @@ export class AuthService implements IAuthService {
       }
 
       await sendEmailVerification(user, {
-        url: `${window.location.origin}/action`,
+        url: url || `/verify-email`,
         handleCodeInApp: false,
       });
 

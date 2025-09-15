@@ -3,9 +3,7 @@ import { z } from 'zod';
 
 // Login Schema
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .email('Geçerli bir e-posta adresi girin'),
+  email: z.email('Geçerli bir e-posta adresi girin'),
   password: z
     .string()
     .min(1, 'Şifre gereklidir'),
@@ -16,9 +14,7 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 
 // Password Reset Schema
 export const passwordResetSchema = z.object({
-  email: z
-    .string()
-    .email('Geçerli bir e-posta adresi girin'),
+  email: z.email('Geçerli bir e-posta adresi girin'),
 });
 
 export type PasswordResetFormData = z.infer<typeof passwordResetSchema>;

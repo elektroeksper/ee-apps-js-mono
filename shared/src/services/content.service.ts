@@ -1,16 +1,4 @@
-import { db } from "@/config/firebase";
-import {
-  IAboutInfo,
-  IBrandingInfo,
-  IContactInfo,
-  IContentOperationResult,
-  IContentService,
-  IServiceItem,
-  ISliderItem,
-  IVideoItem,
-  IVideoSettings,
-  VideoLocation
-} from "@/shared-generated";
+
 import {
   addDoc,
   collection,
@@ -25,6 +13,8 @@ import {
   updateDoc,
   where
 } from "firebase/firestore";
+import { db } from "../configs";
+import { IAboutInfo, IBrandingInfo, IContactInfo, IContentOperationResult, IContentService, IServiceItem, ISliderItem, IVideoItem, IVideoSettings, VideoLocation } from "../types";
 
 class ContentService implements IContentService {
   private slidersRef = collection(db, 'sliders');
@@ -492,7 +482,7 @@ class ContentService implements IContentService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as { title: string; author_name: string; thumbnail_url: string; };
       return data;
     } catch (error) {
       console.error('Failed to fetch YouTube metadata:', error);

@@ -1,11 +1,8 @@
-import { repairRequestService } from '@/services/repairRequest.service';
+import { repairRequestService } from '@/services/repair.service';
 import {
-  IRepairRequest,
   ICreateRepairRequestDTO,
-  IUpdateRepairRequestDTO,
   IRepairRequestFilter,
-  IRepairNote,
-  IRepairRequestStats,
+  IUpdateRepairRequestDTO,
   RepairRequestStatus
 } from '@/shared-generated';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -64,12 +61,12 @@ export const useCreateRepairRequestMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ICreateRepairRequestDTO) => 
+    mutationFn: (data: ICreateRepairRequestDTO) =>
       repairRequestService.createRepairRequest(data),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.all 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.all
         });
         toast.success('Repair request created successfully');
       } else {
@@ -92,11 +89,11 @@ export const useCancelRepairRequestMutation = () => {
       repairRequestService.cancelRepairRequest(id, reason),
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.detail(variables.id) 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.detail(variables.id)
         });
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.lists() 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.lists()
         });
         toast.success('Repair request cancelled');
       } else {
@@ -138,11 +135,11 @@ export const useAcceptRepairRequestMutation = () => {
       repairRequestService.acceptRepairRequest(id, estimatedCost),
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.detail(variables.id) 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.detail(variables.id)
         });
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.lists() 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.lists()
         });
         toast.success('Repair request accepted');
       } else {
@@ -165,11 +162,11 @@ export const useRejectRepairRequestMutation = () => {
       repairRequestService.rejectRepairRequest(id, reason),
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.detail(variables.id) 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.detail(variables.id)
         });
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.lists() 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.lists()
         });
         toast.success('Repair request rejected');
       } else {
@@ -188,23 +185,23 @@ export const useUpdateRepairRequestStatusMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ 
-      id, 
-      status, 
-      comment 
-    }: { 
-      id: string; 
-      status: RepairRequestStatus; 
-      comment?: string 
+    mutationFn: ({
+      id,
+      status,
+      comment
+    }: {
+      id: string;
+      status: RepairRequestStatus;
+      comment?: string
     }) =>
       repairRequestService.updateRepairRequestStatus(id, status, comment),
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.detail(variables.id) 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.detail(variables.id)
         });
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.lists() 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.lists()
         });
         toast.success('Status updated successfully');
       } else {
@@ -227,11 +224,11 @@ export const useUpdateRepairRequestMutation = () => {
       repairRequestService.updateRepairRequest(id, data),
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.detail(variables.id) 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.detail(variables.id)
         });
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.lists() 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.lists()
         });
         toast.success('Repair request updated');
       } else {
@@ -250,21 +247,21 @@ export const useAssignTechnicianMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ 
-      requestId, 
-      technicianId 
-    }: { 
-      requestId: string; 
-      technicianId: string 
+    mutationFn: ({
+      requestId,
+      technicianId
+    }: {
+      requestId: string;
+      technicianId: string
     }) =>
       repairRequestService.assignTechnician(requestId, technicianId),
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.detail(variables.requestId) 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.detail(variables.requestId)
         });
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.lists() 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.lists()
         });
         toast.success('Technician assigned successfully');
       } else {
@@ -303,22 +300,22 @@ export const useAddNoteMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ 
-      requestId, 
-      note, 
-      isInternal, 
-      attachments 
-    }: { 
-      requestId: string; 
-      note: string; 
-      isInternal: boolean; 
-      attachments?: string[] 
+    mutationFn: ({
+      requestId,
+      note,
+      isInternal,
+      attachments
+    }: {
+      requestId: string;
+      note: string;
+      isInternal: boolean;
+      attachments?: string[]
     }) =>
       repairRequestService.addNote(requestId, note, isInternal, attachments),
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.notes(variables.requestId) 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.notes(variables.requestId)
         });
         toast.success('Note added successfully');
       } else {
@@ -356,21 +353,21 @@ export const useAssignDealerMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ 
-      requestId, 
-      dealerId 
-    }: { 
-      requestId: string; 
-      dealerId: string 
+    mutationFn: ({
+      requestId,
+      dealerId
+    }: {
+      requestId: string;
+      dealerId: string
     }) =>
       repairRequestService.assignDealer(requestId, dealerId),
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.detail(variables.requestId) 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.detail(variables.requestId)
         });
-        queryClient.invalidateQueries({ 
-          queryKey: repairRequestQueryKeys.lists() 
+        queryClient.invalidateQueries({
+          queryKey: repairRequestQueryKeys.lists()
         });
         toast.success('Dealer assigned successfully');
       } else {

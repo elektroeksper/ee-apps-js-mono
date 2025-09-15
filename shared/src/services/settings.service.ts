@@ -1,8 +1,9 @@
-import { auth, db } from "@/config/firebase";
-import { IOperationResult, ISettingItem, ISystemSettingsService, SettingsKey } from "@/shared-generated";
-import { FB_COLL_NAMES } from "@/shared-generated/configs/contants";
-import { SettingItem } from "@/shared-generated/models/common-models";
+
+
 import { collection, CollectionReference, doc, DocumentData, getDoc, getDocs, Query, setDoc } from "firebase/firestore";
+import { auth, db, FB_COLL_NAMES } from "../configs";
+import { SettingItem } from "../models/common-models";
+import { IOperationResult, ISettingItem, ISystemSettingsService, SystemSettingsKey } from "../types";
 
 export class SettingsService implements ISystemSettingsService {
   colRef: CollectionReference<DocumentData>;
@@ -30,7 +31,7 @@ export class SettingsService implements ISystemSettingsService {
       if (snapshot.size > 0)
         data.push(...snapshot.docs.map(doc => {
           const settingData = doc.data() as ISettingItem;
-          return new SettingItem(doc.id, { ...settingData, key: doc.id as SettingsKey });
+          return new SettingItem(doc.id, { ...settingData, key: doc.id as SystemSettingsKey });
         }));
 
       if (data.length > 0) {
@@ -43,7 +44,7 @@ export class SettingsService implements ISystemSettingsService {
     }
   }
 
-  async update(key: SettingsKey, value: any): Promise<IOperationResult<void>> {
+  async update(key: SystemSettingsKey, value: any): Promise<IOperationResult<void>> {
     try {
       console.log('🔧 Settings Update Debug:', {
         key,
@@ -111,7 +112,7 @@ export class SettingsService implements ISystemSettingsService {
     }
   }
 
-  async remove(key: SettingsKey): Promise<IOperationResult<void>> {
+  async remove(key: SystemSettingsKey): Promise<IOperationResult<void>> {
     try {
       const setting = await getDoc(doc(this.colRef, key));
       if (setting.exists()) {
@@ -128,4 +129,4 @@ export class SettingsService implements ISystemSettingsService {
   }
 }
 
-export default new SettingsService();
+export const settingsService = new SettingsService();

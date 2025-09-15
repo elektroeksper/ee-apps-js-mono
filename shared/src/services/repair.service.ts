@@ -1,48 +1,27 @@
-import { auth, db } from '@/config/firebase';
+
 import {
-  IRepairRequest,
-  IRepairRequestService,
-  ICreateRepairRequestDTO,
-  IUpdateRepairRequestDTO,
-  IRepairRequestFilter,
-  IRepairOperationResult,
-  IRepairNote,
-  IRepairRequestStats,
-  RepairRequestStatus,
-  IStatusHistoryItem,
-  DeviceCategory,
-  UrgencyLevel
-} from '@/shared-generated';
-import {
+  addDoc,
+  arrayUnion,
   collection,
   doc,
   getDoc,
   getDocs,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
   orderBy,
-  limit,
+  query,
   QueryConstraint,
-  Timestamp,
   serverTimestamp,
-  arrayUnion,
-  addDoc
+  updateDoc,
+  where
 } from 'firebase/firestore';
+import { auth, db } from '../configs/firebase';
+import { DeviceCategory, ICreateRepairRequestDTO, IRepairNote, IRepairOperationResult, IRepairRequest, IRepairRequestFilter, IRepairRequestService, IRepairRequestStats, IStatusHistoryItem, IUpdateRepairRequestDTO, RepairRequestStatus, UrgencyLevel } from '../types';
 
 class RepairRequestService implements IRepairRequestService {
   private readonly collectionName = 'repairRequests';
   private readonly notesCollectionName = 'repairRequestNotes';
 
-  // Helper method to get current user
   private getCurrentUser() {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-    return user;
+    return auth.currentUser;
   }
 
   // Helper method to create status history item
@@ -65,15 +44,15 @@ class RepairRequestService implements IRepairRequestService {
   async createRepairRequest(request: ICreateRepairRequestDTO): Promise<IRepairOperationResult<IRepairRequest>> {
     try {
       const user = this.getCurrentUser();
-      
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not authenticated'
+        };
+      }
+
       const newRequest: Omit<IRepairRequest, 'id'> = {
-        // Customer Information
-        customerId: user.uid,
-        customerName: user.displayName || 'Unknown',
-        customerPhone: user.phoneNumber || '',
-        customerEmail: user.email || undefined,
-        customerAddress: request.customerAddress,
-        
+        customerId: request.customerId,
         // Device Information
         deviceCategory: request.deviceCategory,
         deviceBrand: request.deviceBrand,
@@ -81,32 +60,34 @@ class RepairRequestService implements IRepairRequestService {
         deviceSerialNumber: request.deviceSerialNumber,
         purchaseDate: request.purchaseDate,
         warrantyStatus: request.warrantyStatus,
-        
+
         // Problem Description
         problemDescription: request.problemDescription,
         problemImages: request.problemImages,
         urgencyLevel: request.urgencyLevel,
-        
+
         // Service Details
         serviceType: request.serviceType,
         preferredServiceDate: request.preferredServiceDate,
         preferredTimeSlot: request.preferredTimeSlot,
-        
+
         // Initial Status
         status: RepairRequestStatus.PENDING,
         statusHistory: [
           this.createStatusHistoryItem(
             RepairRequestStatus.PENDING,
-            user.uid,
+            request.customerId,
             'customer',
             'Repair request created'
           )
         ],
         notes: [],
-        
+
         // Timestamps
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        customerName: user.displayName || '',
+        customerEmail: user.email || ''
       };
 
       const docRef = await addDoc(collection(db, this.collectionName), {
@@ -132,14 +113,12 @@ class RepairRequestService implements IRepairRequestService {
     }
   }
 
-  async getMyRepairRequests(customerId?: string): Promise<IRepairOperationResult<IRepairRequest[]>> {
+  async getMyRepairRequests(customerId: string): Promise<IRepairOperationResult<IRepairRequest[]>> {
     try {
-      const user = this.getCurrentUser();
-      const userId = customerId || user.uid;
-      
+
       const q = query(
         collection(db, this.collectionName),
-        where('customerId', '==', userId),
+        where('customerId', '==', customerId),
         orderBy('createdAt', 'desc')
       );
 
@@ -199,7 +178,13 @@ class RepairRequestService implements IRepairRequestService {
   async cancelRepairRequest(id: string, reason: string): Promise<IRepairOperationResult<void>> {
     try {
       const user = this.getCurrentUser();
-      
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not authenticated'
+        };
+      }
+
       const docRef = doc(db, this.collectionName, id);
       const docSnap = await getDoc(docRef);
 
@@ -211,7 +196,7 @@ class RepairRequestService implements IRepairRequestService {
       }
 
       const currentData = docSnap.data();
-      
+
       // Verify ownership
       if (currentData.customerId !== user.uid) {
         return {
@@ -221,8 +206,8 @@ class RepairRequestService implements IRepairRequestService {
       }
 
       // Check if can be cancelled
-      if (currentData.status === RepairRequestStatus.COMPLETED || 
-          currentData.status === RepairRequestStatus.CANCELLED) {
+      if (currentData.status === RepairRequestStatus.COMPLETED ||
+        currentData.status === RepairRequestStatus.CANCELLED) {
         return {
           success: false,
           error: 'Request cannot be cancelled in its current status'
@@ -259,6 +244,13 @@ class RepairRequestService implements IRepairRequestService {
   async getAssignedRepairRequests(filter?: IRepairRequestFilter): Promise<IRepairOperationResult<IRepairRequest[]>> {
     try {
       const user = this.getCurrentUser();
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not authenticated'
+        };
+      }
+
       const constraints: QueryConstraint[] = [];
 
       // Build query based on filter
@@ -293,7 +285,7 @@ class RepairRequestService implements IRepairRequestService {
 
       const q = query(collection(db, this.collectionName), ...constraints);
       const querySnapshot = await getDocs(q);
-      
+
       const requests: IRepairRequest[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
@@ -305,22 +297,22 @@ class RepairRequestService implements IRepairRequestService {
 
       // Apply additional filters that can't be done in Firestore query
       let filteredRequests = requests;
-      
+
       if (filter?.dateFrom) {
-        filteredRequests = filteredRequests.filter(r => 
+        filteredRequests = filteredRequests.filter(r =>
           new Date(r.createdAt) >= new Date(filter.dateFrom!)
         );
       }
-      
+
       if (filter?.dateTo) {
-        filteredRequests = filteredRequests.filter(r => 
+        filteredRequests = filteredRequests.filter(r =>
           new Date(r.createdAt) <= new Date(filter.dateTo!)
         );
       }
-      
+
       if (filter?.searchText) {
         const searchLower = filter.searchText.toLowerCase();
-        filteredRequests = filteredRequests.filter(r => 
+        filteredRequests = filteredRequests.filter(r =>
           r.customerName.toLowerCase().includes(searchLower) ||
           r.deviceBrand.toLowerCase().includes(searchLower) ||
           r.deviceModel.toLowerCase().includes(searchLower) ||
@@ -344,7 +336,13 @@ class RepairRequestService implements IRepairRequestService {
   async acceptRepairRequest(id: string, estimatedCost?: number): Promise<IRepairOperationResult<void>> {
     try {
       const user = this.getCurrentUser();
-      
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not authenticated'
+        };
+      }
+
       const docRef = doc(db, this.collectionName, id);
       const docSnap = await getDoc(docRef);
 
@@ -356,7 +354,7 @@ class RepairRequestService implements IRepairRequestService {
       }
 
       const currentData = docSnap.data();
-      
+
       if (currentData.status !== RepairRequestStatus.PENDING) {
         return {
           success: false,
@@ -402,7 +400,13 @@ class RepairRequestService implements IRepairRequestService {
   async rejectRepairRequest(id: string, reason: string): Promise<IRepairOperationResult<void>> {
     try {
       const user = this.getCurrentUser();
-      
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not authenticated'
+        };
+      }
+
       const docRef = doc(db, this.collectionName, id);
       const docSnap = await getDoc(docRef);
 
@@ -414,7 +418,7 @@ class RepairRequestService implements IRepairRequestService {
       }
 
       const currentData = docSnap.data();
-      
+
       if (currentData.status !== RepairRequestStatus.PENDING) {
         return {
           success: false,
@@ -449,13 +453,19 @@ class RepairRequestService implements IRepairRequestService {
   }
 
   async updateRepairRequestStatus(
-    id: string, 
-    status: RepairRequestStatus, 
+    id: string,
+    status: RepairRequestStatus,
     comment?: string
   ): Promise<IRepairOperationResult<void>> {
     try {
       const user = this.getCurrentUser();
-      
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not authenticated'
+        };
+      }
+
       const docRef = doc(db, this.collectionName, id);
       const docSnap = await getDoc(docRef);
 
@@ -502,7 +512,7 @@ class RepairRequestService implements IRepairRequestService {
   async assignTechnician(requestId: string, technicianId: string): Promise<IRepairOperationResult<void>> {
     try {
       const docRef = doc(db, this.collectionName, requestId);
-      
+
       // TODO: Get technician name from user profile
       await updateDoc(docRef, {
         assignedTechnicianId: technicianId,
@@ -526,7 +536,7 @@ class RepairRequestService implements IRepairRequestService {
   async updateRepairRequest(id: string, data: IUpdateRepairRequestDTO): Promise<IRepairOperationResult<void>> {
     try {
       const docRef = doc(db, this.collectionName, id);
-      
+
       await updateDoc(docRef, {
         ...data,
         updatedAt: serverTimestamp()
@@ -547,14 +557,20 @@ class RepairRequestService implements IRepairRequestService {
 
   // Notes Operations
   async addNote(
-    requestId: string, 
-    note: string, 
-    isInternal: boolean, 
+    requestId: string,
+    note: string,
+    isInternal: boolean,
     attachments?: string[]
   ): Promise<IRepairOperationResult<void>> {
     try {
       const user = this.getCurrentUser();
-      
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not authenticated'
+        };
+      }
+
       const newNote: Omit<IRepairNote, 'id'> = {
         authorId: user.uid,
         authorName: user.displayName || 'Unknown',
@@ -654,7 +670,7 @@ class RepairRequestService implements IRepairRequestService {
 
       const q = query(collection(db, this.collectionName), ...constraints);
       const querySnapshot = await getDocs(q);
-      
+
       const requests: IRepairRequest[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
@@ -666,22 +682,22 @@ class RepairRequestService implements IRepairRequestService {
 
       // Apply additional filters
       let filteredRequests = requests;
-      
+
       if (filter?.dateFrom) {
-        filteredRequests = filteredRequests.filter(r => 
+        filteredRequests = filteredRequests.filter(r =>
           new Date(r.createdAt) >= new Date(filter.dateFrom!)
         );
       }
-      
+
       if (filter?.dateTo) {
-        filteredRequests = filteredRequests.filter(r => 
+        filteredRequests = filteredRequests.filter(r =>
           new Date(r.createdAt) <= new Date(filter.dateTo!)
         );
       }
-      
+
       if (filter?.searchText) {
         const searchLower = filter.searchText.toLowerCase();
-        filteredRequests = filteredRequests.filter(r => 
+        filteredRequests = filteredRequests.filter(r =>
           r.customerName.toLowerCase().includes(searchLower) ||
           r.deviceBrand.toLowerCase().includes(searchLower) ||
           r.deviceModel.toLowerCase().includes(searchLower) ||
@@ -705,7 +721,7 @@ class RepairRequestService implements IRepairRequestService {
   async assignDealer(requestId: string, dealerId: string): Promise<IRepairOperationResult<void>> {
     try {
       const docRef = doc(db, this.collectionName, requestId);
-      
+
       // TODO: Get dealer name from user profile
       await updateDoc(docRef, {
         assignedDealerId: dealerId,
@@ -730,7 +746,7 @@ class RepairRequestService implements IRepairRequestService {
   async getRepairRequestStats(): Promise<IRepairOperationResult<IRepairRequestStats>> {
     try {
       const querySnapshot = await getDocs(collection(db, this.collectionName));
-      
+
       const stats: IRepairRequestStats = {
         total: 0,
         pending: 0,
@@ -764,7 +780,7 @@ class RepairRequestService implements IRepairRequestService {
             break;
           case RepairRequestStatus.COMPLETED:
             stats.completed++;
-            
+
             // Calculate completion time
             if (data.createdAt && data.completedAt) {
               const created = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
@@ -781,13 +797,13 @@ class RepairRequestService implements IRepairRequestService {
 
         // Count by category
         if (data.deviceCategory) {
-          stats.byCategory[data.deviceCategory as DeviceCategory] = 
+          stats.byCategory[data.deviceCategory as DeviceCategory] =
             (stats.byCategory[data.deviceCategory as DeviceCategory] || 0) + 1;
         }
 
         // Count by urgency
         if (data.urgencyLevel) {
-          stats.byUrgency[data.urgencyLevel as UrgencyLevel] = 
+          stats.byUrgency[data.urgencyLevel as UrgencyLevel] =
             (stats.byUrgency[data.urgencyLevel as UrgencyLevel] || 0) + 1;
         }
 
@@ -818,7 +834,7 @@ class RepairRequestService implements IRepairRequestService {
   // Helper method to convert Firestore data to proper types
   private convertFirestoreData(data: any): any {
     const converted = { ...data };
-    
+
     // Convert Timestamp to Date
     Object.keys(converted).forEach(key => {
       if (converted[key] && converted[key].toDate) {

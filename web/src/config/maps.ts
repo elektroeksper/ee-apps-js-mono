@@ -2,8 +2,6 @@
  * Google Maps Configuration
  */
 
-import { IGoogleMapsConfig } from '@/types/maps'
-
 // Default center for Turkey (Istanbul)
 export const DEFAULT_MAP_CENTER = {
   lat: parseFloat(process.env.NEXT_PUBLIC_DEFAULT_MAP_CENTER_LAT || '41.0082'),
@@ -12,7 +10,7 @@ export const DEFAULT_MAP_CENTER = {
 
 export const DEFAULT_MAP_ZOOM = 12
 
-export const GOOGLE_MAPS_CONFIG: IGoogleMapsConfig = {
+export const GOOGLE_MAPS_CONFIG = {
   apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
   defaultCenter: DEFAULT_MAP_CENTER,
   defaultZoom: DEFAULT_MAP_ZOOM,
@@ -68,41 +66,4 @@ export const AUTOCOMPLETE_OPTIONS: google.maps.places.AutocompleteOptions = {
     'place_id'
   ],
   types: ['geocode', 'establishment']
-}
-
-// Categories for business filtering
-export const BUSINESS_CATEGORIES = [
-  { id: 'electronics', label: 'Elektronik', icon: '🔌' },
-  { id: 'appliances', label: 'Beyaz Eşya', icon: '🏠' },
-  { id: 'mobile', label: 'Telefon & Tablet', icon: '📱' },
-  { id: 'computer', label: 'Bilgisayar', icon: '💻' },
-  { id: 'tv', label: 'TV & Ses Sistemleri', icon: '📺' },
-  { id: 'other', label: 'Diğer', icon: '📦' }
-]
-
-// Helper to check if Maps API is loaded
-export const isMapsApiLoaded = (): boolean => {
-  return typeof google !== 'undefined' && 
-         typeof google.maps !== 'undefined'
-}
-
-// Helper to format coordinates for display
-export const formatCoordinates = (lat: number, lng: number): string => {
-  return `${lat.toFixed(6)}, ${lng.toFixed(6)}`
-}
-
-// Helper to calculate distance between two points (in km)
-export const calculateDistance = (
-  point1: { lat: number; lng: number },
-  point2: { lat: number; lng: number }
-): number => {
-  const R = 6371 // Earth's radius in km
-  const dLat = (point2.lat - point1.lat) * Math.PI / 180
-  const dLon = (point2.lng - point1.lng) * Math.PI / 180
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(point1.lat * Math.PI / 180) * Math.cos(point2.lat * Math.PI / 180) *
-    Math.sin(dLon/2) * Math.sin(dLon/2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-  return R * c
 }

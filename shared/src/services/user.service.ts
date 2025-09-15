@@ -3,21 +3,12 @@
  * Handles user profile operations with direct Firestore access and Firebase Functions integration
  */
 
-import { db, functions } from '@/config/firebase';
-import type { IBusiness, IUserWithBusiness } from '@/shared-generated';
-import {
-  AccountType,
-  IAppUser,
-  IBusinessRegisterData,
-  IOperationResult,
-  IRegisterData,
-  IUserFilter,
-  IUserService
-} from '@/shared-generated';
-import { FB_FUNCTIONS } from '@/shared-generated/configs/contants';
-import { AppUser } from '@/shared-generated/models/auth-models';
 import { collection, doc, Query, runTransaction, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
+import { db, FB_FUNCTIONS, functions } from '../configs';
+import { AccountType } from '../enums';
+import { AppUser } from '../models/user-models';
+import { IAppUser, IBusiness, IOperationResult, IRegisterData, IUserFilter, IUserService } from '../types';
 
 export class UserService implements IUserService {
   colRef = collection(db, 'users');
@@ -89,20 +80,12 @@ export class UserService implements IUserService {
     }
   }
 
-  getUserData(data: Partial<IRegisterData | IBusinessRegisterData>): IAppUser {
-    const isBusinessData = (data: any): data is IBusinessRegisterData => {
-      return data.accountType === AccountType.BUSINESS && data.firstName && data.lastName;
-    };
-
-    const firstName = isBusinessData(data) ? data.firstName : '';
-    const lastName = isBusinessData(data) ? data.lastName : '';
+  getUserData(data: Partial<IRegisterData>): IAppUser {
 
     const baseUser: IAppUser = {
       id: '', // Will be set by Firestore
       email: data.email || '',
-      firstName,
-      lastName,
-      displayName: `${firstName} ${lastName}`.trim() || data.email?.split('@')[0] || '',
+      displayName: `${data.email?.split('@')[0] || ''}`,
       accountType: data.accountType ?? AccountType.INDIVIDUAL,
       isEmailVerified: false,
       preferences: {
@@ -127,12 +110,15 @@ export class UserService implements IUserService {
       isDeleted: false,
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
+      firstName: '',
+      lastName: '',
+      isPhoneVerified: false
     };
 
     return baseUser;
   }
 
-  async create(data: Partial<IRegisterData | IBusinessRegisterData>): Promise<IOperationResult<IAppUser>> {
+  async create(data: Partial<IRegisterData>): Promise<IOperationResult<IAppUser>> {
     try {
       const { addDoc } = await import('firebase/firestore');
       const getUserData = this.getUserData(data);
@@ -259,57 +245,6 @@ export class UserService implements IUserService {
     }
   }
 
-  // New business-aware methods
-  async getUserWithBusiness(userId: string): Promise<IOperationResult<IUserWithBusiness>> {
-    try {
-      const userResult = await this.getById(userId);
-      if (!userResult.success || !userResult.data) {
-        return { success: false, error: 'User not found' };
-      }
-
-      const user = userResult.data;
-      const result: IUserWithBusiness = { user };
-
-      // If user has a business association, fetch the business
-      if (user.businessId) {
-        const { getDoc } = await import('firebase/firestore');
-        const businessDoc = await getDoc(doc(db, 'businesses', user.businessId));
-
-        if (businessDoc.exists()) {
-          result.business = { id: businessDoc.id, ...businessDoc.data() } as IBusiness;
-          result.businessRole = user.businessRole;
-
-          // Get permissions based on role
-          if (user.businessRole && result.business.users[userId]) {
-            const userInfo = result.business.users[userId];
-            result.businessPermissions = {
-              canEditBusinessInfo: userInfo.permissions.includes('canEditBusinessInfo'),
-              canDeleteBusiness: userInfo.permissions.includes('canDeleteBusiness'),
-              canManageDocuments: userInfo.permissions.includes('canManageDocuments'),
-              canInviteUsers: userInfo.permissions.includes('canInviteUsers'),
-              canApproveInvitations: userInfo.permissions.includes('canApproveInvitations'),
-              canRemoveUsers: userInfo.permissions.includes('canRemoveUsers'),
-              canChangeUserRoles: userInfo.permissions.includes('canChangeUserRoles'),
-              canInviteOwners: userInfo.permissions.includes('canInviteOwners'),
-              canInviteManagers: userInfo.permissions.includes('canInviteManagers'),
-              canInviteTechnicians: userInfo.permissions.includes('canInviteTechnicians'),
-              canInviteSupport: userInfo.permissions.includes('canInviteSupport'),
-              canViewOrders: userInfo.permissions.includes('canViewOrders'),
-              canManageOrders: userInfo.permissions.includes('canManageOrders'),
-              canViewAnalytics: userInfo.permissions.includes('canViewAnalytics'),
-              canManageInventory: userInfo.permissions.includes('canManageInventory'),
-              canViewFinancials: userInfo.permissions.includes('canViewFinancials'),
-              canManagePayments: userInfo.permissions.includes('canManagePayments'),
-            };
-          }
-        }
-      }
-
-      return { success: true, data: result };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  }
 
   async leaveBusiness(userId: string): Promise<IOperationResult<void>> {
     try {

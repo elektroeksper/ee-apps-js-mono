@@ -2,18 +2,6 @@
  * Business Service
  * Handles business operations with direct Firestore access and Firebase Functions integration
  */
-
-import { db } from '@/config/firebase';
-import type {
-  IAppUser,
-  IBusiness,
-  IBusinessCreateData,
-  IBusinessInvitation,
-  IBusinessPermissions,
-  IBusinessUserInfo,
-  IOperationResult
-} from '@/shared-generated';
-import { BusinessUserRole } from '@/shared-generated';
 import {
   addDoc,
   collection,
@@ -25,98 +13,31 @@ import {
   Timestamp,
   updateDoc
 } from 'firebase/firestore';
-
-// Permission Matrix - matches the architecture document
-const ROLE_PERMISSIONS: Record<BusinessUserRole, IBusinessPermissions> = {
-  [BusinessUserRole.OWNER]: {
-    canEditBusinessInfo: true,
-    canDeleteBusiness: true,
-    canManageDocuments: true,
-    canInviteUsers: true,
-    canApproveInvitations: true,
-    canRemoveUsers: true,
-    canChangeUserRoles: true,
-    canInviteOwners: false, // Only admins can create owners
-    canInviteManagers: true,
-    canInviteTechnicians: true,
-    canInviteSupport: true,
-    canViewOrders: true,
-    canManageOrders: true,
-    canViewAnalytics: true,
-    canManageInventory: true,
-    canViewFinancials: true,
-    canManagePayments: true,
-  },
-  [BusinessUserRole.MANAGER]: {
-    canEditBusinessInfo: false,
-    canDeleteBusiness: false,
-    canManageDocuments: false,
-    canInviteUsers: true, // Limited to technicians/support with approval
-    canApproveInvitations: false,
-    canRemoveUsers: false,
-    canChangeUserRoles: false,
-    canInviteOwners: false,
-    canInviteManagers: false,
-    canInviteTechnicians: true, // Requires approval
-    canInviteSupport: true, // Requires approval
-    canViewOrders: true,
-    canManageOrders: true,
-    canViewAnalytics: true,
-    canManageInventory: true,
-    canViewFinancials: false,
-    canManagePayments: false,
-  },
-  [BusinessUserRole.TECHNICIAN]: {
-    canEditBusinessInfo: false,
-    canDeleteBusiness: false,
-    canManageDocuments: false,
-    canInviteUsers: false,
-    canApproveInvitations: false,
-    canRemoveUsers: false,
-    canChangeUserRoles: false,
-    canInviteOwners: false,
-    canInviteManagers: false,
-    canInviteTechnicians: false,
-    canInviteSupport: false,
-    canViewOrders: true,
-    canManageOrders: true,
-    canViewAnalytics: false,
-    canManageInventory: true,
-    canViewFinancials: false,
-    canManagePayments: false,
-  },
-  [BusinessUserRole.SUPPORT]: {
-    canEditBusinessInfo: false,
-    canDeleteBusiness: false,
-    canManageDocuments: false,
-    canInviteUsers: false,
-    canApproveInvitations: false,
-    canRemoveUsers: false,
-    canChangeUserRoles: false,
-    canInviteOwners: false,
-    canInviteManagers: false,
-    canInviteTechnicians: false,
-    canInviteSupport: false,
-    canViewOrders: true,
-    canManageOrders: false,
-    canViewAnalytics: false,
-    canManageInventory: false,
-    canViewFinancials: false,
-    canManagePayments: false,
-  },
-};
+import { db, ROLE_PERMISSIONS } from '../configs';
+import { BusinessUserRole, BusinessVerificationStatus } from '../enums';
+import { IAppUser, IBusiness, IBusinessInvitation, IBusinessPermissions, IBusinessRegistrationData, IBusinessUserInfo, IOperationResult } from '../types';
 
 export class BusinessService {
   private colRef = collection(db, 'businesses');
 
   // CRUD Operations
-  async createBusiness(data: IBusinessCreateData): Promise<IOperationResult<IBusiness>> {
+  async createBusiness(data: IBusinessRegistrationData): Promise<IOperationResult<IBusiness>> {
     try {
       const businessData: Partial<IBusiness> = {
         ...data,
-        verificationStatus: 'unverified' as any,
+        verification: {
+          status: BusinessVerificationStatus.PENDING,
+          history: [
+            {
+              approvedAt: null,
+              approvedBy: null,
+              rejectedAt: null,
+              rejectedBy: null,
+              rejectionReason: null,
+            }
+          ]
+        },
         documents: [],
-        isApproved: false,
         users: {
           [data.ownerId]: {
             userId: data.ownerId,
@@ -131,8 +52,8 @@ export class BusinessService {
           }
         },
         isActive: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        createdAt: Timestamp.now().toDate(),
+        updatedAt: Timestamp.now().toDate(),
       };
 
       const docRef = await addDoc(this.colRef, businessData);
@@ -357,8 +278,8 @@ export class BusinessService {
         status: requiresApproval ? 'pending_approval' : 'pending',
         token: this.generateSecureToken(),
         expiresAt: Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)), // 7 days
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        createdAt: Timestamp.now().toDate(),
+        updatedAt: Timestamp.now().toDate(),
       };
 
       const invitationsRef = collection(db, `businesses/${businessId}/invitations`);

@@ -56,8 +56,6 @@ enum OperationStatus {
   CANCELLED = 'cancelled'
 }
 
-
-
 // Account Types
 enum AccountType {
   INDIVIDUAL = 'individual',
@@ -70,6 +68,13 @@ enum AuthState {
   AUTHENTICATED = 'authenticated',
   UNAUTHENTICATED = 'unauthenticated',
   ERROR = 'error'
+}
+
+// Authentication Roles (system-level roles)
+enum AuthRole {
+  ADMIN = 'admin',
+  USER = 'user',
+  MODERATOR = 'moderator'
 }
 
 
@@ -129,7 +134,7 @@ enum BusinessVerificationStatus {
 
 
 export {
-  AccountType, AuthErrorCode, AuthState, BusinessUserRole, BusinessVerificationStatus,
+  AccountType, AuthErrorCode, AuthRole, AuthState, BusinessUserRole, BusinessVerificationStatus,
   CompanySize, DocumentStatus, DocumentType, NotificationType,
   OperationStatus, OrderStatus,
   PaymentStatus, ProductCategory, TaxNumberType

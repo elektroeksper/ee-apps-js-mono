@@ -1,5 +1,5 @@
 import { OrderStatus } from "../enums";
-import { IAddress } from "./common-types";
+import { IAddress } from "./map-types";
 
 interface IOrder {
   id: string;

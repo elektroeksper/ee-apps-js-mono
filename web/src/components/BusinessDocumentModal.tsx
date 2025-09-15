@@ -1,6 +1,6 @@
 'use client'
 
-import { storageClientService } from '@/services/storageClientService'
+import { storageClientService } from '@/services/storage.service'
 import { IAppUser, UserDocument } from '@/shared-generated'
 import { useEffect, useState } from 'react'
 import {

@@ -1,4 +1,3 @@
-import { IAddress } from './common-types';
 
 // Repair Request Status Enum
 export enum RepairRequestStatus {
@@ -48,49 +47,47 @@ export enum ServiceType {
 // Repair Request Interface
 export interface IRepairRequest {
   id: string;
-  
+
   // Customer Information
   customerId: string;
   customerName: string;
-  customerPhone: string;
-  customerEmail?: string;
-  customerAddress: IAddress;
-  
-  // Device Information
+  customerEmail: string;
+  customerPhone?: string;
+
   deviceCategory: DeviceCategory;
   deviceBrand: string;
   deviceModel: string;
   deviceSerialNumber?: string;
   purchaseDate?: Date;
   warrantyStatus?: 'under_warranty' | 'expired' | 'unknown';
-  
+
   // Problem Description
   problemDescription: string;
   problemImages?: string[];
   urgencyLevel: UrgencyLevel;
-  
+
   // Service Details
   serviceType: ServiceType;
   preferredServiceDate?: Date;
   preferredTimeSlot?: 'morning' | 'afternoon' | 'evening';
-  
+
   // Assignment and Status
   status: RepairRequestStatus;
   assignedDealerId?: string;
   assignedTechnicianId?: string;
   assignedDealerName?: string;
   assignedTechnicianName?: string;
-  
+
   // Cost and Payment
   estimatedCost?: number;
   finalCost?: number;
   paymentStatus?: 'pending' | 'paid' | 'refunded';
   paymentMethod?: 'cash' | 'credit_card' | 'bank_transfer';
-  
+
   // Service History
   statusHistory: IStatusHistoryItem[];
   notes?: IRepairNote[];
-  
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
@@ -121,9 +118,7 @@ export interface IRepairNote {
 
 // Create Repair Request DTO
 export interface ICreateRepairRequestDTO {
-  // Customer Information
-  customerAddress: IAddress;
-  
+  customerId: string;
   // Device Information
   deviceCategory: DeviceCategory;
   deviceBrand: string;
@@ -131,12 +126,12 @@ export interface ICreateRepairRequestDTO {
   deviceSerialNumber?: string;
   purchaseDate?: Date;
   warrantyStatus?: 'under_warranty' | 'expired' | 'unknown';
-  
+
   // Problem Description
   problemDescription: string;
   problemImages?: string[];
   urgencyLevel: UrgencyLevel;
-  
+
   // Service Details
   serviceType: ServiceType;
   preferredServiceDate?: Date;
@@ -183,7 +178,7 @@ export interface IRepairRequestService {
   getMyRepairRequests(customerId: string): Promise<IRepairOperationResult<IRepairRequest[]>>;
   getRepairRequestById(id: string): Promise<IRepairOperationResult<IRepairRequest>>;
   cancelRepairRequest(id: string, reason: string): Promise<IRepairOperationResult<void>>;
-  
+
   // Dealer/Technician Operations
   getAssignedRepairRequests(filter?: IRepairRequestFilter): Promise<IRepairOperationResult<IRepairRequest[]>>;
   acceptRepairRequest(id: string, estimatedCost?: number): Promise<IRepairOperationResult<void>>;
@@ -191,15 +186,15 @@ export interface IRepairRequestService {
   updateRepairRequestStatus(id: string, status: RepairRequestStatus, comment?: string): Promise<IRepairOperationResult<void>>;
   assignTechnician(requestId: string, technicianId: string): Promise<IRepairOperationResult<void>>;
   updateRepairRequest(id: string, data: IUpdateRepairRequestDTO): Promise<IRepairOperationResult<void>>;
-  
+
   // Notes Operations
   addNote(requestId: string, note: string, isInternal: boolean, attachments?: string[]): Promise<IRepairOperationResult<void>>;
   getNotes(requestId: string): Promise<IRepairOperationResult<IRepairNote[]>>;
-  
+
   // Admin Operations
   getAllRepairRequests(filter?: IRepairRequestFilter): Promise<IRepairOperationResult<IRepairRequest[]>>;
   assignDealer(requestId: string, dealerId: string): Promise<IRepairOperationResult<void>>;
-  
+
   // Statistics
   getRepairRequestStats(): Promise<IRepairOperationResult<IRepairRequestStats>>;
 }

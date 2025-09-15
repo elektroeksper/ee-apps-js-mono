@@ -1,6 +1,6 @@
 'use client'
 
-import { UserService } from '@/services/auth/UserService';
+import { UserService } from '@/services/auth/user.service';
 import { AccountType, AuthRole, getAuthErrorMessage, IAppUser } from '@/shared-generated';
 import { useCallback, useEffect, useRef, useState } from 'react';
 

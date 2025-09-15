@@ -1,6 +1,6 @@
 'use client'
 
-import { AuthService } from '@/services/auth/AuthService';
+import { AuthService } from '@/services/auth/auth.service';
 import { IBusinessRegisterData, ILoginData, IPasswordChangeData, IRegisterData } from '@/shared-generated';
 import { useCallback } from 'react';
 

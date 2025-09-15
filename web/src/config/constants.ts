@@ -1,5 +1,5 @@
 
-export const APP_ROUTES = {
+export const WEB_ROUTES = {
   ROOT: '/',
   LOGIN: '/login',
   REGISTER: '/register',

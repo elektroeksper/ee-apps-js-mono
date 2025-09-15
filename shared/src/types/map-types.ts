@@ -2,13 +2,20 @@
  * Map and Address related type definitions
  */
 
-export interface ICoordinates {
+interface ICoordinates {
   lat: number
   lng: number
 }
 
+interface IGoogleMapsConfig {
+  apiKey: string
+  defaultCenter: ICoordinates
+  defaultZoom: number
+  libraries: ('places' | 'marker' | 'geometry' | 'drawing')[]
+}
+
 // Extended address interface that includes shared IAddress properties
-export interface IAddress {
+interface IAddress {
   // Required from shared types
   street: string
   city: string
@@ -27,7 +34,7 @@ export interface IAddress {
   type?: 'home' | 'business'
 }
 
-export interface IMarkerData {
+interface IMarkerData {
   id: string
   position: ICoordinates
   title: string
@@ -42,7 +49,7 @@ export interface IMarkerData {
   }
 }
 
-export enum AddressComponent {
+enum AddressComponent {
   // Turkey specific address components
   city = 'administrative_area_level_1',           // İl (Province/City)
   district = 'administrative_area_level_2',       // İlçe (District)
@@ -53,12 +60,12 @@ export enum AddressComponent {
   country = 'country'                             // Ülke (Country)
 }
 
-export interface IAddressComponentItem {
+interface IAddressComponentItem {
   key: keyof typeof AddressComponent
   value: string
 }
 
-export interface IAppUserFilter {
+interface IAppUserFilter {
   addressType?: 'business' | 'individual'
   addressComponents?: IAddressComponentItem[]
   businessInfo?: {
@@ -67,7 +74,7 @@ export interface IAppUserFilter {
   }
 }
 
-export interface IGoogleMapsConfig {
+interface IGoogleMapsConfig {
   apiKey: string
   defaultCenter: ICoordinates
   defaultZoom: number
@@ -76,18 +83,18 @@ export interface IGoogleMapsConfig {
   region: string
 }
 
-export interface IPlaceResult extends google.maps.places.PlaceResult {
-  // Extended for type safety
+interface IPlaceResult {
+  addressComponentsMap?: { [key in keyof typeof AddressComponent]?: string }
 }
 
-export interface IMapBounds {
+interface IMapBounds {
   north: number
   south: number
   east: number
   west: number
 }
 
-export interface IDealerInfo {
+interface IDealerInfo {
   id: string
   displayName: string
   businessName?: string
@@ -100,3 +107,7 @@ export interface IDealerInfo {
   reviewCount?: number
   photoUrl?: string
 }
+
+
+export type { AddressComponent, IAddress, IAddressComponentItem, IAppUserFilter, ICoordinates, IDealerInfo, IGoogleMapsConfig, IMapBounds, IMarkerData, IPlaceResult }
+

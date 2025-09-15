@@ -39,20 +39,6 @@ interface IEntity {
   updatedBy?: string;
 }
 
-interface IAddress {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  apartment?: string;
-  district?: string;
-  neighborhood?: string;
-  postalCode?: string;
-  formattedAddress?: string;
-  [key: string]: string | undefined;
-}
-
 interface IApiResponse<T> {
   success: boolean;
   data?: T;
@@ -60,14 +46,7 @@ interface IApiResponse<T> {
   message?: string;
 }
 
-interface IAddressInfo {
-  country?: string;
-  city?: string;
-  district?: string;
-  street?: string;
-  formattedAddress?: string;
-  [key: string]: string | undefined;
-}
+
 interface ISystemSettingsService {
   getAll(): Promise<IOperationResult<ISettingItem[]>>;
   update(key: SystemSettingsKey, value: any): Promise<IOperationResult<void>>;
@@ -75,6 +54,6 @@ interface ISystemSettingsService {
 }
 
 export type {
-  IAddress, IAddressInfo, IApiResponse, IEntity, IListItem, IOperationResult, ISettingItem, ISystemSettingsService, SystemSettingsKey as SettingsKey, SystemSettingsKey
+  IApiResponse, IEntity, IListItem, IOperationResult, ISettingItem, ISystemSettingsService, SystemSettingsKey
 };
 

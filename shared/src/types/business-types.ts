@@ -4,37 +4,11 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import { AccountType, BusinessUserRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType, TaxNumberType } from '../enums';
-import { IUserPreferences } from './auth-types';
-import { IAddress } from './common-types';
+import { BusinessUserRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType, TaxNumberType } from '../enums';
+import { IRegisterData } from './auth-types';
+import { IEntity } from './common-types';
+import { IAddress } from './map-types';
 
-// Base entity for Firestore documents (uses Timestamp instead of Date)
-interface IFirestoreEntity {
-  id: string;
-  isDeleted?: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  updatedBy?: string;
-}
-
-// Business Document Interface
-interface IBusinessDocument {
-  id: string;
-  type: DocumentType;
-  fileName: string;
-  fileUrl: string;
-  uploadedAt: Timestamp;
-  status: DocumentStatus;
-}
-
-// Business Address Interface (extends IAddress with business-specific fields)
-interface IBusinessAddress extends IAddress {
-  companyName?: string;
-  department?: string;
-  floor?: string;
-}
-
-// Business User Info - stored in business.users map
 interface IBusinessUserInfo {
   userId: string; // Redundant but useful for iteration
   userName: string; // Display name for quick access
@@ -46,48 +20,58 @@ interface IBusinessUserInfo {
   lastActiveAt?: Timestamp; // Last activity timestamp
 }
 
-// Main Business Entity
-interface IBusiness extends IFirestoreEntity {
-  // Basic Business Information
-  companyName: string;
-  taxNumber: string;
-  taxNumberType: TaxNumberType;
-  identityNumber?: string; // For individual business owners
-  taxOffice: string;
+interface IBusinessDocument {
+  type: DocumentType;
+  url: string; // Storage URL or public URL
+  uploadedAt: Timestamp;
+  uploadedBy: string; // User ID who uploaded
+  status: DocumentStatus;
+  reviewedAt?: Timestamp;
+  reviewedBy?: string; // Admin user ID who reviewed
+  rejectionReason?: string; // Reason if rejected
+  expiresAt?: Timestamp; // Optional expiration date
+}
 
-  // Contact & Location
-  address: IBusinessAddress;
-  phone: string;
-  email: string; // Business primary email
-  website?: string;
 
-  // Business Details
-  industry: string;
-  companySize: CompanySize;
-  mainCategoryId: string;
+interface IBusinessSetupData {
   subCategoryIds: string[];
-  description?: string;
-
-  // Verification & Compliance
-  verificationStatus: BusinessVerificationStatus;
+  companySize?: CompanySize;
+  address?: IAddress;
+  phone?: string;
   documents: IBusinessDocument[];
-  isApproved: boolean;
-  approvedAt?: Timestamp;
-  approvedBy?: string; // Admin user ID
-  rejectedAt?: Timestamp;
-  rejectedBy?: string;
-  rejectionReason?: string;
+  otherAddresses?: IAddress[];
+  website?: string;
+}
 
-  // Ownership & Team
+// Main Business Entity
+interface IBusiness extends IEntity {
+  companyName: string;
+  taxNumber?: string;
+  taxNumberType?: TaxNumberType;
+  identityNumber?: string;
+  addresses?: IAddress[];
+  phone?: string;
+  website?: string;
+  companySize?: CompanySize;
+  documents?: IBusinessDocument[];
+  verification: {
+    status: BusinessVerificationStatus;
+    history: {
+      approvedAt?: Date | Timestamp | null;
+      approvedBy?: string | null; // Admin user ID who approved
+      rejectedAt?: Date | Timestamp | null;
+      rejectedBy?: string | null; // Admin user ID who rejected
+      rejectionReason?: string | null;
+    }[]
+  };
+
   ownerId: string; // Reference to user who owns the business
   users: Record<string, IBusinessUserInfo>; // Map of userId -> user info for quick access
-
-  // Status
   isActive: boolean;
 }
 
 // Business Invitation Entity (subcollection)
-interface IBusinessInvitation extends IFirestoreEntity {
+interface IBusinessInvitation extends IEntity {
   // Invitation Details
   invitedEmail: string;
   invitedRole: BusinessUserRole;
@@ -141,7 +125,7 @@ interface IBusinessPermissions {
 }
 
 // Business Creation Data
-interface IBusinessCreateData {
+interface IBusinessRegistrationData extends IRegisterData {
   // Basic Information
   companyName: string;
   taxNumber: string;
@@ -150,7 +134,7 @@ interface IBusinessCreateData {
   taxOffice: string;
 
   // Contact & Location
-  address: IBusinessAddress;
+  address: IAddress;
   phone: string;
   email: string;
   website?: string;
@@ -166,75 +150,16 @@ interface IBusinessCreateData {
   ownerId: string;
 }
 
-// User with Business Information
-interface IUserWithBusiness {
-  user: IAppUser;
-  business?: IBusiness;
-  businessRole?: BusinessUserRole;
-  businessPermissions?: IBusinessPermissions;
-}
 
-// Business Registration Data (extends user registration)
-interface IBusinessRegistrationData {
-  // User data
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
 
-  // Business data
-  companyName: string;
-  taxNumber: string;
-  taxNumberType: TaxNumberType;
-  identityNumber?: string;
-  taxOffice: string;
-  address: IBusinessAddress;
-  phone: string;
-  website?: string;
-  industry: string;
-  companySize: CompanySize;
-  mainCategoryId: string;
-  subCategoryIds: string[];
-  description?: string;
-}
 
-// Enhanced IAppUser for business architecture (this will replace the one in auth-types.ts)
-interface IAppUser extends IFirestoreEntity {
-  // Personal Information
-  email: string;
-  firstName: string;
-  lastName: string;
-  displayName: string;
-  photoURL?: string;
-  phone?: string;
-  personalAddress?: IAddress; // Personal/home address
-
-  // Account Details
-  accountType: AccountType;
-  isEmailVerified: boolean;
-  preferences: IUserPreferences;
-
-  // Business Association (One-to-One Constraint)
-  businessId?: string; // Reference to business (null for individual users)
-  businessRole?: BusinessUserRole; // OWNER | MANAGER | TECHNICIAN | SUPPORT
-  businessPermissions?: string[]; // Granular permissions array
-  joinedBusinessAt?: Timestamp;
-
-  // Status
-  isActive: boolean;
-  lastLoginAt?: Timestamp;
-}
 
 export type {
-  IAppUser, IBusiness,
-  IBusinessAddress,
-  IBusinessCreateData,
+  IBusiness,
   IBusinessDocument,
   IBusinessInvitation,
   IBusinessPermissions,
   IBusinessRegistrationData,
-  IBusinessUserInfo,
-  IFirestoreEntity,
-  IUserWithBusiness
+  IBusinessUserInfo
 };
 

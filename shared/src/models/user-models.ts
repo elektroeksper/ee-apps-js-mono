@@ -1,13 +1,13 @@
 import { Timestamp } from "firebase/firestore";
 import { AccountType, BusinessUserRole } from "../enums";
-import { IAddress, IAppUser, IUserPreferences } from "../types";
+import { IAddress, IBusinessPermissions } from "../types";
+import { IAppUser, IUserPreferences } from "../types/user-types";
 
 class AppUser implements IAppUser {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  isDeleted?: boolean | undefined;
   displayName: string;
   photoURL?: string | undefined;
   phone?: string | undefined;
@@ -19,19 +19,23 @@ class AppUser implements IAppUser {
   // Business Association
   businessId?: string | undefined;
   businessRole?: BusinessUserRole | undefined;
-  businessPermissions?: string[] | undefined;
-  joinedBusinessAt?: Timestamp | undefined;
+  businessPermissions?: IBusinessPermissions | undefined;
+  joinedBusinessAt?: Date | Timestamp | undefined;
 
   // Status
   isActive: boolean;
-  lastLoginAt?: Timestamp | undefined;
+  lastLoginAt?: Date | Timestamp | undefined;
 
   // Timestamps
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date | Timestamp;
+  updatedAt: Date | Timestamp;
   updatedBy?: string | undefined;
 
-  constructor(id: string, data: Partial<IAppUser> = {}) {
+  isPhoneVerified: boolean = false;
+  isDeleted: boolean = false;
+
+
+  constructor(id: string, data: Partial<IAppUser>) {
     this.id = id;
     this.email = data.email || '';
     this.firstName = data.firstName || '';
@@ -43,6 +47,8 @@ class AppUser implements IAppUser {
     this.isEmailVerified = data.isEmailVerified ?? false;
     this.preferences = data.preferences ?? {} as IUserPreferences;
     this.personalAddress = data.personalAddress;
+    this.isPhoneVerified = data.isPhoneVerified ?? false;
+    this.isDeleted = data.isDeleted ?? false;
 
     // Business fields
     this.businessId = data.businessId;
@@ -52,11 +58,11 @@ class AppUser implements IAppUser {
 
     // Status
     this.isActive = data.isActive ?? true;
-    this.lastLoginAt = data.lastLoginAt;
+    this.lastLoginAt = data.lastLoginAt || new Date();
 
     // Timestamps
-    this.createdAt = data.createdAt || Timestamp.now();
-    this.updatedAt = data.updatedAt || Timestamp.now();
+    this.createdAt = data.createdAt || new Date();
+    this.updatedAt = data.updatedAt || new Date();
     this.updatedBy = data.updatedBy;
   }
 
