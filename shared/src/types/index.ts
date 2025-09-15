@@ -1,4 +1,5 @@
 export * from './auth-types';
+export * from './business-types';
 export * from './common-types';
 export * from './content-types';
 export * from './document.types';

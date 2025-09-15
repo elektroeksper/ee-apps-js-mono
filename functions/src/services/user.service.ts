@@ -433,7 +433,7 @@ export async function createBusinessDocument(userId: string, documentData: {
     const docRef = await db.collection('businessDocuments').add(docData);
     const createdDoc = await docRef.get();
 
-    const businessDocument: IBusinessDocument = {
+    const businessDocument: any = {
       id: createdDoc.id,
       type: documentData.type,
       fileName: documentData.fileName,

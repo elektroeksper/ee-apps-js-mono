@@ -143,3 +143,5 @@ shared-generated/
 package-lock.json
 yarn.lock
 functions/admin-service-account.json
+
+emulator-data/

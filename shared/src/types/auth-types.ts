@@ -3,8 +3,9 @@
  * Shared across web and functions packages
  */
 
-import { AccountType, BusinessUserRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType, TaxNumberType } from '../enums';
-import { IAddress, IEntity, IOperationResult } from './common-types';
+import { AccountType, BusinessUserRole, BusinessVerificationStatus, CompanySize, TaxNumberType } from '../enums';
+import { IAppUser, IBusiness, IBusinessDocument } from './business-types';
+import { IAddress, IOperationResult } from './common-types';
 
 // Base Operation Result Interface
 
@@ -106,23 +107,6 @@ interface IBusinessInfo {
   }[];
 }
 
-interface IAppUser extends IEntity {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  displayName: string;
-  photoURL?: string;
-  phone?: string;
-  accountType: AccountType;
-  role?: BusinessUserRole;
-  isEmailVerified: boolean;
-  preferences: IUserPreferences;
-  address?: IAddress;
-  lastLoginAt?: Date;
-  businessInfo?: IBusinessInfo; // For business profile data
-}
-
 // Business Profile Interface
 interface IBusinessProfile extends IAppUser {
   companyName: string;
@@ -146,16 +130,6 @@ interface IBusinessProfile extends IAppUser {
   rejectedAt?: Date;
   rejectedBy?: string; // Admin user ID who rejected
   rejectionReason?: string;
-}
-
-// Business Document Interface
-interface IBusinessDocument {
-  id: string;
-  type: DocumentType;
-  fileName: string;
-  fileUrl: string;
-  uploadedAt: string; // ISO date string
-  status: DocumentStatus;
 }
 
 // User Preferences Interface
@@ -239,10 +213,24 @@ interface IAuthContextType {
   fireUser: IFirebaseUser | null;
   appUser: IAppUser | null;
 
+  // Business information (when user belongs to a business)
+  business: IBusiness | null;
+  businessRole: BusinessUserRole | null;
+  businessPermissions: string[];
+
+  // Business permission helpers
+  hasBusinessPermission: (permission: string) => boolean;
+  canEditBusiness: boolean;
+  canInviteUsers: boolean;
+  canManageUsers: boolean;
+  canViewOrders: boolean;
+  canManageOrders: boolean;
+
   // Loading flags
   isLoading: boolean;          // union loading (auth || user)
   isAuthLoading: boolean;      // firebase auth listener/loading
   isUserLoading: boolean;      // user document/profile loading
+  isBusinessLoading: boolean;  // business data loading
 
   // Roles / permissions
   isAdmin: boolean;
@@ -262,6 +250,11 @@ interface IAuthContextType {
   updateUser: (data: Partial<IAppUser>) => Promise<IAppUser | null>; // uid implied from auth state
   refreshUser: () => Promise<void>;
   refreshAuthToken: () => Promise<void>; // forces refresh of auth claims/token
+
+  // Business operations
+  refreshBusiness: () => Promise<void>;
+  leaveBusiness: () => Promise<{ success: boolean; error?: string }>;
+  acceptBusinessInvitation: (token: string) => Promise<{ success: boolean; error?: string }>;
 
   // Auth actions
   register: (data: IRegisterData | IBusinessRegisterData) => Promise<{ success: boolean; error?: string }>;
@@ -342,7 +335,7 @@ interface IBusinessRegisterFormData extends IRegisterData {
 }
 
 export type {
-  IAppUser, IAuthConfig, IAuthContextType, IAuthError, IAuthService, IAuthValidationSchemas, IBusinessDocument, IBusinessInfo, IBusinessProfile, IBusinessRegisterData, IBusinessRegisterFormData, IFirebaseUser,
+  IAuthConfig, IAuthContextType, IAuthError, IAuthService, IAuthValidationSchemas, IBusinessInfo, IBusinessProfile, IBusinessRegisterData, IBusinessRegisterFormData, IFirebaseUser,
   ILoginData, INotificationPreferences, IPasswordChangeData, IPasswordResetData, IPrivacyPreferences, IRegisterData, IRouteGuard, IUserFilter, IUserPreferences, IUserService
 };
 

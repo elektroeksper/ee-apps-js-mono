@@ -6,6 +6,62 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
+    // Business rules
+    match /businesses/{businessId} {
+      // Allow business creation if user is authenticated
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.ownerId;
+      
+      // Allow read access to business members
+      allow read: if request.auth != null && (
+        // Owner can always read
+        request.auth.uid == resource.data.ownerId ||
+        // Business members can read their business
+        request.auth.uid in resource.data.users.keys()
+      );
+      
+      // Allow write access to business owners and managers with edit permissions
+      allow update: if request.auth != null && 
+        request.auth.uid in resource.data.users.keys() &&
+        'canEditBusinessInfo' in resource.data.users[request.auth.uid].permissions;
+      
+      // Allow delete only by business owner
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.ownerId;
+      
+      // Business invitations subcollection
+      match /invitations/{invitationId} {
+        // Allow creating invitations if user has permission to invite
+        allow create: if request.auth != null && 
+          request.auth.uid in get(/databases/$(database)/documents/businesses/$(businessId)).data.users.keys() &&
+          'canInviteUsers' in get(/databases/$(database)/documents/businesses/$(businessId)).data.users[request.auth.uid].permissions;
+        
+        // Allow reading invitations for business members with invite permissions
+        allow read: if request.auth != null && (
+          // Business members with invite permissions can read
+          (request.auth.uid in get(/databases/$(database)/documents/businesses/$(businessId)).data.users.keys() &&
+           'canInviteUsers' in get(/databases/$(database)/documents/businesses/$(businessId)).data.users[request.auth.uid].permissions) ||
+          // Invited user can read their own invitation (for acceptance)
+          request.auth.token.email == resource.data.invitedEmail
+        );
+        
+        // Allow updating invitations for status changes (acceptance/approval)
+        allow update: if request.auth != null && (
+          // Invited user can accept invitation
+          (request.auth.token.email == resource.data.invitedEmail && 
+           request.resource.data.status == 'accepted') ||
+          // Business members with approval permissions can approve
+          (request.auth.uid in get(/databases/$(database)/documents/businesses/$(businessId)).data.users.keys() &&
+           'canApproveInvitations' in get(/databases/$(database)/documents/businesses/$(businessId)).data.users[request.auth.uid].permissions)
+        );
+        
+        // Allow deleting invitations by users with invite permissions
+        allow delete: if request.auth != null && 
+          request.auth.uid in get(/databases/$(database)/documents/businesses/$(businessId)).data.users.keys() &&
+          'canInviteUsers' in get(/databases/$(database)/documents/businesses/$(businessId)).data.users[request.auth.uid].permissions;
+      }
+    }
+    
     // Public read access to products
     match /products/{productId} {
       allow read: if true;
@@ -13,18 +69,46 @@ service cloud.firestore {
         request.auth.token.admin == true;
     }
     
-    // Users can read and write their own orders
+    // Business-aware order rules
     match /orders/{orderId} {
+      // Users can read and write their own orders
       allow read, write: if request.auth != null && 
         request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && 
         request.auth.uid == request.resource.data.userId;
+      
+      // Business members can read orders if they have permission
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/businesses/$(resource.data.businessId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.users.keys() &&
+        'canViewOrders' in get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.users[request.auth.uid].permissions;
+      
+      // Business members can manage orders if they have permission
+      allow update: if request.auth != null && 
+        exists(/databases/$(database)/documents/businesses/$(resource.data.businessId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.users.keys() &&
+        'canManageOrders' in get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.users[request.auth.uid].permissions;
     }
     
     // Admin-only access to admin collections
     match /admin/{document=**} {
       allow read, write: if request.auth != null && 
         request.auth.token.admin == true;
+    }
+    
+    // Helper function to check business membership and permissions
+    function hasBusinessPermission(businessId, permission) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/businesses/$(businessId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/businesses/$(businessId)).data.users.keys() &&
+        permission in get(/databases/$(database)/documents/businesses/$(businessId)).data.users[request.auth.uid].permissions;
+    }
+    
+    // Helper function to check if user is business owner
+    function isBusinessOwner(businessId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/businesses/$(businessId)) &&
+        request.auth.uid == get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId;
     }
   }
 }

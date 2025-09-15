@@ -1,12 +1,13 @@
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { HttpsError, HttpsOptions, onCall } from 'firebase-functions/v2/https';
 import { ADMIN_USERS } from './configs/constant';
+import { businessService } from './services/business.service';
 import { geocodingService } from './services/geo-coding.service';
 import * as orderService from './services/order.service';
 import * as productService from './services/product.service';
 import * as storageService from './services/storage.service';
 import * as userService from './services/user.service';
-import { getAuthErrorMessage, GetUserDocumentsResponse, IAddressInfo, IOperationResult, UploadDocumentResponse } from './shared-generated';
+import { BusinessUserRole, getAuthErrorMessage, GetUserDocumentsResponse, IAddressInfo, IOperationResult, UploadDocumentResponse } from './shared-generated';
 import { sendBusinessApprovalEmail, sendBusinessRejectionEmail } from './utils/email.service';
 import { auth, db } from './utils/firebase-admin';
 
@@ -1278,6 +1279,276 @@ export const testEmailFunction = onCall(async (request) => {
       error: error.message || 'Failed to send test email',
       sentTo: targetEmail
     };
+  }
+});
+
+//====================
+// BUSINESS FUNCTIONS
+//====================
+
+export const createBusiness = onCall(functionOptions, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { companyName, taxNumber, taxNumberType, taxOffice, address, phone, email, industry, companySize, mainCategoryId, subCategoryIds, description } = request.data;
+
+  if (!companyName || !taxNumber || !taxNumberType || !taxOffice || !address || !phone || !email || !industry || !companySize || !mainCategoryId) {
+    throw new HttpsError('invalid-argument', 'Missing required business data');
+  }
+
+  try {
+    const result = await businessService.createBusiness({
+      ownerId: request.auth.uid,
+      companyName,
+      taxNumber,
+      taxNumberType,
+      taxOffice,
+      address,
+      phone,
+      email,
+      industry,
+      companySize,
+      mainCategoryId,
+      subCategoryIds: subCategoryIds || [],
+      description
+    });
+
+    if (result.success) {
+      return result;
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to create business');
+    }
+  } catch (error: any) {
+    console.error('Error creating business:', error);
+    throw new HttpsError('internal', error.message || 'Failed to create business');
+  }
+});
+
+export const getBusiness = onCall(functionOptions, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { businessId } = request.data;
+
+  if (!businessId) {
+    throw new HttpsError('invalid-argument', 'Business ID is required');
+  }
+
+  try {
+    const result = await businessService.getBusiness(businessId);
+
+    if (result.success) {
+      return result;
+    } else {
+      throw new HttpsError('not-found', result.error || 'Business not found');
+    }
+  } catch (error: any) {
+    console.error('Error getting business:', error);
+    throw new HttpsError('internal', error.message || 'Failed to get business');
+  }
+});
+
+export const updateBusiness = onCall(functionOptions, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { businessId, updates } = request.data;
+
+  if (!businessId || !updates) {
+    throw new HttpsError('invalid-argument', 'Business ID and updates are required');
+  }
+
+  try {
+    // Check user permission to edit business
+    const businessResult = await businessService.getBusiness(businessId);
+    if (!businessResult.success || !businessResult.data) {
+      throw new HttpsError('not-found', 'Business not found');
+    }
+
+    const userInfo = businessResult.data.users[request.auth.uid];
+    if (!userInfo || !userInfo.permissions.includes('canEditBusinessInfo')) {
+      throw new HttpsError('permission-denied', 'Insufficient permissions to edit business');
+    }
+
+    const result = await businessService.updateBusiness(businessId, updates);
+
+    if (result.success) {
+      return result;
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to update business');
+    }
+  } catch (error: any) {
+    console.error('Error updating business:', error);
+    throw new HttpsError('internal', error.message || 'Failed to update business');
+  }
+});
+
+export const inviteUserToBusiness = onCall(functionOptions, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { businessId, invitedEmail, invitedRole, invitedName } = request.data;
+
+  if (!businessId || !invitedEmail || !invitedRole) {
+    throw new HttpsError('invalid-argument', 'Business ID, email, and role are required');
+  }
+
+  try {
+    // Check user permission to invite
+    const businessResult = await businessService.getBusiness(businessId);
+    if (!businessResult.success || !businessResult.data) {
+      throw new HttpsError('not-found', 'Business not found');
+    }
+
+    const userInfo = businessResult.data.users[request.auth.uid];
+    if (!userInfo || !userInfo.permissions.includes('canInviteUsers')) {
+      throw new HttpsError('permission-denied', 'Insufficient permissions to invite users');
+    }
+
+    // Generate secure token
+    const token = businessService.generateSecureToken();
+
+    // Create invitation with proper timestamp for shared types
+    const expiresDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days expiry
+
+    const invitationData = {
+      businessId,
+      businessName: businessResult.data.companyName,
+      invitedEmail,
+      invitedName: invitedName || invitedEmail,
+      invitedRole,
+      invitedBy: request.auth.uid,
+      invitedByName: userInfo.userName,
+      token,
+      expiresAt: expiresDate, // Let the business service handle timestamp conversion
+      status: 'pending' as any,
+    };
+
+    const result = await businessService.createInvitation(businessId, invitationData as any);
+
+    if (result.success) {
+      // TODO: Send invitation email here
+      console.log('Invitation created successfully, email sending not implemented yet');
+      return result;
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to create invitation');
+    }
+  } catch (error: any) {
+    console.error('Error inviting user to business:', error);
+    throw new HttpsError('internal', error.message || 'Failed to invite user');
+  }
+});
+
+export const acceptBusinessInvitation = onCall(functionOptions, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { invitationToken } = request.data;
+
+  if (!invitationToken) {
+    throw new HttpsError('invalid-argument', 'Invitation token is required');
+  }
+
+  try {
+    const result = await businessService.acceptInvitation(invitationToken);
+
+    if (result.success) {
+      return { success: true, message: 'Invitation accepted successfully' };
+    } else {
+      throw new HttpsError('invalid-argument', result.error || 'Failed to accept invitation');
+    }
+  } catch (error: any) {
+    console.error('Error accepting business invitation:', error);
+    throw new HttpsError('internal', error.message || 'Failed to accept invitation');
+  }
+});
+
+export const removeUserFromBusiness = onCall(functionOptions, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { businessId, userId } = request.data;
+
+  if (!businessId || !userId) {
+    throw new HttpsError('invalid-argument', 'Business ID and user ID are required');
+  }
+
+  try {
+    // Check user permission to remove users
+    const businessResult = await businessService.getBusiness(businessId);
+    if (!businessResult.success || !businessResult.data) {
+      throw new HttpsError('not-found', 'Business not found');
+    }
+
+    const userInfo = businessResult.data.users[request.auth.uid];
+    if (!userInfo || !userInfo.permissions.includes('canRemoveUsers')) {
+      throw new HttpsError('permission-denied', 'Insufficient permissions to remove users');
+    }
+
+    // Cannot remove business owner
+    const targetUser = businessResult.data.users[userId];
+    if (targetUser && targetUser.role === BusinessUserRole.OWNER) {
+      throw new HttpsError('invalid-argument', 'Cannot remove business owner');
+    }
+
+    const result = await businessService.removeUserFromBusiness(businessId, userId);
+
+    if (result.success) {
+      return { success: true, message: 'User removed successfully' };
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to remove user');
+    }
+  } catch (error: any) {
+    console.error('Error removing user from business:', error);
+    throw new HttpsError('internal', error.message || 'Failed to remove user');
+  }
+});
+
+export const updateUserRole = onCall(functionOptions, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { businessId, userId, newRole } = request.data;
+
+  if (!businessId || !userId || !newRole) {
+    throw new HttpsError('invalid-argument', 'Business ID, user ID, and new role are required');
+  }
+
+  try {
+    // Check user permission to change roles
+    const businessResult = await businessService.getBusiness(businessId);
+    if (!businessResult.success || !businessResult.data) {
+      throw new HttpsError('not-found', 'Business not found');
+    }
+
+    const userInfo = businessResult.data.users[request.auth.uid];
+    if (!userInfo || !userInfo.permissions.includes('canChangeUserRoles')) {
+      throw new HttpsError('permission-denied', 'Insufficient permissions to change user roles');
+    }
+
+    // Cannot change owner role
+    const targetUser = businessResult.data.users[userId];
+    if (targetUser && targetUser.role === BusinessUserRole.OWNER) {
+      throw new HttpsError('invalid-argument', 'Cannot change business owner role');
+    }
+
+    const result = await businessService.updateUserRole(businessId, userId, newRole);
+
+    if (result.success) {
+      return { success: true, message: 'User role updated successfully' };
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to update user role');
+    }
+  } catch (error: any) {
+    console.error('Error updating user role:', error);
+    throw new HttpsError('internal', error.message || 'Failed to update user role');
   }
 });
 

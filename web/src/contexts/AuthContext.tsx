@@ -11,6 +11,7 @@ import {
   useRoles,
   useUserDoc,
 } from '@/hooks/auth'
+import { useBusiness } from '@/hooks/useBusiness'
 import { IAuthContextType } from '@/shared-generated'
 import {
   createContext,
@@ -60,11 +61,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     update: updateUser,
     clearError: clearUserError,
   } = useUserDoc(fireUser?.uid || null)
+
+  // Get business data if user is authenticated
+  const {
+    business,
+    businessRole,
+    businessPermissions,
+    isLoading: isBusinessLoading,
+    error: businessError,
+    refresh: refreshBusiness,
+    leaveBusiness,
+    acceptInvitation,
+    hasPermission,
+    canEditBusiness,
+    canInviteUsers,
+    canManageUsers,
+    canViewOrders,
+    canManageOrders,
+  } = useBusiness(fireUser?.uid || null)
+
   const actions = useAuthActions()
   const { roles, isAdmin, hasRole, hasAnyRole } = useRoles(claims, appUser)
 
   const clearError = useCallback(() => {
     clearUserError()
+    // Note: business errors are handled by the business hook
     // authError is transient; no direct clear right now
   }, [clearUserError])
 
@@ -139,25 +160,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // core identities
       fireUser,
       appUser,
+
+      // business information
+      business,
+      businessRole,
+      businessPermissions,
+
+      // business permission helpers
+      hasBusinessPermission: hasPermission,
+      canEditBusiness,
+      canInviteUsers,
+      canManageUsers,
+      canViewOrders,
+      canManageOrders,
+
       // loading flags
-      isLoading: isAuthLoading || isUserLoading,
+      isLoading: isAuthLoading || isUserLoading || isBusinessLoading,
       isAuthLoading,
       isUserLoading,
+      isBusinessLoading,
+
       // roles
       isAdmin,
       userRoles: roles,
       hasRole,
       hasAnyRole,
+
       // business document computed properties
       hasDocuments,
       isProfileComplete,
+
       // errors
-      error: authError || userError,
+      error: authError || userError || businessError,
       clearError,
+
       // user profile ops
       updateUser,
       refreshUser,
       refreshAuthToken: refreshClaims,
+
+      // business operations
+      refreshBusiness: () => Promise.resolve(refreshBusiness()),
+      leaveBusiness,
+      acceptBusinessInvitation: acceptInvitation,
+
       // auth actions
       register: actions.register,
       login: actions.login,
@@ -168,8 +214,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [
       fireUser,
       appUser,
+      business,
+      businessRole,
+      businessPermissions,
+      hasPermission,
+      canEditBusiness,
+      canInviteUsers,
+      canManageUsers,
+      canViewOrders,
+      canManageOrders,
       isAuthLoading,
       isUserLoading,
+      isBusinessLoading,
       isAdmin,
       roles,
       hasRole,
@@ -178,10 +234,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isProfileComplete,
       authError,
       userError,
+      businessError,
       clearError,
       updateUser,
       refreshUser,
       refreshClaims,
+      refreshBusiness,
+      leaveBusiness,
+      acceptInvitation,
       actions,
     ]
   )

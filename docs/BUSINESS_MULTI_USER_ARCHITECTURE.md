@@ -65,13 +65,25 @@ interface IBusiness {
   rejectedBy?: string
   rejectionReason?: string
 
-  // Ownership
+  // Ownership & Team
   ownerId: string // Reference to user who owns the business
+  users: Record<string, IBusinessUserInfo> // Map of userId -> user info for quick access
 
   // Metadata
   createdAt: Timestamp
   updatedAt: Timestamp
   isActive: boolean
+}
+
+interface IBusinessUserInfo {
+  userId: string // Redundant but useful for iteration
+  userName: string // Display name for quick access
+  email: string // Email for quick access
+  role: BusinessUserRole // User's role in this business
+  permissions: string[] // Specific permissions array
+  isActive: boolean // Whether user is active in this business
+  joinedAt: Timestamp // When user joined the business
+  lastActiveAt?: Timestamp // Last activity timestamp
 }
 ```
 
@@ -225,48 +237,9 @@ const ROLE_PERMISSIONS: Record<BusinessUserRole, IBusinessPermissions> = {
 
 ## Implementation Phases
 
-### Phase 1: Database Schema Migration
+### Phase 1: Core Service Updates
 
-#### 1.1 Create Migration Functions
-
-```typescript
-// functions/src/migrations/business-migration.ts
-interface MigrationResult {
-  migratedBusinesses: number
-  migratedUsers: number
-  errors: MigrationError[]
-}
-
-async function migrateBusinessData(): Promise<MigrationResult>
-async function validateMigration(): Promise<ValidationResult>
-async function rollbackMigration(): Promise<RollbackResult>
-```
-
-#### 1.2 Migration Steps
-
-1. **Backup Current Data**
-   - Export all user documents with business data
-   - Store backup in Cloud Storage with timestamp
-
-2. **Create Business Documents**
-   - Extract `businessInfo` from existing business users
-   - Create new documents in `businesses` collection
-   - Maintain original user ID as `ownerId`
-
-3. **Update User Documents**
-   - Remove `businessInfo` property
-   - Add `businessId` reference
-   - Set `businessRole` to `OWNER` for migrated users
-   - Update `accountType` consistency
-
-4. **Validation & Cleanup**
-   - Verify all business data migrated correctly
-   - Ensure referential integrity
-   - Remove orphaned data
-
-### Phase 2: Core Service Updates
-
-#### 2.1 Business Service (New)
+#### 1.1 Business Service (New)
 
 ```typescript
 // web/src/services/BusinessService.ts
@@ -286,6 +259,11 @@ class BusinessService {
   async getBusinessUsers(
     businessId: string
   ): Promise<IOperationResult<IAppUser[]>>
+  async addUserToBusiness(
+    businessId: string,
+    userId: string,
+    role: BusinessUserRole
+  ): Promise<IOperationResult<void>>
   async removeUser(
     businessId: string,
     userId: string
@@ -342,7 +320,7 @@ class BusinessService {
 }
 ```
 
-#### 2.2 Updated User Service
+#### 1.2 Updated User Service
 
 ```typescript
 // web/src/services/auth/UserService.ts - Updated methods
@@ -365,9 +343,9 @@ class UserService {
 }
 ```
 
-### Phase 3: Authentication & Context Updates
+### Phase 2: Authentication & Context Updates
 
-#### 3.1 Enhanced Auth Context
+#### 2.1 Enhanced Auth Context
 
 ```typescript
 // web/src/contexts/AuthContext.tsx - Updated interface
@@ -394,7 +372,7 @@ interface IAuthContextType {
 }
 ```
 
-#### 3.2 Role-Based Route Guards
+#### 2.2 Role-Based Route Guards
 
 ```typescript
 // web/src/components/guards/BusinessGuard.tsx
@@ -408,9 +386,9 @@ interface BusinessGuardProps {
 const BusinessGuard: React.FC<BusinessGuardProps>
 ```
 
-### Phase 4: UI Component Updates
+### Phase 3: UI Component Updates
 
-#### 4.1 Registration Flow Updates
+#### 3.1 Registration Flow Updates
 
 ```typescript
 // web/src/components/BusinessRegisterForm.tsx
@@ -431,7 +409,7 @@ interface BusinessRegistrationData {
 }
 ```
 
-#### 4.2 Business Management Dashboard
+#### 3.2 Business Management Dashboard
 
 ```typescript
 // web/src/components/business/BusinessDashboard.tsx
@@ -449,7 +427,7 @@ interface UserManagementProps {
 }
 ```
 
-#### 4.3 User Profile Updates
+#### 3.3 User Profile Updates
 
 ```typescript
 // web/src/components/UserProfile.tsx
@@ -460,9 +438,9 @@ interface UserProfileData {
 }
 ```
 
-### Phase 5: Business Invitation System
+### Phase 4: Business Invitation System
 
-#### 5.1 Invitation Flow with Approval Process
+#### 4.1 Invitation Flow with Approval Process
 
 ```typescript
 // Invitation Creation (OWNER or qualified roles only)
@@ -610,7 +588,7 @@ async function determineApprovalRequirement(
 }
 ```
 
-#### 5.2 Email Templates & Notifications
+#### 4.2 Email Templates & Notifications
 
 - **Direct Invitation Email**: Sent immediately for owner/admin invitations
 - **Approval Request**: Notifies owners when manager creates invitation
@@ -618,9 +596,9 @@ async function determineApprovalRequirement(
 - **Role Change Notification**: Sent when user role is modified
 - **Business Removal Notification**: Sent when user is removed from business
 
-### Phase 6: Admin Panel Updates
+### Phase 5: Admin Panel Updates
 
-#### 6.1 Enhanced Business Management
+#### 5.1 Enhanced Business Management
 
 ```typescript
 // web/src/pages/admin/businesses.tsx
@@ -676,6 +654,88 @@ async function adminCreateBusinessOwner(
 }
 ```
 
+## Data Storage Strategy: User Map vs Array
+
+### Chosen Approach: User Map (`Record<string, IBusinessUserInfo>`)
+
+**Benefits:**
+
+- **Performance**: No need to query user collection for basic info (name, email, role)
+- **Quick Access**: O(1) lookup for user info by userId
+- **Rich Information**: Immediate access to permissions, role, and status
+- **Reduced Queries**: Business dashboard can display all team info without additional queries
+- **Offline Friendly**: All user info available when business document is cached
+
+**Trade-offs:**
+
+- **Data Duplication**: User name and email stored in both collections
+- **Sync Complexity**: Must update business map when user info changes
+- **Document Size**: Business document grows with team size
+- **Consistency Challenges**: Risk of stale data if user updates aren't propagated
+
+**Mitigation Strategies:**
+
+- Implement sync functions to update business map when user info changes
+- Monitor document size and consider pagination for very large teams (100+ users)
+- Use Cloud Functions triggers to maintain consistency
+- Implement validation checks to detect and fix inconsistencies
+
+```typescript
+// Cloud Function to sync user changes to business map
+export const syncUserChangesToBusiness = functions.firestore
+  .document('users/{userId}')
+  .onUpdate(async (change, context) => {
+    const userId = context.params.userId
+    const before = change.before.data()
+    const after = change.after.data()
+
+    // Only sync if user is part of a business and relevant fields changed
+    if (!after.businessId) return
+
+    const relevantFieldsChanged =
+      before.displayName !== after.displayName ||
+      before.email !== after.email ||
+      before.isActive !== after.isActive
+
+    if (!relevantFieldsChanged) return
+
+    // Update business map
+    const businessRef = db.collection('businesses').doc(after.businessId)
+    await businessRef.update({
+      [`users.${userId}.userName`]: after.displayName,
+      [`users.${userId}.email`]: after.email,
+      [`users.${userId}.isActive`]: after.isActive,
+      [`users.${userId}.lastActiveAt`]:
+        admin.firestore.FieldValue.serverTimestamp(),
+    })
+  })
+```
+
+### Alternative Approach: Simple Array (`string[]`)
+
+**Benefits:**
+
+- **Simplicity**: Easier to maintain consistency
+- **Smaller Documents**: Business documents stay lean
+- **Single Source of Truth**: User info only stored in user collection
+
+**Trade-offs:**
+
+- **More Queries**: Need to fetch user documents for team displays
+- **Performance Impact**: Multiple queries for business dashboards
+- **Complex UI Logic**: Need to handle loading states for user info
+
+### Recommendation
+
+Use the **User Map approach** for most businesses because:
+
+1. Most businesses have small teams (< 50 users)
+2. Performance benefits outweigh sync complexity
+3. Better user experience with faster loading
+4. Can implement background sync to maintain consistency
+
+For enterprise businesses with very large teams, consider a hybrid approach or pagination.
+
 ## Data Validation & Constraints
 
 ### 1. One Business Per User Constraint
@@ -702,7 +762,83 @@ function validateSingleBusinessConstraint(currentData, newData) {
 }
 ```
 
-### 2. Business Ownership Transfer
+### 2. Business-User Relationship Integrity
+
+```typescript
+// Maintain consistency between business.users map and user.businessId
+async function addUserToBusiness(
+  businessId: string,
+  userId: string,
+  role: BusinessUserRole
+): Promise<IOperationResult<void>> {
+  // Use Firestore transaction to ensure atomicity
+  return db.runTransaction(async transaction => {
+    const userDoc = await transaction.get(userRef)
+    const userData = userDoc.data()
+
+    // 1. Add user to business.users map with full info
+    transaction.update(businessRef, {
+      [`users.${userId}`]: {
+        userId,
+        userName: userData.displayName,
+        email: userData.email,
+        role,
+        permissions: ROLE_PERMISSIONS[role],
+        isActive: true,
+        joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+    })
+
+    // 2. Update user's business association
+    transaction.update(userRef, {
+      businessId,
+      businessRole: role,
+      joinedBusinessAt: admin.firestore.FieldValue.serverTimestamp(),
+    })
+  })
+}
+
+async function removeUserFromBusiness(
+  businessId: string,
+  userId: string
+): Promise<IOperationResult<void>> {
+  return db.runTransaction(async transaction => {
+    // 1. Remove user from business.users map
+    transaction.update(businessRef, {
+      [`users.${userId}`]: admin.firestore.FieldValue.delete(),
+    })
+
+    // 2. Clear user's business association
+    transaction.update(userRef, {
+      businessId: null,
+      businessRole: null,
+      businessPermissions: null,
+      joinedBusinessAt: null,
+    })
+  })
+}
+
+async function updateUserRoleInBusiness(
+  businessId: string,
+  userId: string,
+  newRole: BusinessUserRole
+): Promise<IOperationResult<void>> {
+  return db.runTransaction(async transaction => {
+    // Update role and permissions in business map
+    transaction.update(businessRef, {
+      [`users.${userId}.role`]: newRole,
+      [`users.${userId}.permissions`]: ROLE_PERMISSIONS[newRole],
+    })
+
+    // Update user's role
+    transaction.update(userRef, {
+      businessRole: newRole,
+    })
+  })
+}
+```
+
+### 3. Business Ownership Transfer
 
 ```typescript
 // Only allow ownership transfer through specific admin function
@@ -821,38 +957,15 @@ function isSystemAdmin(userId) {
 - Users can only access their associated business data
 - Admin users have cross-business access for management
 
-## Migration Timeline & Rollback Strategy
-
-### Timeline (Estimated)
-
-- **Week 1-2**: Database schema design and migration scripts
-- **Week 3-4**: Core service implementation and testing
-- **Week 5-6**: UI updates and integration
-- **Week 7**: Business invitation system
-- **Week 8**: Admin panel updates and final testing
-
-### Rollback Strategy
-
-1. **Data Backup**: Complete backup before migration
-2. **Rollback Scripts**: Automated scripts to restore original structure
-3. **Feature Flags**: Gradual rollout with ability to revert
-4. **Monitoring**: Real-time monitoring during migration
-
 ## Testing Strategy
 
-### 1. Data Migration Testing
-
-- Test with sample business data
-- Validate data integrity before and after migration
-- Performance testing with large datasets
-
-### 2. Business Logic Testing
+### 1. Business Logic Testing
 
 - Unit tests for business service methods
 - Integration tests for user-business relationships
 - End-to-end tests for invitation flow
 
-### 3. Security Testing
+### 2. Security Testing
 
 - Permission validation testing
 - Data access control verification
