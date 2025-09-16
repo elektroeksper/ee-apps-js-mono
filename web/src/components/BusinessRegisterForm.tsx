@@ -4,22 +4,16 @@ import { GOOGLE_MAPS_CONFIG } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   businessRegisterSchema,
+  transformToBusinessRegisterData,
   type BusinessRegisterFormData,
 } from '@/lib/validations/auth'
 import {
   AccountType,
-  BusinessUserRole,
-  BusinessVerificationStatus,
   getAuthErrorMessage,
-  IBusiness,
   ICoordinates,
-  IRegisterData,
-  ROLE_PERMISSIONS,
   TaxNumberType,
 } from '@/shared-generated'
-import { businessService, userService } from '@/shared-generated/services'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Timestamp } from 'firebase/firestore'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React, { useCallback, useState } from 'react'
@@ -60,26 +54,27 @@ export const BusinessRegisterForm: React.FC = () => {
     ICoordinates | undefined
   >(GOOGLE_MAPS_CONFIG.defaultCenter)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid },
-    watch,
-    setError,
-    setValue,
-  } = useForm<BusinessRegisterFormData>({
-    resolver: zodResolver(businessRegisterSchema),
+  const form = useForm<BusinessRegisterFormData>({
+    resolver: zodResolver(businessRegisterSchema) as any,
+    mode: 'onChange',
     defaultValues: {
-      businessName: '',
-      taxNumber: '',
-      userTitle: '',
-      taxOffice: '',
-      mainCategoryId: '',
       firstName: '',
       lastName: '',
       email: '',
-      phoneNumber: '',
-      businessAddress: {
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      accountType: AccountType.BUSINESS,
+      businessName: '',
+      companyName: '',
+      userTitle: '',
+      taxNumber: '',
+      taxNumberType: TaxNumberType.TAX,
+      identityNumber: '',
+      taxOffice: '',
+      mainCategoryId: '',
+      subCategoryIds: [],
+      address: {
         street: '',
         doorNumber: '',
         neighborhood: '',
@@ -93,125 +88,68 @@ export const BusinessRegisterForm: React.FC = () => {
           lng: 32.8597,
         },
       },
-      password: '',
-      confirmPassword: '',
+      website: '',
+      industry: '',
+      companySize: '',
+      description: '',
       acceptTerms: false,
+      marketingConsent: false,
     },
   })
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+    watch,
+    setError,
+    setValue,
+  } = form
 
   const onSubmit = async (data: BusinessRegisterFormData) => {
     try {
       clearError()
 
       // Check if door number is required but missing
-      if (hasSufficientAddressInfo && !data.businessAddress?.doorNumber) {
-        setError('businessAddress.doorNumber', {
+      if (hasSufficientAddressInfo && !data.address?.doorNumber) {
+        setError('address.doorNumber', {
           type: 'manual',
           message: 'Kapı numarası gereklidir',
         })
         return
       }
 
-      const registerData: IRegisterData = {
-        email: data.email,
-        password: data.password,
-        accountType: AccountType.BUSINESS,
-        firstName: data.firstName,
-        lastName: data.lastName,
+      // Use the transformation function to convert form data to IBusinessRegisterData
+      if (!registerUser) {
+        setError('root', {
+          type: 'manual',
+          message: 'Registration service is not available',
+        })
+        return
       }
-      const registerResult = await registerUser(registerData)
+
+      // Transform form data to the shared interface format
+      const businessRegisterData = transformToBusinessRegisterData(data, '')
+
+      // Register the business user
+      const registerResult = await registerUser(businessRegisterData)
 
       if (!registerResult.success) {
         setError('root', {
           type: 'manual',
           message: getAuthErrorMessage(registerResult.error || 'default', 'tr'),
         })
-      }
-      const userCreateResult = await userService.create(data)
-      if (!userCreateResult.success) {
-        setError('root', {
-          type: 'manual',
-          message: getAuthErrorMessage(
-            userCreateResult.error || 'default',
-            'tr'
-          ),
-        })
         return
       }
 
-      // Business users need to verify email first, then complete setup
-      const businessCreateData: IBusiness = {
-        companyName: data.businessName,
-        taxNumber: data.taxNumber,
-        taxOffice: data.taxOffice,
-        mainCategoryId: data.mainCategoryId,
-        users: {
-          [String(registerResult.data!.uid)]: {
-            displayName: data.firstName + ' ' + data.lastName,
-            businessTitle: data.userTitle,
-            email: data.email,
-            isActive: true,
-            joinedAt: Timestamp.now(),
-            permissions: ROLE_PERMISSIONS[BusinessUserRole.OWNER],
-            role: BusinessUserRole.OWNER,
-            userId: registerResult.data!.uid,
-            lastActiveAt: Timestamp.now(),
-          },
-        },
-        isActive: false,
-        ownerId: String(registerResult.data!.uid),
-        addresses: data.businessAddress
-          ? [
-              {
-                street: data.businessAddress.street,
-                doorNumber: data.businessAddress.doorNumber,
-                neighborhood: data.businessAddress.neighborhood,
-                district: data.businessAddress.district,
-                city: data.businessAddress.city,
-                state: data.businessAddress.state,
-                postalCode: data.businessAddress.postalCode,
-                zipCode: data.businessAddress.postalCode, // Assuming postalCode is used for zipCode
-                country: data.businessAddress.country,
-                coordinates: data.businessAddress.coordinates,
-              },
-            ]
-          : [],
-        verification: {
-          status: BusinessVerificationStatus.PENDING,
-          history: [],
-        },
-        companySize: undefined,
-        createdAt: Timestamp.now(),
-        documents: [],
-        phone: data.phoneNumber,
-        identityNumber:
-          data.taxNumberType === 'identity' ? data.identityNumber : undefined,
-        isDeleted: false,
-        subCategoryIds: [],
-        updatedAt: Timestamp.now(),
-        website: undefined,
-        taxNumberType: data.taxNumberType,
-        updatedBy: String(registerResult.data!.uid),
-      }
-      const businessCreateResult =
-        await businessService.create(businessCreateData)
-      if (!businessCreateResult.success) {
-        setError('root', {
-          type: 'manual',
-          message: getAuthErrorMessage(
-            businessCreateResult.error || 'default',
-            'tr'
-          ),
-        })
-      }
-      router.push('/verify-email')
-    } catch (err: any) {
+      // If registration is successful, redirect to verification or dashboard
+      router.push('/auth/verify-email?type=business')
+    } catch (error) {
+      console.error('Registration error:', error)
       setError('root', {
         type: 'manual',
-        message: getAuthErrorMessage(
-          err.code || err.message || 'default',
-          'tr'
-        ),
+        message:
+          'Kayıt işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.',
       })
     }
   }
@@ -235,17 +173,17 @@ export const BusinessRegisterForm: React.FC = () => {
       console.log('🗺️ Coordinates:', coordinates)
 
       // Update form values
-      setValue('businessAddress.street', components.street || '')
-      setValue('businessAddress.doorNumber', components.streetNumber || '')
-      setValue('businessAddress.neighborhood', components.neighborhood || '')
-      setValue('businessAddress.district', components.district || '')
-      setValue('businessAddress.city', components.city || '')
-      setValue('businessAddress.state', components.city || '') // Using city as state for Turkey
-      setValue('businessAddress.postalCode', components.postalCode || '')
-      setValue('businessAddress.country', components.country || 'Turkey')
+      setValue('address.street', components.street || '')
+      setValue('address.doorNumber', components.streetNumber || '')
+      setValue('address.neighborhood', components.neighborhood || '')
+      setValue('address.district', components.district || '')
+      setValue('address.city', components.city || '')
+      setValue('address.state', components.city || '') // Using city as state for Turkey
+      setValue('address.postalCode', components.postalCode || '')
+      setValue('address.country', components.country || 'Turkey')
 
       if (coordinates) {
-        setValue('businessAddress.coordinates', coordinates)
+        setValue('address.coordinates', coordinates)
         setMapCenter(coordinates)
         setMarkerPosition(coordinates)
         console.log('🗺️ Map centered at:', coordinates)
@@ -262,7 +200,7 @@ export const BusinessRegisterForm: React.FC = () => {
   const handleMarkerDragEnd = useCallback(
     (position: ICoordinates) => {
       setMarkerPosition(position)
-      setValue('businessAddress.coordinates', position)
+      setValue('address.coordinates', position)
     },
     [setValue]
   )
@@ -272,13 +210,13 @@ export const BusinessRegisterForm: React.FC = () => {
     (place: google.maps.places.PlaceResult | null) => {
       if (place) {
         const components = extractAddressComponents(place)
-        setValue('businessAddress.street', components.street || '')
-        setValue('businessAddress.doorNumber', components.streetNumber || '')
-        setValue('businessAddress.neighborhood', components.neighborhood || '')
-        setValue('businessAddress.district', components.district || '')
-        setValue('businessAddress.city', components.city || '')
-        setValue('businessAddress.state', components.city || '')
-        setValue('businessAddress.postalCode', components.postalCode || '')
+        setValue('address.street', components.street || '')
+        setValue('address.doorNumber', components.streetNumber || '')
+        setValue('address.neighborhood', components.neighborhood || '')
+        setValue('address.district', components.district || '')
+        setValue('address.city', components.city || '')
+        setValue('address.state', components.city || '')
+        setValue('address.postalCode', components.postalCode || '')
         setAddressText(components.formatted)
       }
     },
@@ -286,11 +224,11 @@ export const BusinessRegisterForm: React.FC = () => {
   )
 
   // Watch address parts for dynamic full address & geocoding on door number change
-  const doorNumber = watch('businessAddress.doorNumber')
-  const street = watch('businessAddress.street')
-  const district = watch('businessAddress.district')
-  const city = watch('businessAddress.city')
-  const neighborhood = watch('businessAddress.neighborhood')
+  const doorNumber = watch('address.doorNumber')
+  const street = watch('address.street')
+  const district = watch('address.district')
+  const city = watch('address.city')
+  const neighborhood = watch('address.neighborhood')
 
   // Watch required form fields for submit button state
   const businessName = watch('businessName')
@@ -303,7 +241,7 @@ export const BusinessRegisterForm: React.FC = () => {
   const firstName = watch('firstName')
   const lastName = watch('lastName')
   const email = watch('email')
-  const phoneNumber = watch('phoneNumber')
+  const phone = watch('phone')
   const password = watch('password')
   const confirmPassword = watch('confirmPassword')
   const acceptTerms = watch('acceptTerms')
@@ -325,12 +263,7 @@ export const BusinessRegisterForm: React.FC = () => {
       mainCategoryId
     )
 
-    const hasRequiredPersonalInfo = !!(
-      firstName &&
-      lastName &&
-      email &&
-      phoneNumber
-    )
+    const hasRequiredPersonalInfo = !!(firstName && lastName && email && phone)
 
     const hasRequiredSecurity = !!(password && confirmPassword && acceptTerms)
 
@@ -353,7 +286,7 @@ export const BusinessRegisterForm: React.FC = () => {
     firstName,
     lastName,
     email,
-    phoneNumber,
+    phone,
     password,
     confirmPassword,
     acceptTerms,
@@ -387,7 +320,7 @@ export const BusinessRegisterForm: React.FC = () => {
             const coords = { lat: loc.lat(), lng: loc.lng() }
             setMapCenter(coords)
             setMarkerPosition(coords)
-            setValue('businessAddress.coordinates', coords)
+            setValue('address.coordinates', coords)
             // Update displayed address text with formatted result including door number
             setAddressText(results[0].formatted_address)
           }
@@ -584,8 +517,8 @@ export const BusinessRegisterForm: React.FC = () => {
             <Input
               label="Telefon Numarası"
               type="tel"
-              {...register('phoneNumber')}
-              error={errors.phoneNumber?.message}
+              {...register('phone')}
+              error={errors.phone?.message}
               placeholder="Telefon numaranızı girin"
             />
           </div>
@@ -633,8 +566,8 @@ export const BusinessRegisterForm: React.FC = () => {
                 Kapı No *
               </label>
               <Input
-                {...register('businessAddress.doorNumber')}
-                error={errors.businessAddress?.doorNumber?.message}
+                {...register('address.doorNumber')}
+                error={errors.address?.doorNumber?.message}
                 placeholder="Kapı numaranızı girin"
                 required
               />

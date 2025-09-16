@@ -1,11 +1,11 @@
 'use client'
 
+import type { YouTubeVideoMetadata } from '@/shared-generated/types/content-types'
 import {
   fetchYouTubeMetadata,
   getYouTubeEmbedUrl,
   isValidYouTubeVideoId,
-  YouTubeVideoMetadata,
-} from '@/utils/youtube'
+} from '@/shared-generated/utils/youtube-utils'
 import { useEffect, useState } from 'react'
 import { FiLoader, FiPlay } from 'react-icons/fi'
 

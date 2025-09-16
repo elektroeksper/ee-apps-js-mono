@@ -3,10 +3,10 @@
 import { useAuth } from '@/contexts/AuthContext'
 import {
   individualRegisterSchema,
+  transformToIndividualRegisterData,
   type IndividualRegisterFormData,
 } from '@/lib/validations/auth'
-import type { IRegisterData } from '@/shared-generated'
-import { AccountType, getAuthErrorMessage } from '@/shared-generated'
+import { getAuthErrorMessage } from '@/shared-generated'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -39,7 +39,10 @@ export const IndividualRegisterForm: React.FC = () => {
   } = useForm<IndividualRegisterFormData>({
     resolver: zodResolver(individualRegisterSchema),
     defaultValues: {
+      firstName: '',
+      lastName: '',
       email: '',
+      phoneNumber: '',
       password: '',
       confirmPassword: '',
       acceptTerms: false,
@@ -50,13 +53,8 @@ export const IndividualRegisterForm: React.FC = () => {
     try {
       clearError()
 
-      // Transform data to match the registration interface
-      const registrationData: IRegisterData = {
-        email: data.email,
-        password: data.password,
-        confirmPassword: data.confirmPassword,
-        accountType: AccountType.INDIVIDUAL,
-      }
+      // Transform form data to registration interface (excludes confirmPassword)
+      const registrationData = transformToIndividualRegisterData(data)
 
       const result = await registerUser(registrationData)
       if (result.success) {

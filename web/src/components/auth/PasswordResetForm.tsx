@@ -14,8 +14,8 @@ import {
   passwordResetSchema,
   type PasswordResetFormData,
 } from '@/lib/validations/auth'
-import { authService } from '@/services/auth/auth.service'
 import { getAuthErrorMessage } from '@/shared-generated'
+import { authService } from '@/shared-generated/services/auth.service'
 
 interface PasswordResetFormProps {
   onSuccess?: () => void

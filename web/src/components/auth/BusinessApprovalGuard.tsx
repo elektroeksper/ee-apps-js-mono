@@ -5,10 +5,16 @@
  */
 
 import { useAuth } from '@/contexts/AuthContext'
-import { isBusinessUser } from '@/types/user'
+import { AccountType } from '@/shared-generated'
+import type { IAppUser } from '@/shared-generated/types/user-types'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
+
+// Utility function to check if user is a business user
+const isBusinessUser = (user: IAppUser): boolean => {
+  return user.accountType === AccountType.BUSINESS
+}
 
 interface BusinessApprovalGuardProps {
   children: React.ReactNode

@@ -15,8 +15,8 @@ import {
   passwordChangeSchema,
   type PasswordChangeFormData,
 } from '@/lib/validations/auth'
-import { authService } from '@/services/auth/auth.service'
 import { getAuthErrorMessage } from '@/shared-generated'
+import { authService } from '@/shared-generated/services/auth.service'
 
 interface PasswordChangeFormProps {
   onSuccess?: () => void
