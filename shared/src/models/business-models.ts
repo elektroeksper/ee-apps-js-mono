@@ -5,6 +5,7 @@ import { IAddress, IBusiness, IBusinessDocument, IBusinessUserInfo } from "../ty
 class Business implements IBusiness {
   companyName: string = '';
   taxNumber?: string | undefined;
+  taxOffice?: string | undefined;
   taxNumberType?: TaxNumberType | undefined;
   identityNumber?: string | undefined;
   addresses?: IAddress[] | undefined;
@@ -18,8 +19,8 @@ class Business implements IBusiness {
   isActive: boolean = true;
   id?: string | undefined;
   isDeleted?: boolean | undefined;
-  createdAt?: Date | undefined;
-  updatedAt?: Date | undefined;
+  createdAt?: Timestamp | Date | undefined;
+  updatedAt?: Timestamp | Date | undefined;
   updatedBy?: string | undefined;
 
   constructor(id?: string, data?: Partial<IBusiness>) {
@@ -42,8 +43,8 @@ class Business implements IBusiness {
       // Metadata
       this.id = data.id;
       this.isDeleted = data.isDeleted ?? false;
-      this.createdAt = data.createdAt || new Date();
-      this.updatedAt = data.updatedAt || new Date();
+      this.createdAt = data.createdAt || Timestamp.now();
+      this.updatedAt = data.updatedAt || Timestamp.now();
       this.updatedBy = data.updatedBy;
     }
   }

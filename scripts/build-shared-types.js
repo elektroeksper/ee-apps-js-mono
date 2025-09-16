@@ -36,15 +36,15 @@ const PACKAGES = {
  */
 function getLastModified(dirPath) {
   if (!fs.existsSync(dirPath)) return 0;
-  
+
   let latestTime = 0;
-  
+
   function checkDir(currentDir) {
     const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       const fullPath = path.join(currentDir, entry.name);
-      
+
       if (entry.isDirectory()) {
         checkDir(fullPath);
       } else {
@@ -53,7 +53,7 @@ function getLastModified(dirPath) {
       }
     }
   }
-  
+
   checkDir(dirPath);
   return latestTime;
 }
@@ -64,31 +64,57 @@ function getLastModified(dirPath) {
 function needsRebuild() {
   const srcModified = getLastModified(SHARED_SRC_DIR);
   const distModified = getLastModified(SHARED_DIST_DIR);
-  
+
   // If dist doesn't exist or src is newer than dist, rebuild needed
   return !fs.existsSync(SHARED_DIST_DIR) || srcModified > distModified;
 }
 
 /**
- * Build shared types package
+ * Build shared types package with robust fallback methods
  */
 function buildSharedTypes() {
   if (!needsRebuild()) {
     console.log('📦 Shared types are up to date, skipping build');
     return false;
   }
-  
+
   console.log('🔨 Building shared types...');
-  
+
   try {
-    // Use pnpm to build shared package
-    execSync('pnpm shared:build', { 
-      cwd: ROOT_DIR, 
-      stdio: 'inherit' 
-    });
-    
-    console.log('✅ Shared types built successfully');
-    return true;
+    // First try the standard build
+    try {
+      execSync('pnpm shared:build', {
+        cwd: ROOT_DIR,
+        stdio: 'inherit'
+      });
+
+      // Verify output was generated
+      if (fs.existsSync(SHARED_DIST_DIR) && fs.readdirSync(SHARED_DIST_DIR).length > 0) {
+        console.log('✅ Shared types built successfully');
+        return true;
+      } else {
+        console.log('⚠️  Standard build completed but no output generated, trying robust build...');
+      }
+    } catch (standardError) {
+      console.log('⚠️  Standard build failed, trying robust build...');
+    }
+
+    // Fallback to robust build script
+    const robustBuildPath = path.join(SHARED_DIR, 'build-robust.js');
+    if (fs.existsSync(robustBuildPath)) {
+      execSync(`node "${robustBuildPath}"`, {
+        cwd: SHARED_DIR,
+        stdio: 'inherit'
+      });
+
+      if (fs.existsSync(SHARED_DIST_DIR) && fs.readdirSync(SHARED_DIST_DIR).length > 0) {
+        console.log('✅ Shared types built successfully using robust method');
+        return true;
+      }
+    }
+
+    throw new Error('Both standard and robust build methods failed');
+
   } catch (error) {
     console.error('❌ Failed to build shared types:', error.message);
     process.exit(1);
@@ -121,7 +147,7 @@ function copyDirectory(src, dest) {
       fs.copyFileSync(srcPath, destPath);
     }
   }
-  
+
   return true;
 }
 
@@ -197,16 +223,16 @@ function copyToPackage(packageName, config) {
   // Copy to src directory
   if (copyDirectory(SHARED_DIST_DIR, config.srcTarget)) {
     generateHelperFiles(packageName, config.srcTarget);
-    
+
     // Copy to lib directory if needed (for Firebase Functions)
     if (config.needsLibCopy && config.libTarget) {
       copyDirectory(config.srcTarget, config.libTarget);
     }
-    
+
     console.log(`✅ Shared types copied to ${packageName}`);
     return true;
   }
-  
+
   return false;
 }
 
@@ -216,13 +242,13 @@ function copyToPackage(packageName, config) {
 function main() {
   const args = process.argv.slice(2);
   const targetPackages = args.length > 0 ? args : Object.keys(PACKAGES);
-  
+
   console.log('🚀 Optimized shared types build starting...');
   console.log(`📋 Target packages: ${targetPackages.join(', ')}`);
-  
+
   // Step 1: Build shared types (only if needed)
   const wasRebuilt = buildSharedTypes();
-  
+
   // Step 2: Copy to target packages
   let successCount = 0;
   for (const packageName of targetPackages) {
@@ -231,12 +257,12 @@ function main() {
       console.warn(`⚠️  Unknown package: ${packageName}`);
       continue;
     }
-    
+
     if (copyToPackage(packageName, config)) {
       successCount++;
     }
   }
-  
+
   console.log(`\n🎉 Build completed successfully!`);
   console.log(`   📦 Shared types ${wasRebuilt ? 'rebuilt' : 'up to date'}`);
   console.log(`   📂 Copied to ${successCount}/${targetPackages.length} packages`);

@@ -8,7 +8,7 @@ import { httpsCallable } from 'firebase/functions';
 import { db, FB_FUNCTIONS, functions } from '../configs';
 import { AccountType } from '../enums';
 import { AppUser } from '../models/user-models';
-import { IAppUser, IBusiness, IOperationResult, IRegisterData, IUserFilter, IUserService } from '../types';
+import { IAppUser, IBusiness, IBusinessRegisterData, IOperationResult, IRegisterData, IUserFilter, IUserService } from '../types';
 
 export class UserService implements IUserService {
   colRef = collection(db, 'users');
@@ -80,8 +80,7 @@ export class UserService implements IUserService {
     }
   }
 
-  getUserData(data: Partial<IRegisterData>): IAppUser {
-
+  getUserData(data: Partial<IRegisterData | IBusinessRegisterData>): IAppUser {
     const baseUser: IAppUser = {
       id: '', // Will be set by Firestore
       email: data.email || '',
@@ -110,15 +109,16 @@ export class UserService implements IUserService {
       isDeleted: false,
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
-      firstName: '',
-      lastName: '',
+      firstName: data.firstName || '',
+      lastName: data.lastName || '',
+      phone: data.phone || '',
       isPhoneVerified: false
     };
 
     return baseUser;
   }
 
-  async create(data: Partial<IRegisterData>): Promise<IOperationResult<IAppUser>> {
+  async create(data: Partial<IRegisterData | IBusinessRegisterData>): Promise<IOperationResult<IAppUser>> {
     try {
       const { addDoc } = await import('firebase/firestore');
       const getUserData = this.getUserData(data);

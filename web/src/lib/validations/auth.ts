@@ -1,4 +1,4 @@
-import { AccountType } from '@/shared-generated';
+import { AccountType, TaxNumberType } from '@/shared-generated';
 import { z } from 'zod';
 
 // Login Schema
@@ -83,18 +83,18 @@ export const businessRegisterSchema = z.object({
   identityNumber: z
     .string()
     .optional(),
-  taxNumberType: z.enum(['tax', 'identity']).optional(),
+  userTitle: z
+    .string()
+    .min(2, 'Unvan en az 2 karakter olmalıdır')
+    .max(100, 'Unvan en fazla 100 karakter olabilir'),
+  taxNumberType: z.enum([TaxNumberType.TAX, TaxNumberType.IDENTITY]).optional(),
   taxOffice: z
     .string()
     .min(2, 'Vergi dairesi gereklidir')
     .optional(),
-  userTitle: z
-    .string()
-    .min(2, 'Kullanıcı ünvanı gereklidir'),
   mainCategoryId: z
     .string()
     .min(1, 'Lütfen ana kategori seçin'),
-
   // Personal Information (extends IRegisterData)
   firstName: z
     .string()
@@ -151,7 +151,7 @@ export const businessRegisterSchema = z.object({
   path: ['confirmPassword'],
 }).superRefine((data, ctx) => {
   // Ensure either tax number or identity number is provided based on type
-  if (data.taxNumberType === 'tax') {
+  if (data.taxNumberType === TaxNumberType.TAX) {
     if (!data.taxNumber) {
       ctx.addIssue({
         code: "custom",
@@ -165,7 +165,7 @@ export const businessRegisterSchema = z.object({
         path: ['taxNumber'],
       });
     }
-  } else if (data.taxNumberType === 'identity') {
+  } else if (data.taxNumberType === TaxNumberType.IDENTITY) {
     if (!data.identityNumber) {
       ctx.addIssue({
         code: "custom",

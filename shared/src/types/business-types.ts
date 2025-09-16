@@ -5,16 +5,30 @@
 
 import { Timestamp } from 'firebase/firestore';
 import { BusinessUserRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType, TaxNumberType } from '../enums';
-import { IRegisterData } from './auth-types';
-import { IEntity } from './common-types';
+import { IEntity, IOperationResult } from './common-types';
 import { IAddress } from './map-types';
+
+interface IBusinessFilter {
+  status?: BusinessVerificationStatus;
+  ownerId?: string;
+}
+
+interface IBusinessService {
+  getAll: (filter?: IBusinessFilter) => Promise<IOperationResult<IBusiness[]>>;
+  create: (data: IBusiness) => Promise<IOperationResult<IBusiness>>;
+  update: (id: string, data: Partial<IBusiness>) => Promise<IOperationResult<IBusiness>>;
+  getById: (id: string) => Promise<IOperationResult<IBusiness>>;
+  delete: (id: string) => Promise<IOperationResult<void>>;
+  verifyBusiness: (id: string, approve: boolean, adminId: string, reason?: string) => Promise<IOperationResult<void>>;
+}
 
 interface IBusinessUserInfo {
   userId: string; // Redundant but useful for iteration
-  userName: string; // Display name for quick access
+  businessTitle: string; // e.g., Owner, Manager
+  displayName: string; // Display name for quick access
   email: string; // Email for quick access
   role: BusinessUserRole; // User's role in this business
-  permissions: string[]; // Specific permissions array
+  permissions: IBusinessPermissions; // Specific permissions array
   isActive: boolean; // Whether user is active in this business
   joinedAt: Timestamp; // When user joined the business
   lastActiveAt?: Timestamp; // Last activity timestamp
@@ -47,6 +61,7 @@ interface IBusinessSetupData {
 interface IBusiness extends IEntity {
   companyName: string;
   taxNumber?: string;
+  taxOffice?: string;
   taxNumberType?: TaxNumberType;
   identityNumber?: string;
   addresses?: IAddress[];
@@ -54,6 +69,8 @@ interface IBusiness extends IEntity {
   website?: string;
   companySize?: CompanySize;
   documents?: IBusinessDocument[];
+  mainCategoryId?: string;
+  subCategoryIds?: string[]; // Business sub-categories
   verification: {
     status: BusinessVerificationStatus;
     history: {
@@ -124,42 +141,12 @@ interface IBusinessPermissions {
   canManagePayments: boolean;
 }
 
-// Business Creation Data
-interface IBusinessRegistrationData extends IRegisterData {
-  // Basic Information
-  companyName: string;
-  taxNumber: string;
-  taxNumberType: TaxNumberType;
-  identityNumber?: string;
-  taxOffice: string;
-
-  // Contact & Location
-  address: IAddress;
-  phone: string;
-  email: string;
-  website?: string;
-
-  // Business Details
-  industry: string;
-  companySize: CompanySize;
-  mainCategoryId: string;
-  subCategoryIds: string[];
-  description?: string;
-
-  // Owner (will be set from authenticated user)
-  ownerId: string;
-}
-
-
-
-
 
 export type {
   IBusiness,
-  IBusinessDocument,
-  IBusinessInvitation,
+  IBusinessDocument, IBusinessFilter, IBusinessInvitation,
   IBusinessPermissions,
-  IBusinessRegistrationData,
-  IBusinessUserInfo
+  IBusinessService,
+  IBusinessSetupData, IBusinessUserInfo
 };
 

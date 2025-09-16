@@ -6,10 +6,20 @@ import {
   businessRegisterSchema,
   type BusinessRegisterFormData,
 } from '@/lib/validations/auth'
-import type { IBusinessRegisterData } from '@/shared-generated'
-import { AccountType, getAuthErrorMessage } from '@/shared-generated'
-import { ICoordinates } from '@/types/maps'
+import {
+  AccountType,
+  BusinessUserRole,
+  BusinessVerificationStatus,
+  getAuthErrorMessage,
+  IBusiness,
+  ICoordinates,
+  IRegisterData,
+  ROLE_PERMISSIONS,
+  TaxNumberType,
+} from '@/shared-generated'
+import { businessService, userService } from '@/shared-generated/services'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Timestamp } from 'firebase/firestore'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React, { useCallback, useState } from 'react'
@@ -62,8 +72,8 @@ export const BusinessRegisterForm: React.FC = () => {
     defaultValues: {
       businessName: '',
       taxNumber: '',
-      taxOffice: '',
       userTitle: '',
+      taxOffice: '',
       mainCategoryId: '',
       firstName: '',
       lastName: '',
@@ -102,44 +112,99 @@ export const BusinessRegisterForm: React.FC = () => {
         return
       }
 
-      // Transform data to match the registration interface
-      const registrationData: IBusinessRegisterData = {
-        firstName: data.firstName,
-        lastName: data.lastName,
+      const registerData: IRegisterData = {
         email: data.email,
         password: data.password,
-        confirmPassword: data.confirmPassword,
         accountType: AccountType.BUSINESS,
-        companyName: data.businessName,
-        taxNumber: data.taxNumber,
-        address: data.businessAddress
-          ? {
-              street: data.businessAddress.street,
-              city: data.businessAddress.city,
-              state: data.businessAddress.state,
-              country: data.businessAddress.country,
-              zipCode: data.businessAddress.postalCode,
-              district: data.businessAddress.district,
-              neighborhood: data.businessAddress.neighborhood,
-              // Convert coordinates object to string for IAddress interface
-              formattedAddress: data.businessAddress.coordinates
-                ? `${data.businessAddress.coordinates.lat},${data.businessAddress.coordinates.lng}`
-                : undefined,
-            }
-          : undefined,
-        mainCategoryId: data.mainCategoryId,
+        firstName: data.firstName,
+        lastName: data.lastName,
       }
+      const registerResult = await registerUser(registerData)
 
-      const result = await registerUser(registrationData)
-      if (result.success) {
-        // Business users need to verify email first, then complete setup
-        router.push('/verify-email')
-      } else {
+      if (!registerResult.success) {
         setError('root', {
           type: 'manual',
-          message: getAuthErrorMessage(result.error || 'default', 'tr'),
+          message: getAuthErrorMessage(registerResult.error || 'default', 'tr'),
         })
       }
+      const userCreateResult = await userService.create(data)
+      if (!userCreateResult.success) {
+        setError('root', {
+          type: 'manual',
+          message: getAuthErrorMessage(
+            userCreateResult.error || 'default',
+            'tr'
+          ),
+        })
+        return
+      }
+
+      // Business users need to verify email first, then complete setup
+      const businessCreateData: IBusiness = {
+        companyName: data.businessName,
+        taxNumber: data.taxNumber,
+        taxOffice: data.taxOffice,
+        mainCategoryId: data.mainCategoryId,
+        users: {
+          [String(registerResult.data!.uid)]: {
+            displayName: data.firstName + ' ' + data.lastName,
+            businessTitle: data.userTitle,
+            email: data.email,
+            isActive: true,
+            joinedAt: Timestamp.now(),
+            permissions: ROLE_PERMISSIONS[BusinessUserRole.OWNER],
+            role: BusinessUserRole.OWNER,
+            userId: registerResult.data!.uid,
+            lastActiveAt: Timestamp.now(),
+          },
+        },
+        isActive: false,
+        ownerId: String(registerResult.data!.uid),
+        addresses: data.businessAddress
+          ? [
+              {
+                street: data.businessAddress.street,
+                doorNumber: data.businessAddress.doorNumber,
+                neighborhood: data.businessAddress.neighborhood,
+                district: data.businessAddress.district,
+                city: data.businessAddress.city,
+                state: data.businessAddress.state,
+                postalCode: data.businessAddress.postalCode,
+                zipCode: data.businessAddress.postalCode, // Assuming postalCode is used for zipCode
+                country: data.businessAddress.country,
+                coordinates: data.businessAddress.coordinates,
+              },
+            ]
+          : [],
+        verification: {
+          status: BusinessVerificationStatus.PENDING,
+          history: [],
+        },
+        companySize: undefined,
+        createdAt: Timestamp.now(),
+        documents: [],
+        phone: data.phoneNumber,
+        identityNumber:
+          data.taxNumberType === 'identity' ? data.identityNumber : undefined,
+        isDeleted: false,
+        subCategoryIds: [],
+        updatedAt: Timestamp.now(),
+        website: undefined,
+        taxNumberType: data.taxNumberType,
+        updatedBy: String(registerResult.data!.uid),
+      }
+      const businessCreateResult =
+        await businessService.create(businessCreateData)
+      if (!businessCreateResult.success) {
+        setError('root', {
+          type: 'manual',
+          message: getAuthErrorMessage(
+            businessCreateResult.error || 'default',
+            'tr'
+          ),
+        })
+      }
+      router.push('/verify-email')
     } catch (err: any) {
       setError('root', {
         type: 'manual',
@@ -153,7 +218,7 @@ export const BusinessRegisterForm: React.FC = () => {
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId)
-    setValue('mainCategoryId', categoryId)
+    setValue('mainCategoryId', categoryId as any)
   }
 
   // Handle place selection from autocomplete
@@ -398,7 +463,9 @@ export const BusinessRegisterForm: React.FC = () => {
                         ? 'bg-indigo-600'
                         : 'bg-gray-300'
                     }`}
-                    onClick={() => setValue('taxNumberType', 'identity')}
+                    onClick={() =>
+                      setValue('taxNumberType', TaxNumberType.IDENTITY)
+                    }
                   >
                     <span
                       className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${

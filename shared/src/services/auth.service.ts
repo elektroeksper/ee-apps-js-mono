@@ -22,8 +22,8 @@ import {
 } from 'firebase/auth';
 import { getAuthErrorMessage } from '../configs';
 import { auth } from '../configs/firebase';
-import { AccountType, AuthErrorCode } from '../enums';
-import { IAuthService, IBusinessRegistrationData, IFirebaseUser, ILoginData, IOperationResult, IPasswordChangeData, IRegisterData } from '../types';
+import { AuthErrorCode } from '../enums';
+import { IAuthService, IFirebaseUser, ILoginData, IOperationResult, IPasswordChangeData, IRegisterData } from '../types';
 
 export class AuthService implements IAuthService {
   /**
@@ -72,7 +72,7 @@ export class AuthService implements IAuthService {
    * Register new user with email and password
    * Supports both individual and business registration
    */
-  async register(data: IRegisterData | IBusinessRegistrationData): Promise<IOperationResult<IFirebaseUser>> {
+  async register(data: IRegisterData): Promise<IOperationResult<IFirebaseUser>> {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -82,9 +82,7 @@ export class AuthService implements IAuthService {
 
       // Update the user's display name
       await updateProfile(userCredential.user, {
-        displayName: data.accountType === AccountType.INDIVIDUAL
-          ? data.email?.split('@')[0]
-          : (data as IBusinessRegistrationData).companyName || data.email?.split('@')[0],
+        displayName: data.email?.split('@')[0]
       });
 
       // Send email verification
@@ -163,10 +161,10 @@ export class AuthService implements IAuthService {
   /**
    * Send password reset email
    */
-  async resetPassword(email: string, url: string, path?: string): Promise<IOperationResult<void>> {
+  async resetPassword(email: string, continueUrl: string): Promise<IOperationResult<void>> {
     try {
       await sendPasswordResetEmail(auth, email, {
-        url,
+        url: continueUrl,
         handleCodeInApp: false,
       });
 

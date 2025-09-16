@@ -7,6 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "build:robust": "node build-robust.js",
+    "build:force": "npm run clean && npm run build:robust",
     "dev": "tsc --watch",
     "clean": "rimraf dist",
     "type:check": "tsc --noEmit"

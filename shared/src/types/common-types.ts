@@ -1,4 +1,5 @@
 // Common shared types for the Electro Expert application
+import { Timestamp } from "firebase/firestore";
 
 type SystemSettingsKey =
   | 'emailNotifications'
@@ -34,8 +35,8 @@ interface IOperationResult<T = any> {
 interface IEntity {
   id?: string;
   isDeleted?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | Timestamp;
+  updatedAt?: Date | Timestamp;
   updatedBy?: string;
 }
 

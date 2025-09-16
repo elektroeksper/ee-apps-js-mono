@@ -3,7 +3,7 @@
  * Shared across web and functions packages
  */
 
-import { AccountType } from '../enums';
+import { AccountType, CompanySize, TaxNumberType } from '../enums';
 import { IOperationResult } from './common-types';
 import { IAddress } from './map-types';
 import { IAppUser } from './user-types';
@@ -36,23 +36,41 @@ interface ILoginData {
 
 // Registration Data Interface
 interface IRegisterData {
+  firstName?: string;
+  lastName?: string;
   email: string;
+  phone?: string;
   password: string;
-  confirmPassword: string;
   accountType: AccountType;
 }
 
 // Business Registration Data
 interface IBusinessRegisterData extends IRegisterData {
+  // Basic Information
+  businessName: string;
+  userTitle: string;
   companyName: string;
-  title?: string;
-  firstName: string;
-  lastName: string;
-  taxNumber?: string;
-  address?: IAddress;
-  mainCategoryId: string; // New field for main category selection
-}
+  taxNumber: string;
+  taxNumberType: TaxNumberType;
+  identityNumber?: string;
+  taxOffice: string;
 
+  // Contact & Location
+  address: IAddress;
+  phone: string;
+  email: string;
+  website?: string;
+
+  // Business Details
+  industry: string;
+  companySize: CompanySize;
+  mainCategoryId: string;
+  subCategoryIds: string[];
+  description?: string;
+
+  // Owner (will be set from authenticated user)
+  ownerId: string;
+}
 
 interface IIndividualSetupData {
   firstName: string;
@@ -77,7 +95,7 @@ interface IPasswordChangeData {
 // Auth Service Interface
 interface IAuthService {
   login(data: ILoginData): Promise<IOperationResult<IFirebaseUser>>;
-  register(data: IRegisterData | IBusinessRegisterData): Promise<IOperationResult<IFirebaseUser>>;
+  register(data: IRegisterData): Promise<IOperationResult<IFirebaseUser>>;
   logout(): Promise<IOperationResult<void>>;
   loginWithGoogle(): Promise<IOperationResult<IFirebaseUser>>;
   registerWithGoogle(): Promise<IOperationResult<IFirebaseUser>>;
@@ -120,7 +138,7 @@ interface IAuthContextType {
   refreshAuthToken: () => Promise<void>; // forces refresh of auth claims/token
 
   // Auth actions
-  register: (data: IRegisterData | IBusinessRegisterData) => Promise<{ success: boolean; error?: string }>;
+  register: (data: IRegisterData | IBusinessRegisterData) => Promise<IOperationResult<IFirebaseUser>>;
   login: (data: ILoginData) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
@@ -174,7 +192,7 @@ interface IAuthConfig {
 
 
 export type {
-  IAuthConfig, IAuthContextType, IAuthError, IAuthService, IAuthValidationSchemas, IFirebaseUser,
+  IAuthConfig, IAuthContextType, IAuthError, IAuthService, IAuthValidationSchemas, IBusinessRegisterData, IFirebaseUser,
   IIndividualSetupData, ILoginData, IPasswordChangeData, IPasswordResetData, IRegisterData, IRouteGuard
 };
 

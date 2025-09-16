@@ -31,6 +31,7 @@ interface IAddress {
   district?: string
   postalCode?: string  // This maps to zipCode
   coordinates?: ICoordinates
+  phone?: string
   type?: 'home' | 'business'
 }
 

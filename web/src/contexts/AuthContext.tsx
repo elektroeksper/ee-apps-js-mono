@@ -12,7 +12,6 @@ import {
   useUserDoc,
 } from '@/hooks/auth'
 import { useBusiness } from '@/hooks/useBusiness'
-import { IAuthContextType } from '@/shared-generated'
 import {
   createContext,
   ReactNode,

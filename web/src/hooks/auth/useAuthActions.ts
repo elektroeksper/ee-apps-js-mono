@@ -1,10 +1,10 @@
 'use client'
 
-import { AuthService } from '@/services/auth/auth.service';
-import { IBusinessRegisterData, ILoginData, IPasswordChangeData, IRegisterData } from '@/shared-generated';
+import { IBusinessRegisterData, IFirebaseUser, ILoginData, IOperationResult, IPasswordChangeData, IRegisterData } from '@/shared-generated';
+import { AuthService } from '@/shared-generated/services/auth.service';
 import { useCallback } from 'react';
 
-interface ActionResult { success: boolean; error?: string }
+interface ActionResult<T = void> extends IOperationResult<T> { }
 
 export function useAuthActions() {
   const login = useCallback(async (data: ILoginData): Promise<ActionResult> => {
@@ -13,7 +13,7 @@ export function useAuthActions() {
     return { success: res.success, error: res.error };
   }, []);
 
-  const register = useCallback(async (data: IRegisterData | IBusinessRegisterData): Promise<ActionResult> => {
+  const register = useCallback(async (data: IRegisterData | IBusinessRegisterData): Promise<ActionResult<IFirebaseUser>> => {
     const service = new AuthService();
 
     // Store registration data temporarily for user document creation
@@ -28,7 +28,7 @@ export function useAuthActions() {
       sessionStorage.removeItem('pendingRegistration');
     }
 
-    return { success: res.success, error: res.error };
+    return { data: res.data, success: res.success, error: res.error };
   }, []);
 
   const logout = useCallback(async (): Promise<ActionResult> => {
@@ -51,7 +51,7 @@ export function useAuthActions() {
 
   const resetPassword = useCallback(async (email: string): Promise<ActionResult> => {
     const service = new AuthService();
-    const res = await service.resetPassword(email);
+    const res = await service.resetPassword(email, window.location.origin + '/login');
     return { success: res.success, error: res.error };
   }, []);
 

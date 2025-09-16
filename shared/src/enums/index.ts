@@ -9,7 +9,7 @@ enum BusinessUserRole {
 
 enum TaxNumberType {
   TAX = 'tax',
-  ID = 'identity'
+  IDENTITY = 'identity'
 }
 
 enum OrderStatus {
