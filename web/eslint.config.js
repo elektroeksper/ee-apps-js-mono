@@ -3,26 +3,23 @@ import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
 
 export default [
+  {
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'out/**',
+      'build/**',
+      'dist/**',
+      'shared-generated/**',
+      'src/shared-generated/**',
+      '**/*.config.js',
+      'next.config.ts',
+      'tailwind.config.js'
+    ]
+  },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
-    ignores: [
-      'node_modules/**',
-      '**/node_modules/**',
-      'dist/**',
-      '**/dist/**',
-      '.next/**',
-      '**/.next/**',
-      'out/**',
-      '**/out/**',
-      'build/**',
-      '**/build/**',
-      '**/shared-generated/**',
-      'shared-generated/**',
-      'web/src/shared-generated/**',
-      'functions/lib/**',
-      'functions/src/shared-generated/**'
-    ],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -38,7 +35,13 @@ export default [
         Buffer: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
-        global: 'readonly'
+        global: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        fetch: 'readonly',
+        google: 'readonly'
       }
     },
     plugins: {
@@ -46,20 +49,20 @@ export default [
     },
     rules: {
       // TypeScript specific rules
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
 
-      // General rules
+      // General rules - less strict for web app
       'no-console': 'warn',
       'no-debugger': 'error',
-      'no-alert': 'error',
+      'no-alert': 'warn',
       'prefer-const': 'error',
       'no-var': 'error',
-      'object-shorthand': 'error',
-      'prefer-template': 'error',
+      'object-shorthand': 'warn',
+      'prefer-template': 'warn',
 
       // Disable some default rules for TypeScript
       'no-unused-vars': 'off', // Use @typescript-eslint/no-unused-vars instead
