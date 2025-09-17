@@ -4,10 +4,11 @@ import { AuthGuard } from '@/components/auth'
 import BusinessDocumentModal from '@/components/BusinessDocumentModal'
 import RejectReasonModal from '@/components/RejectReasonModal'
 import { useAuth } from '@/contexts/AuthContext'
-import { AccountType, AuthRole, IAppUser } from '@/shared-generated'
-import { userService } from '@/shared-generated/services/auth.service'
+import { useBusiness } from '@/hooks/useBusiness'
+import { AuthRole, IAppUser } from '@/shared-generated'
+import { userService } from '@/shared-generated/services'
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { use, useCallback, useEffect, useState } from 'react'
 import {
   FiAlertTriangle,
   FiArrowLeft,
@@ -20,7 +21,6 @@ import {
   FiPhone,
   FiRefreshCw,
   FiSearch,
-  FiShield,
   FiTrash2,
   FiUser,
   FiUsers,
@@ -28,7 +28,7 @@ import {
 } from 'react-icons/fi'
 
 // Helper function to compute profile completion for any user
-function computeIsProfileComplete(user: IAppUser): boolean {
+async function computeIsProfileComplete(user: IAppUser): Promise<boolean> {
   if (!user) return false
 
   // Basic required fields for all users
@@ -42,17 +42,12 @@ function computeIsProfileComplete(user: IAppUser): boolean {
   if (!hasBasicInfo) return false
 
   // For business users, check business-specific requirements
-  if (user.accountType === AccountType.BUSINESS) {
-    const businessProfile = user as any
-    const businessInfo = businessProfile.businessInfo || {}
-    const hasDocuments =
-      businessProfile.documents && businessProfile.documents.length > 0
+  if (user.businessInfo) {
+    const { business, isLoading: isBusinessLoading } = useBusiness(user.id)
 
-    // Business profile is complete if:
-    // 1. Has basic info AND
-    // 2. Has company name AND
-    // 3. Has uploaded documents (required for approval)
-    return !!(businessInfo.companyName && hasDocuments)
+    if (isBusinessLoading) return false
+
+    return (business?.documents?.length ?? 0) > 0
   }
 
   // For regular users, basic info is sufficient
@@ -61,7 +56,6 @@ function computeIsProfileComplete(user: IAppUser): boolean {
 
 interface IUserFilter {
   search: string
-  accountType: AccountType | 'all'
   role: AuthRole | 'all'
   emailVerified: 'all' | 'verified' | 'unverified'
   businessApproval: 'all' | 'pending' | 'approved' | 'rejected'
@@ -97,7 +91,6 @@ function AdminUsersPageContent() {
   const [rejectionReason, setRejectionReason] = useState('')
   const [filters, setFilters] = useState<IUserFilter>({
     search: '',
-    accountType: 'all',
     role: 'all',
     emailVerified: 'all',
     businessApproval: 'all',
@@ -232,20 +225,6 @@ function AdminUsersPageContent() {
       )
     }
 
-    // Account type filter
-    if (filters.accountType !== 'all') {
-      filtered = filtered.filter(
-        user => user.accountType === filters.accountType
-      )
-    }
-
-    // Role filter
-    if (filters.role !== 'all') {
-      filtered = filtered.filter(user =>
-        user.roles.includes(filters.role as AuthRole)
-      )
-    }
-
     // Email verified filter
     if (filters.emailVerified !== 'all') {
       const isVerified = filters.emailVerified === 'verified'
@@ -255,9 +234,6 @@ function AdminUsersPageContent() {
     // Business approval filter
     if (filters.businessApproval !== 'all') {
       filtered = filtered.filter(user => {
-        // Only filter business users
-        if (user.accountType !== AccountType.BUSINESS) return true
-
         const extendedUser = user as any
         const isApproved = extendedUser?.businessInfo?.isApproved
         const isRejected = extendedUser?.businessInfo?.rejectedAt
@@ -349,22 +325,6 @@ function AdminUsersPageContent() {
                 className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
               />
             </div>
-
-            {/* Account Type Filter */}
-            <select
-              value={filters.accountType}
-              onChange={e =>
-                setFilters(prev => ({
-                  ...prev,
-                  accountType: e.target.value as any,
-                }))
-              }
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-            >
-              <option value="all">Tüm Hesap Türleri</option>
-              <option value={AccountType.INDIVIDUAL}>Bireysel</option>
-              <option value={AccountType.BUSINESS}>İşletme</option>
-            </select>
 
             {/* Role Filter */}
             <select
@@ -501,12 +461,12 @@ function AdminUsersPageContent() {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            user.accountType === AccountType.BUSINESS
+                            user.businessInfo
                               ? 'bg-orange-100 text-orange-800'
                               : 'bg-blue-100 text-blue-800'
                           }`}
                         >
-                          {user.accountType === AccountType.BUSINESS ? (
+                          {user.businessInfo ? (
                             <>
                               <FiUsers className="h-3 w-3 mr-1" />
                               İşletme
@@ -521,29 +481,7 @@ function AdminUsersPageContent() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1">
-                          {user.roles.map(role => (
-                            <span
-                              key={role}
-                              className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
-                                role === AuthRole.ADMIN ||
-                                role === AuthRole.MODERATOR
-                                  ? 'bg-purple-100 text-purple-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
-                            >
-                              {role === AuthRole.ADMIN ||
-                              role === AuthRole.MODERATOR ? (
-                                <FiShield className="h-3 w-3 mr-1" />
-                              ) : (
-                                <FiUser className="h-3 w-3 mr-1" />
-                              )}
-                              {role === AuthRole.ADMIN
-                                ? 'Admin'
-                                : role === AuthRole.MODERATOR
-                                  ? 'Moderatör'
-                                  : 'Kullanıcı'}
-                            </span>
-                          ))}
+                          {user.businessInfo?.role || 'Kullanici'}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -561,16 +499,16 @@ function AdminUsersPageContent() {
                           </span>
                           <span
                             className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
-                              computeIsProfileComplete(user)
+                              use(computeIsProfileComplete(user))
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-yellow-100 text-yellow-800'
                             }`}
                           >
-                            {computeIsProfileComplete(user)
+                            {use(computeIsProfileComplete(user))
                               ? 'Profil Tamamlandı'
                               : 'Profil Eksik'}
                           </span>
-                          {user.accountType === AccountType.BUSINESS &&
+                          {user?.businessInfo?.isActive &&
                             (() => {
                               const extendedUser = user as any
                               const isApproved =
@@ -604,7 +542,7 @@ function AdminUsersPageContent() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
-                        {new Date(user.createdAt).toLocaleDateString('tr-TR')}
+                        {user.createdAt?.toLocaleString('tr-TR')}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
@@ -616,7 +554,7 @@ function AdminUsersPageContent() {
                           </button>
 
                           {/* Business Document Inspection */}
-                          {user.accountType === AccountType.BUSINESS &&
+                          {user.businessInfo &&
                             (() => {
                               const extendedUser = user as any
                               const isApproved =

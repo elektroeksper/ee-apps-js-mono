@@ -12,6 +12,7 @@ import {
   useUserDoc,
 } from '@/hooks/auth'
 import { useBusiness } from '@/hooks/useBusiness'
+import type { IAuthContextType } from '@/shared-generated'
 import {
   createContext,
   ReactNode,
@@ -162,7 +163,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // business information
       business,
-      businessRole,
+      businessRole: businessRole || undefined,
       businessPermissions,
 
       // business permission helpers

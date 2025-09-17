@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
-import { AccountType, BusinessUserRole } from "../enums";
-import { IAddress, IBusinessPermissions } from "../types";
+import { AccountType } from "../enums";
+import { IAddress, IBusinessUserInfo } from "../types";
 import { IAppUser, IUserPreferences } from "../types/user-types";
 
 class AppUser implements IAppUser {
@@ -10,17 +10,13 @@ class AppUser implements IAppUser {
   lastName: string;
   displayName: string;
   photoURL?: string | undefined;
-  phone?: string | undefined;
+  phone?: string | undefined
   accountType: AccountType;
   isEmailVerified: boolean;
   preferences: IUserPreferences;
-  personalAddress?: IAddress | undefined;
-
-  // Business Association
-  businessId?: string | undefined;
-  businessRole?: BusinessUserRole | undefined;
-  businessPermissions?: IBusinessPermissions | undefined;
-  joinedBusinessAt?: Date | Timestamp | undefined;
+  address?: IAddress | undefined;
+  // Business related fields
+  businessInfo?: IBusinessUserInfo | null;
 
   // Status
   isActive: boolean;
@@ -46,15 +42,12 @@ class AppUser implements IAppUser {
     this.accountType = data.accountType ?? AccountType.INDIVIDUAL;
     this.isEmailVerified = data.isEmailVerified ?? false;
     this.preferences = data.preferences ?? {} as IUserPreferences;
-    this.personalAddress = data.personalAddress;
+    this.address = data.address;
     this.isPhoneVerified = data.isPhoneVerified ?? false;
     this.isDeleted = data.isDeleted ?? false;
 
     // Business fields
-    this.businessId = data.businessId;
-    this.businessRole = data.businessRole;
-    this.businessPermissions = data.businessPermissions;
-    this.joinedBusinessAt = data.joinedBusinessAt;
+    this.businessInfo = data.businessInfo ?? null;
 
     // Status
     this.isActive = data.isActive ?? true;
@@ -70,12 +63,8 @@ class AppUser implements IAppUser {
     return `${this.firstName} ${this.lastName}`.trim();
   }
 
-  get isBusiness(): boolean {
-    return this.accountType === AccountType.BUSINESS;
-  }
-
   get hasBusinessAssociation(): boolean {
-    return !!this.businessId;
+    return this.businessInfo !== null;
   }
 }
 

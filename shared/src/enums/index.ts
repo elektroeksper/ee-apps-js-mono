@@ -1,5 +1,10 @@
 // Common enums for the Electro Expert application
 
+enum AccountType {
+  INDIVIDUAL = 'individual',
+  BUSINESS = 'business'
+}
+
 enum BusinessUserRole {
   OWNER = 'owner',
   MANAGER = 'manager',
@@ -54,12 +59,6 @@ enum OperationStatus {
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
   CANCELLED = 'cancelled'
-}
-
-// Account Types
-enum AccountType {
-  INDIVIDUAL = 'individual',
-  BUSINESS = 'business'
 }
 
 // Authentication States

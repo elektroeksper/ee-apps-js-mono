@@ -114,10 +114,16 @@ interface IAuthContextType {
   fireUser: IFirebaseUser | null;
   appUser: IAppUser | null;
 
+  // Business information (from useBusiness hook)
+  business?: any; // IBusiness when available
+  businessRole?: string;
+  businessPermissions?: string[];
+
   // Loading flags
-  isLoading: boolean;          // union loading (auth || user)
+  isLoading: boolean;          // union loading (auth || user || business)
   isAuthLoading: boolean;      // firebase auth listener/loading
   isUserLoading: boolean;      // user document/profile loading
+  isBusinessLoading?: boolean; // business data loading
 
   // Roles / permissions (user-level, not business-specific)
   isAdmin: boolean;
@@ -125,8 +131,17 @@ interface IAuthContextType {
   hasRole: (role: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
 
+  // Business permission helpers
+  hasBusinessPermission?: (permission: string) => boolean;
+  canEditBusiness?: boolean;
+  canInviteUsers?: boolean;
+  canManageUsers?: boolean;
+  canViewOrders?: boolean;
+  canManageOrders?: boolean;
+
   // Profile completion computed properties
   isProfileComplete: boolean;  // computed profile completion status for all user types
+  hasDocuments?: boolean;      // business document status
 
   // Errors
   error: string | null;
@@ -136,6 +151,11 @@ interface IAuthContextType {
   updateUser: (data: Partial<IAppUser>) => Promise<IAppUser | null>; // uid implied from auth state
   refreshUser: () => Promise<void>;
   refreshAuthToken: () => Promise<void>; // forces refresh of auth claims/token
+
+  // Business operations
+  refreshBusiness?: () => Promise<void>;
+  leaveBusiness?: () => Promise<{ success: boolean; error?: string }>;
+  acceptBusinessInvitation?: (businessId: string) => Promise<{ success: boolean; error?: string }>;
 
   // Auth actions
   register: (data: IRegisterData | IBusinessRegisterData) => Promise<IOperationResult<IFirebaseUser>>;

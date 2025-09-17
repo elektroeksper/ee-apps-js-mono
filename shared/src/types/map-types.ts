@@ -108,7 +108,7 @@ interface IDealerInfo {
   reviewCount?: number
   photoUrl?: string
 }
+export { AddressComponent }
 
-
-export type { AddressComponent, IAddress, IAddressComponentItem, IAppUserFilter, ICoordinates, IDealerInfo, IGoogleMapsConfig, IMapBounds, IMarkerData, IPlaceResult }
+export type { IAddress, IAddressComponentItem, IAppUserFilter, ICoordinates, IDealerInfo, IGoogleMapsConfig, IMapBounds, IMarkerData, IPlaceResult }
 

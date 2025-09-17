@@ -24,7 +24,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 const IndividualHome: React.FC = () => {
   const { appUser } = useAuth()
   const extendedUser = appUser as IAppUser
-  const userAddress = extendedUser?.personalAddress
+  const userAddress = extendedUser?.address
   const [loading, setLoading] = useState(true)
 
   // Video fetch and client guard

@@ -20,7 +20,7 @@ interface DashboardStats {
 }
 
 const BusinessHome: React.FC = () => {
-  const { appUser } = useAuth()
+  const { appUser, business, businessRole } = useAuth()
   const extendedUser = appUser as IAppUser
   const [stats, setStats] = useState<DashboardStats>({
     totalCustomers: 0,
@@ -112,14 +112,17 @@ const BusinessHome: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Hoş Geldiniz,{' '}
-                {getBusinessName(extendedUser) || extendedUser?.displayName}!
+                {extendedUser?.displayName ||
+                  extendedUser?.firstName ||
+                  'Kullanıcı'}
+                !
               </h1>
               <p className="text-gray-600 mt-1">
                 İşletme kontrol panelinize hoş geldiniz
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              {extendedUser?.businessInfo?.isApproved && (
+              {business?.verification?.status === 'verified' && (
                 <div className="flex items-center px-4 py-2 bg-green-100 rounded-lg">
                   <svg
                     className="w-5 h-5 text-green-600 mr-2"
@@ -137,7 +140,7 @@ const BusinessHome: React.FC = () => {
                   </span>
                 </div>
               )}
-              {extendedUser?.businessInfo?.isCertified && (
+              {businessRole === 'owner' && (
                 <div className="flex items-center px-4 py-2 bg-blue-100 rounded-lg">
                   <svg
                     className="w-5 h-5 text-blue-600 mr-2"

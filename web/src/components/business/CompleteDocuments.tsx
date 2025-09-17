@@ -17,9 +17,9 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 
 const CompleteDocuments: React.FC = () => {
-  const { appUser, updateUser, logout } = useAuth()
+  const { appUser, business, updateUser, logout } = useAuth()
   const extendedUser = appUser as IAppUser
-  const businessInfo = extendedUser?.businessId // Using businessId instead of businessInfo
+  const businessInfo = extendedUser?.businessInfo // Using businessInfo for business association
 
   // Video fetch and client guard
   const { data: videos, isLoading: videosLoading } =
@@ -188,13 +188,13 @@ const CompleteDocuments: React.FC = () => {
             </div>
 
             {/* Rejection Reason */}
-            {businessInfo?.rejectionReason && (
+            {business?.rejectionReason && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
                 <h3 className="text-sm font-semibold text-red-900 mb-2">
                   Red Nedeni:
                 </h3>
                 <p className="text-sm text-red-800">
-                  {businessInfo.rejectionReason}
+                  {business.rejectionReason}
                 </p>
               </div>
             )}
@@ -420,14 +420,12 @@ const CompleteDocuments: React.FC = () => {
           </div>
 
           {/* Rejection Reason */}
-          {businessInfo?.rejectionReason && (
+          {business?.rejectionReason && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
               <h3 className="text-sm font-semibold text-red-900 mb-2">
                 Red Nedeni:
               </h3>
-              <p className="text-sm text-red-800">
-                {businessInfo.rejectionReason}
-              </p>
+              <p className="text-sm text-red-800">{business.rejectionReason}</p>
             </div>
           )}
 

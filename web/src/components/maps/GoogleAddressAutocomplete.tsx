@@ -29,7 +29,12 @@ const GoogleAddressAutocomplete: React.FC<GoogleAddressAutocompleteProps> = ({
 }) => {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_CONFIG.apiKey,
-    libraries: GOOGLE_MAPS_CONFIG.libraries,
+    libraries: GOOGLE_MAPS_CONFIG.libraries as (
+      | 'places'
+      | 'drawing'
+      | 'geometry'
+      | 'visualization'
+    )[],
     language: GOOGLE_MAPS_CONFIG.language,
     region: GOOGLE_MAPS_CONFIG.region,
   })

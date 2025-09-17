@@ -254,13 +254,13 @@ export class UserService implements IUserService {
       }
 
       const user = userResult.data;
-      if (!user.businessId) {
+      if (!user.businessInfo?.businessId) {
         return { success: false, error: 'User is not associated with any business' };
       }
 
       // Check if user is the business owner
       const { getDoc } = await import('firebase/firestore');
-      const businessDoc = await getDoc(doc(db, 'businesses', user.businessId));
+      const businessDoc = await getDoc(doc(db, 'businesses', user.businessInfo.businessId));
 
       if (businessDoc.exists()) {
         const business = businessDoc.data() as IBusiness;
@@ -273,7 +273,7 @@ export class UserService implements IUserService {
       }
 
       return await runTransaction(db, async (transaction) => {
-        const businessRef = doc(db, 'businesses', user.businessId!);
+        const businessRef = doc(db, 'businesses', user.businessInfo!.businessId);
         const userRef = doc(this.colRef, userId);
 
         // Remove user from business users map

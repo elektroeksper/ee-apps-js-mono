@@ -17,8 +17,8 @@ export function useRoles(claims: Record<string, any> | null, appUser: IAppUser |
     if (Array.isArray(claimRolesRaw)) claimRoles = claimRolesRaw as string[]
     else if (typeof claimRolesRaw === 'string') claimRoles = [claimRolesRaw]
 
-    // Merge roles from user document if present (rolesList preferred, fallback to legacy enum roles)
-    const docRoles = (appUser?.rolesList as string[] | undefined) || (appUser?.roles as unknown as string[]) || []
+    // Merge roles from user document if present (no roles on IAppUser currently)
+    const docRoles: string[] = []
     // Normalize to unique, preserve original casing; then remove any 'admin' role string (case-insensitive)
     const mergedAll = Array.from(new Set([...claimRoles, ...docRoles]))
     const merged = mergedAll.filter(r => r.toLowerCase() !== 'admin')

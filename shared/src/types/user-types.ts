@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore"
 import { AccountType, BusinessUserRole } from "../enums"
-import { IBusinessPermissions } from "./business-types"
+import { IBusinessUserInfo } from "./business-types"
 import { IOperationResult } from "./common-types"
 import { IAddress } from "./map-types"
 
@@ -12,23 +12,19 @@ interface IAppUser {
   email: string
   phone?: string
   photoURL?: string // Add this
-  accountType: AccountType
+  accountType: AccountType // Account type for business/individual distinction
   isEmailVerified: boolean
   isPhoneVerified: boolean
   preferences: IUserPreferences // Add this
 
   // Business Association - Add these
-  businessId?: string
-  businessRole?: BusinessUserRole
-  businessPermissions?: IBusinessPermissions
-  joinedBusinessAt?: Date | Timestamp
-
+  businessInfo?: IBusinessUserInfo | null // Info about the business the user is associated with
   // Status fields - Add these
   isActive: boolean
   lastLoginAt?: Date | Timestamp
 
   // Addresses
-  personalAddress?: IAddress // Rename from address for clarity
+  address?: IAddress // Rename from address for clarity
 
   // Metadata
   isDeleted: boolean

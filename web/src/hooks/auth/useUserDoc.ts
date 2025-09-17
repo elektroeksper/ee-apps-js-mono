@@ -161,10 +161,12 @@ export function useUserDoc(uid: string | null): UseUserDocState {
           await setDoc(doc(db, 'users', uid), userData);
           console.log('✅ User document created in Firestore');
 
-          // Create AppUser instance
-          const { AppUser } = await import('@/shared-generated/models/auth-models');
-          const newAppUser = new AppUser(uid, userData);
-          console.log('✅ AppUser instance created:', newAppUser);
+          // Create AppUser object
+          const newAppUser: IAppUser = {
+            id: uid,
+            ...userData
+          };
+          console.log('✅ AppUser object created:', newAppUser);
           setAppUser(newAppUser);
           setError(null);
           console.log('✅ Created user document for Google sign-in user');

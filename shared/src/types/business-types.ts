@@ -11,6 +11,7 @@ import { IAddress } from './map-types';
 interface IBusinessFilter {
   status?: BusinessVerificationStatus;
   ownerId?: string;
+  userIds: string[];
 }
 
 interface IBusinessService {
@@ -23,6 +24,7 @@ interface IBusinessService {
 }
 
 interface IBusinessUserInfo {
+  businessId: string; // Reference to the business this user is associated with
   userId: string; // Redundant but useful for iteration
   businessTitle: string; // e.g., Owner, Manager
   displayName: string; // Display name for quick access
@@ -30,8 +32,8 @@ interface IBusinessUserInfo {
   role: BusinessUserRole; // User's role in this business
   permissions: IBusinessPermissions; // Specific permissions array
   isActive: boolean; // Whether user is active in this business
-  joinedAt: Timestamp; // When user joined the business
-  lastActiveAt?: Timestamp; // Last activity timestamp
+  addedAt?: Timestamp | Date; // When the user was added
+  lastActiveAt?: Timestamp | Date; // Last activity timestamp
 }
 
 interface IBusinessDocument {

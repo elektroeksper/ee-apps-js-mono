@@ -2,7 +2,7 @@
  * Business hooks for business data and operations
  */
 
-import { BusinessUserRole, IBusiness } from '@/shared-generated';
+import { BusinessUserRole, IBusiness, IBusinessUserInfo } from '@/shared-generated';
 import { BusinessService } from '@/shared-generated/services/business.service';
 import { UserService } from '@/shared-generated/services/user.service';
 import { useCallback, useEffect, useState } from 'react';
@@ -32,41 +32,23 @@ export function useBusiness(userId: string | null) {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const result = await userService.getUserWithBusiness(userId);
 
-      if (result.success && result.data) {
-        const userWithBusiness: IUserWithBusiness = result.data;
-        setBusiness(userWithBusiness.business || null);
-        setBusinessRole(userWithBusiness.businessRole || null);
-
-        // Convert business permissions object to array of permissions
-        const permissions: string[] = [];
-        if (userWithBusiness.businessPermissions) {
-          Object.entries(userWithBusiness.businessPermissions).forEach(([key, value]) => {
-            if (value === true) {
-              permissions.push(key);
-            }
-          });
-        }
-        setBusinessPermissions(permissions);
-      } else {
-        setBusiness(null);
-        setBusinessRole(null);
-        setBusinessPermissions([]);
-        if (result.error) {
-          setError(result.error);
-        }
+    const result = await businessService.getAll({ userIds: [userId] });
+    if (result.success) {
+      const businesses = result.data;
+      if (businesses && businesses.length > 0) {
+        const userBusiness = businesses[0];
+        setBusiness(userBusiness);
       }
-    } catch (err: any) {
-      console.error('Error fetching business data:', err);
-      setError(err.message || 'Failed to fetch business data');
+    } else {
+      setError(result.error || 'Failed to fetch business data');
       setBusiness(null);
       setBusinessRole(null);
       setBusinessPermissions([]);
-    } finally {
       setIsLoading(false);
+      return;
     }
+
   }, [userId]);
 
   useEffect(() => {
@@ -154,7 +136,7 @@ export function useBusinessOperations() {
     setError(null);
 
     try {
-      const result = await businessService.createBusiness(businessData);
+      const result = await businessService.create(businessData);
       return result;
     } catch (err: any) {
       console.error('Error creating business:', err);
@@ -171,7 +153,7 @@ export function useBusinessOperations() {
     setError(null);
 
     try {
-      const result = await businessService.updateBusiness(businessId, updates);
+      const result = await businessService.update(businessId, updates);
       return result;
     } catch (err: any) {
       console.error('Error updating business:', err);
@@ -183,12 +165,12 @@ export function useBusinessOperations() {
     }
   }, []);
 
-  const inviteUser = useCallback(async (businessId: string, email: string, role: BusinessUserRole, invitedBy: string, name?: string): Promise<{ success: boolean; error?: string }> => {
+  const addUser = useCallback(async (businessId: string, userId: string, info: IBusinessUserInfo): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await businessService.inviteUser(businessId, email, role, invitedBy, name);
+      const result = await businessService.addUser(businessId, userId, info);
       return result;
     } catch (err: any) {
       console.error('Error inviting user:', err);
@@ -239,7 +221,7 @@ export function useBusinessOperations() {
     error,
     createBusiness,
     updateBusiness,
-    inviteUser,
+    addUser,
     removeUser,
     updateUserRole,
   };
