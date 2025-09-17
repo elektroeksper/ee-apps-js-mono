@@ -1,6 +1,6 @@
 import https from 'node:https';
 import { URL } from 'node:url';
-import { IAddressInfo, IOperationResult } from '../shared-generated';
+import { IAddress, IOperationResult } from '../shared-generated';
 
 class GeocodingService {
   private apiKey: string | undefined;
@@ -33,8 +33,8 @@ class GeocodingService {
 
   private extractAddressComponents(
     addressComponents: any[]
-  ): Partial<IAddressInfo> {
-    const info: Partial<IAddressInfo> = {};
+  ): Partial<IAddress> {
+    const info: Partial<IAddress> = {};
 
     for (const component of addressComponents) {
       const types = component.types;
@@ -74,7 +74,7 @@ class GeocodingService {
   decodeAddressByLocation = async (
     lat: number,
     lng: number
-  ): Promise<IOperationResult<IAddressInfo | null>> => {
+  ): Promise<IOperationResult<IAddress | null>> => {
     try {
       if (!this.apiKey) {
         return { success: false, data: null, error: 'Geocoding service not configured (missing API key)' };
@@ -89,8 +89,17 @@ class GeocodingService {
           firstResult.address_components
         );
 
-        const addressInfo: IAddressInfo = {
-          ...addressComponents,
+        const addressInfo: IAddress = {
+          street: addressComponents.street ?? '',
+          city: addressComponents.city ?? '',
+          state: addressComponents.state ?? '',
+          zipCode: addressComponents.zipCode ?? '',
+          country: addressComponents.country ?? '',
+          doorNumber: addressComponents.doorNumber ?? '',
+          district: addressComponents.district ?? '',
+          neighborhood: addressComponents.neighborhood ?? '',
+          apartment: addressComponents.apartment ?? '',
+          type: addressComponents.type,
           formattedAddress: firstResult.formatted_address,
         };
 
@@ -133,7 +142,7 @@ class GeocodingService {
     IOperationResult<{
       lat: number;
       lng: number;
-      addressInfo: IAddressInfo;
+      addressInfo: IAddress;
     } | null>
   > => {
     try {
@@ -151,8 +160,17 @@ class GeocodingService {
           firstResult.address_components
         );
 
-        const addressInfo: IAddressInfo = {
-          ...addressComponents,
+        const addressInfo: IAddress = {
+          street: addressComponents.street ?? '',
+          city: addressComponents.city ?? '',
+          state: addressComponents.state ?? '',
+          zipCode: addressComponents.zipCode ?? '',
+          country: addressComponents.country ?? '',
+          doorNumber: addressComponents.doorNumber ?? '',
+          district: addressComponents.district ?? '',
+          neighborhood: addressComponents.neighborhood ?? '',
+          apartment: addressComponents.apartment ?? '',
+          type: addressComponents.type,
           formattedAddress: firstResult.formatted_address,
         };
 

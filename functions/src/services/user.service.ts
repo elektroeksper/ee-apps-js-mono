@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { auth, db } from '../utils/firebase-admin';
 // Import types from shared-generated (will be copied at build time)
-import { AccountType, BusinessVerificationStatus, DocumentStatus, DocumentType, IAppUser, IBusinessDocument, IBusinessProfile, IOperationResult } from '../shared-generated';
+import { DocumentStatus, DocumentType, IAppUser, IBusinessDocument, IOperationResult } from '../shared-generated';
 
 // Get user profile
 export async function getUserProfile(userId: string): Promise<IOperationResult<IAppUser>> {
@@ -55,29 +55,31 @@ export async function createUserProfile(userId: string, userData: Partial<IAppUs
       };
     }
 
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (userDoc.exists) {
+    if (!userData) {
       return {
         success: false,
-        error: 'User profile already exists',
-        code: 409
+        error: 'User data is required',
+        code: 400
       };
     }
 
-    const profileData = {
+    // Prepare user data with timestamps
+    const userDoc = {
       ...userData,
+      id: userId,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
     };
 
-    await userRef.set(profileData);
+    // Create user document
+    const userRef = db.collection('users').doc(userId);
+    await userRef.set(userDoc);
 
-    const createdUser = await userRef.get();
+    // Get created user profile
+    const createdDoc = await userRef.get();
     const createdUserData = {
-      id: createdUser.id,
-      ...createdUser.data()
+      id: createdDoc.id,
+      ...createdDoc.data()
     } as IAppUser;
 
     return {
@@ -106,33 +108,42 @@ export async function updateUserProfile(userId: string, updates: Partial<IAppUse
       };
     }
 
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
+    if (!updates || Object.keys(updates).length === 0) {
       return {
         success: false,
-        error: 'User not found',
+        error: 'Updates are required',
+        code: 400
+      };
+    }
+
+    // Add timestamp
+    const updateData = {
+      ...updates,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    // Update user document
+    const userRef = db.collection('users').doc(userId);
+    await userRef.update(updateData);
+
+    // Get updated user profile
+    const updatedDoc = await userRef.get();
+    if (!updatedDoc.exists) {
+      return {
+        success: false,
+        error: 'User not found after update',
         code: 404
       };
     }
 
-    const updateData = {
-      ...updates,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-
-    await userRef.update(updateData);
-
-    const updatedUser = await userRef.get();
-    const updatedUserData = {
-      id: updatedUser.id,
-      ...updatedUser.data()
+    const userData = {
+      id: updatedDoc.id,
+      ...updatedDoc.data()
     } as IAppUser;
 
     return {
       success: true,
-      data: updatedUserData,
+      data: userData,
       code: 200
     };
   } catch (error) {
@@ -179,108 +190,6 @@ export async function setAdminRole(userId: string): Promise<IOperationResult<voi
   }
 }
 
-// Create business profile
-export async function createBusinessProfile(userId: string, businessData: Partial<IBusinessProfile>): Promise<IOperationResult<IBusinessProfile>> {
-  try {
-    if (!userId) {
-      return {
-        success: false,
-        error: 'User ID is required',
-        code: 400
-      };
-    }
-
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (userDoc.exists) {
-      return {
-        success: false,
-        error: 'User profile already exists',
-        code: 409
-      };
-    }
-
-    const profileData = {
-      ...businessData,
-      accountType: AccountType.BUSINESS,
-      verificationStatus: BusinessVerificationStatus.UNVERIFIED,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-
-    await userRef.set(profileData);
-
-    const createdUser = await userRef.get();
-    const createdUserData = {
-      id: createdUser.id,
-      ...createdUser.data()
-    } as IBusinessProfile;
-
-    return {
-      success: true,
-      data: createdUserData,
-      code: 201
-    };
-  } catch (error) {
-    console.error('Error creating business profile:', error);
-    return {
-      success: false,
-      error: 'Failed to create business profile',
-      code: 500
-    };
-  }
-}
-
-// Update business profile
-export async function updateBusinessProfile(userId: string, updates: Partial<IBusinessProfile>): Promise<IOperationResult<IBusinessProfile>> {
-  try {
-    if (!userId) {
-      return {
-        success: false,
-        error: 'User ID is required',
-        code: 400
-      };
-    }
-
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      return {
-        success: false,
-        error: 'User not found',
-        code: 404
-      };
-    }
-
-    const updateData = {
-      ...updates,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-
-    await userRef.update(updateData);
-
-    const updatedUser = await userRef.get();
-    const updatedUserData = {
-      id: updatedUser.id,
-      ...updatedUser.data()
-    } as IBusinessProfile;
-
-    return {
-      success: true,
-      data: updatedUserData,
-      code: 200
-    };
-  } catch (error) {
-    console.error('Error updating business profile:', error);
-    return {
-      success: false,
-      error: 'Failed to update business profile',
-      code: 500
-    };
-  }
-}
 
 // Delete user profile
 export async function deleteUserProfile(userId: string): Promise<IOperationResult<void>> {

@@ -6,7 +6,7 @@ import * as orderService from './services/order.service';
 import * as productService from './services/product.service';
 import * as storageService from './services/storage.service';
 import * as userService from './services/user.service';
-import { BusinessUserRole, BusinessVerificationStatus, getAuthErrorMessage, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse } from './shared-generated';
+import { BusinessUserRole, getAuthErrorMessage, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse } from './shared-generated';
 import { businessService } from './shared-generated/services';
 import { sendBusinessApprovalEmail, sendBusinessRejectionEmail } from './utils/email.service';
 import { auth, db } from './utils/firebase-admin';
@@ -181,18 +181,6 @@ export const moderateUser = onCall(async (request) => {
   };
 });
 
-export const createUserProfile = onCall(async (request) => {
-  if (!request.auth) {
-    return {
-      success: false,
-      error: 'Authentication required'
-    };
-  }
-
-  const { userData } = request.data;
-  return await userService.createUserProfile(request.auth.uid, userData);
-});
-
 export const updateUserProfile = onCall(async (request) => {
   // Validate required authentication
   if (!request.auth) {
@@ -216,7 +204,7 @@ export const updateUserProfile = onCall(async (request) => {
     throw new HttpsError('permission-denied', 'Insufficient permissions to update this profile');
   }
 
-  return await userService.updateUserProfile(targetUserId, updates);
+
 });
 
 export const setAdminRole = onCall(async (request) => {
@@ -230,42 +218,6 @@ export const setAdminRole = onCall(async (request) => {
 
   const { userId } = request.data;
   return await userService.setAdminRole(userId);
-});
-
-// Additional User Functions
-export const createBusinessProfile = onCall(async (request) => {
-  if (!request.auth) {
-    return {
-      success: false,
-      error: 'Authentication required'
-    };
-  }
-
-  const { businessData } = request.data;
-  return await userService.createBusinessProfile(request.auth.uid, businessData);
-});
-
-export const updateBusinessProfile = onCall(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { userId, updates } = request.data;
-
-  // 🔒 SECURITY CHECK: Prevent role/admin field updates through business profile update
-  const securityCheck = validateProfileUpdateSecurity(updates);
-  if (!securityCheck.isValid) {
-    throw new HttpsError('invalid-argument',
-      `Forbidden fields in business profile update: ${securityCheck.forbiddenFields.join(', ')}. Use role management functions instead.`);
-  }
-
-  const targetUserId = userId || request.auth.uid;
-  // Only allow updating another user's business profile if caller is admin
-  if (targetUserId !== request.auth.uid && !isAdminUser(request)) {
-    throw new HttpsError('permission-denied', 'Insufficient permissions to update this business profile');
-  }
-
-  return await userService.updateBusinessProfile(targetUserId, updates);
 });
 
 export const deleteUserProfile = onCall(async (request) => {
@@ -332,7 +284,6 @@ export const createBusinessDocument = onCall(async (request) => {
   return await userService.createBusinessDocument(request.auth!.uid, documentData);
 });
 
-// Order Functions
 export const getUserOrders = onCall(async (request) => {
   if (!request.auth) {
     return {
@@ -556,24 +507,6 @@ export const getUserClaims = onCall(functionOptions, async (request) => {
   }
 });
 
-// ==================================================================================
-// ROLE MANAGEMENT SECURITY PRINCIPLE
-// ==================================================================================
-// 
-// 🔒 CRITICAL SECURITY RULE: Firebase Auth Claims are the SINGLE SOURCE OF TRUTH
-// 
-// ✅ ALLOWED FLOW:  Firebase Auth Claims → Firestore Profile (sync)
-// ❌ FORBIDDEN FLOW: Firestore Profile → Firebase Auth Claims (NEVER!)
-// 
-// All role changes MUST happen through these functions which:
-// 1. Update Firebase Auth claims first (source of truth)
-// 2. Sync to Firestore profile second (for search/admin)
-// 
-// Regular profile updates (updateUserProfile) should NEVER touch role claims!
-// ==================================================================================
-
-// Enhanced Role Management Functions
-
 export const setUserRoles = onCall(functionOptions, async (request) => {
   try {
     // Only admins can set roles
@@ -728,92 +661,6 @@ export const removeUserRole = onCall(functionOptions, async (request) => {
   }
 });
 
-export const hasRole = onCall(functionOptions, async (request) => {
-  try {
-    const { role } = request.data as { role: string };
-
-    if (!request.auth) {
-      return {
-        success: false,
-        hasRole: false,
-        error: 'Authentication required'
-      };
-    }
-
-    // Check if user is admin (admins have all roles)
-    if (request.auth.token.admin === true) {
-      return {
-        success: true,
-        hasRole: true,
-        reason: 'User is admin'
-      };
-    }
-
-    // Check roles array
-    const userRoles = Array.isArray(request.auth.token.roles) ? request.auth.token.roles : [];
-    const hasTheRole = userRoles.includes(role);
-
-    return {
-      success: true,
-      hasRole: hasTheRole,
-      userRoles
-    };
-  } catch (error) {
-    return {
-      success: false,
-      hasRole: false,
-      error: error instanceof Error ? error.message : 'Failed to check role'
-    };
-  }
-});
-
-// Enhanced user search with role filtering
-export const searchUsersByRole = onCall(async (request) => {
-  if (!isAdminUser(request)) {
-    return {
-      success: false,
-      error: 'Admin access required'
-    };
-  }
-
-  try {
-    const { role, limit = 50 } = request.data as { role: string; limit?: number };
-
-    if (!role) {
-      return {
-        success: false,
-        error: 'Role parameter is required'
-      };
-    }
-
-    // Search users who have the specific role in their rolesList
-    const usersSnapshot = await db.collection('users')
-      .where('rolesList', 'array-contains', role)
-      .limit(limit)
-      .get();
-
-    const users = usersSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    return {
-      success: true,
-      data: users,
-      count: users.length
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to search users by role'
-    };
-  }
-});
-
-// Get all admins
-// getAdminUsers removed: admin determination now solely via custom claim; fetch by claim requires admin SDK listUsers + filter if needed.
-
-// Get user statistics for admin dashboard
 export const getUserStats = onCall(async (request) => {
   if (!isAdminUser(request)) {
     throw new HttpsError('permission-denied', 'Admin access required');
@@ -913,9 +760,6 @@ export const getUserStats = onCall(async (request) => {
   }
 });
 
-// ===== EMAIL FUNCTIONS =====
-
-// Send business approval email
 export const sendBusinessApprovalEmailFunction = onCall(async (request) => {
   // Only admins can send approval emails
   if (!isAdminUser(request)) {
@@ -991,74 +835,6 @@ export const sendBusinessRejectionEmailFunction = onCall(async (request) => {
   }
 });
 
-// Combined business approval function (updates status + sends email)
-export const approveBusinessAccount = onCall(async (request) => {
-  // Only admins can approve business accounts
-  if (!isAdminUser(request)) {
-    throw new HttpsError('permission-denied', 'Admin access required');
-  }
-
-  const { userId } = request.data;
-
-  if (!userId) {
-    throw new HttpsError('invalid-argument', 'userId is required');
-  }
-
-  try {
-    // Get user profile to extract business info
-    const userProfileResult = await userService.getUserProfile(userId);
-    if (!userProfileResult.success || !userProfileResult.data) {
-      throw new HttpsError('not-found', 'User profile not found');
-    }
-
-    const userProfile = userProfileResult.data as any;
-    const businessName = userProfile.businessInfo?.businessName || userProfile.companyName || 'İşletmeniz';
-    const ownerName = userProfile.displayName || `${userProfile.firstName} ${userProfile.lastName}`;
-
-    // Update business approval status
-    const businessInfo = userProfile.businessInfo || {};
-
-    // If there were rejection fields, we need to explicitly remove them
-    // Create a clean businessInfo object without rejection fields
-    const { rejectedAt, rejectedBy, rejectionReason, ...cleanBusinessInfo } = businessInfo;
-    const updatedBusinessInfo = {
-      ...cleanBusinessInfo,
-      isApproved: true,
-      approvedAt: new Date().toISOString(),
-      approvedBy: request.auth!.uid,
-    };
-
-    const updateResult = await userService.updateUserProfile(userId, {
-      businessInfo: updatedBusinessInfo
-    } as any);
-
-    if (!updateResult.success) {
-      throw new HttpsError('internal', 'Failed to update user profile');
-    }
-
-    // Get user email for sending notification
-    const userRecord = await auth.getUser(userId);
-    if (userRecord.email) {
-      // Send approval email (don't fail the whole operation if email fails)
-      try {
-        await sendBusinessApprovalEmail(userRecord.email, businessName, ownerName);
-      } catch (emailError) {
-        console.error('Failed to send approval email, but approval was successful:', emailError);
-      }
-    }
-
-    return {
-      success: true,
-      message: 'Business account approved successfully',
-      data: updateResult.data,
-    };
-  } catch (error: any) {
-    console.error('Error approving business account:', error);
-    throw new HttpsError('internal', error.message || 'Failed to approve business account');
-  }
-});
-
-// Combined business rejection function (updates status + sends email)
 export const rejectBusinessAccount = onCall(async (request) => {
   // Only admins can reject business accounts
   if (!isAdminUser(request)) {
@@ -1125,12 +901,6 @@ export const rejectBusinessAccount = onCall(async (request) => {
   }
 });
 
-// ===== DOCUMENT MANAGEMENT FUNCTIONS =====
-
-/**
- * Get user documents from Firebase Storage
- * Only admins can fetch documents for any user, regular users can only fetch their own
- */
 export const getUserDocuments = onCall(async (request): Promise<GetUserDocumentsResponse> => {
   try {
     // Require authentication
@@ -1169,10 +939,6 @@ export const getUserDocuments = onCall(async (request): Promise<GetUserDocuments
   }
 });
 
-/**
- * Upload a document to Firebase Storage
- * Users can upload their own documents, admins can upload for any user
- */
 export const uploadUserDocument = onCall(async (request): Promise<UploadDocumentResponse> => {
   try {
     // Require authentication
@@ -1218,12 +984,6 @@ export const uploadUserDocument = onCall(async (request): Promise<UploadDocument
   }
 });
 
-// ===== TEST EMAIL FUNCTION =====
-
-/**
- * Test email functionality - Only for admins
- * Use this to test if email configuration is working
- */
 export const testEmailFunction = onCall(async (request) => {
   // Only admins can test email
   if (!isAdminUser(request)) {
@@ -1279,52 +1039,6 @@ export const testEmailFunction = onCall(async (request) => {
       error: error.message || 'Failed to send test email',
       sentTo: targetEmail
     };
-  }
-});
-
-//====================
-// BUSINESS FUNCTIONS
-//====================
-
-export const createBusiness = onCall(functionOptions, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { companyName, taxNumber, taxNumberType, taxOffice, addresses, phone, email, industry, users, companySize, mainCategoryId, subCategoryIds, description } = request.data;
-
-  if (!companyName || !taxNumber || !taxNumberType || !taxOffice || !addresses || !phone || !email || !industry || !companySize || !mainCategoryId) {
-    throw new HttpsError('invalid-argument', 'Missing required business data');
-  }
-
-  try {
-    const result = await businessService.create({
-      ownerId: request.auth.uid,
-      companyName,
-      taxNumber,
-      taxNumberType,
-      taxOffice,
-      addresses,
-      phone,
-      companySize,
-      mainCategoryId,
-      subCategoryIds: subCategoryIds || [],
-      verification: {
-        status: BusinessVerificationStatus.UNVERIFIED,
-        history: []
-      },
-      users,
-      isActive: false
-    });
-
-    if (result.success) {
-      return result;
-    } else {
-      throw new HttpsError('internal', result.error || 'Failed to create business');
-    }
-  } catch (error: any) {
-    console.error('Error creating business:', error);
-    throw new HttpsError('internal', error.message || 'Failed to create business');
   }
 });
 
