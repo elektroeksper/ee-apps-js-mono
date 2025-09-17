@@ -1,13 +1,13 @@
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { HttpsError, HttpsOptions, onCall } from 'firebase-functions/v2/https';
 import { ADMIN_USERS } from './configs/constant';
-import { businessService } from './services/business.service';
 import { geocodingService } from './services/geo-coding.service';
 import * as orderService from './services/order.service';
 import * as productService from './services/product.service';
 import * as storageService from './services/storage.service';
 import * as userService from './services/user.service';
-import { BusinessUserRole, getAuthErrorMessage, GetUserDocumentsResponse, IAddressInfo, IOperationResult, UploadDocumentResponse } from './shared-generated';
+import { BusinessUserRole, BusinessVerificationStatus, getAuthErrorMessage, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse } from './shared-generated';
+import { businessService } from './shared-generated/services';
 import { sendBusinessApprovalEmail, sendBusinessRejectionEmail } from './utils/email.service';
 import { auth, db } from './utils/firebase-admin';
 
@@ -400,7 +400,7 @@ export const getAddressFromCoordinates = onCall(geocodeFunctionOptions, (request
       lng: number;
     };
     return geocodingService.decodeAddressByLocation(lat, lng) as Promise<
-      IOperationResult<IAddressInfo | null>
+      IOperationResult<IAddress | null>
     >;
   } catch (error) {
     return {
@@ -417,7 +417,7 @@ export const getAddressFromQuery = onCall(geocodeFunctionOptions, (request) => {
       IOperationResult<{
         lat: number;
         lng: number;
-        addressInfo: IAddressInfo;
+        addressInfo: IAddress;
       } | null>
     >;
   } catch (error) {
@@ -1291,27 +1291,30 @@ export const createBusiness = onCall(functionOptions, async (request) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { companyName, taxNumber, taxNumberType, taxOffice, address, phone, email, industry, companySize, mainCategoryId, subCategoryIds, description } = request.data;
+  const { companyName, taxNumber, taxNumberType, taxOffice, addresses, phone, email, industry, users, companySize, mainCategoryId, subCategoryIds, description } = request.data;
 
-  if (!companyName || !taxNumber || !taxNumberType || !taxOffice || !address || !phone || !email || !industry || !companySize || !mainCategoryId) {
+  if (!companyName || !taxNumber || !taxNumberType || !taxOffice || !addresses || !phone || !email || !industry || !companySize || !mainCategoryId) {
     throw new HttpsError('invalid-argument', 'Missing required business data');
   }
 
   try {
-    const result = await businessService.createBusiness({
+    const result = await businessService.create({
       ownerId: request.auth.uid,
       companyName,
       taxNumber,
       taxNumberType,
       taxOffice,
-      address,
+      addresses,
       phone,
-      email,
-      industry,
       companySize,
       mainCategoryId,
       subCategoryIds: subCategoryIds || [],
-      description
+      verification: {
+        status: BusinessVerificationStatus.UNVERIFIED,
+        history: []
+      },
+      users,
+      isActive: false
     });
 
     if (result.success) {
@@ -1337,7 +1340,7 @@ export const getBusiness = onCall(functionOptions, async (request) => {
   }
 
   try {
-    const result = await businessService.getBusiness(businessId);
+    const result = await businessService.getById(businessId);
 
     if (result.success) {
       return result;
@@ -1363,17 +1366,17 @@ export const updateBusiness = onCall(functionOptions, async (request) => {
 
   try {
     // Check user permission to edit business
-    const businessResult = await businessService.getBusiness(businessId);
+    const businessResult = await businessService.getById(businessId);
     if (!businessResult.success || !businessResult.data) {
       throw new HttpsError('not-found', 'Business not found');
     }
 
     const userInfo = businessResult.data.users[request.auth.uid];
-    if (!userInfo || !userInfo.permissions.includes('canEditBusinessInfo')) {
+    if (!userInfo || !Object.keys(userInfo.permissions).includes('canEditBusinessInfo')) {
       throw new HttpsError('permission-denied', 'Insufficient permissions to edit business');
     }
 
-    const result = await businessService.updateBusiness(businessId, updates);
+    const result = await businessService.update(businessId, updates);
 
     if (result.success) {
       return result;
@@ -1383,88 +1386,6 @@ export const updateBusiness = onCall(functionOptions, async (request) => {
   } catch (error: any) {
     console.error('Error updating business:', error);
     throw new HttpsError('internal', error.message || 'Failed to update business');
-  }
-});
-
-export const inviteUserToBusiness = onCall(functionOptions, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { businessId, invitedEmail, invitedRole, invitedName } = request.data;
-
-  if (!businessId || !invitedEmail || !invitedRole) {
-    throw new HttpsError('invalid-argument', 'Business ID, email, and role are required');
-  }
-
-  try {
-    // Check user permission to invite
-    const businessResult = await businessService.getBusiness(businessId);
-    if (!businessResult.success || !businessResult.data) {
-      throw new HttpsError('not-found', 'Business not found');
-    }
-
-    const userInfo = businessResult.data.users[request.auth.uid];
-    if (!userInfo || !userInfo.permissions.includes('canInviteUsers')) {
-      throw new HttpsError('permission-denied', 'Insufficient permissions to invite users');
-    }
-
-    // Generate secure token
-    const token = businessService.generateSecureToken();
-
-    // Create invitation with proper timestamp for shared types
-    const expiresDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days expiry
-
-    const invitationData = {
-      businessId,
-      businessName: businessResult.data.companyName,
-      invitedEmail,
-      invitedName: invitedName || invitedEmail,
-      invitedRole,
-      invitedBy: request.auth.uid,
-      invitedByName: userInfo.userName,
-      token,
-      expiresAt: expiresDate, // Let the business service handle timestamp conversion
-      status: 'pending' as any,
-    };
-
-    const result = await businessService.createInvitation(businessId, invitationData as any);
-
-    if (result.success) {
-      // TODO: Send invitation email here
-      console.log('Invitation created successfully, email sending not implemented yet');
-      return result;
-    } else {
-      throw new HttpsError('internal', result.error || 'Failed to create invitation');
-    }
-  } catch (error: any) {
-    console.error('Error inviting user to business:', error);
-    throw new HttpsError('internal', error.message || 'Failed to invite user');
-  }
-});
-
-export const acceptBusinessInvitation = onCall(functionOptions, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const { invitationToken } = request.data;
-
-  if (!invitationToken) {
-    throw new HttpsError('invalid-argument', 'Invitation token is required');
-  }
-
-  try {
-    const result = await businessService.acceptInvitation(invitationToken);
-
-    if (result.success) {
-      return { success: true, message: 'Invitation accepted successfully' };
-    } else {
-      throw new HttpsError('invalid-argument', result.error || 'Failed to accept invitation');
-    }
-  } catch (error: any) {
-    console.error('Error accepting business invitation:', error);
-    throw new HttpsError('internal', error.message || 'Failed to accept invitation');
   }
 });
 
@@ -1481,13 +1402,13 @@ export const removeUserFromBusiness = onCall(functionOptions, async (request) =>
 
   try {
     // Check user permission to remove users
-    const businessResult = await businessService.getBusiness(businessId);
+    const businessResult = await businessService.getById(businessId);
     if (!businessResult.success || !businessResult.data) {
       throw new HttpsError('not-found', 'Business not found');
     }
 
     const userInfo = businessResult.data.users[request.auth.uid];
-    if (!userInfo || !userInfo.permissions.includes('canRemoveUsers')) {
+    if (!userInfo || !Object.keys(userInfo.permissions).includes('canRemoveUsers')) {
       throw new HttpsError('permission-denied', 'Insufficient permissions to remove users');
     }
 
@@ -1497,7 +1418,7 @@ export const removeUserFromBusiness = onCall(functionOptions, async (request) =>
       throw new HttpsError('invalid-argument', 'Cannot remove business owner');
     }
 
-    const result = await businessService.removeUserFromBusiness(businessId, userId);
+    const result = await businessService.removeUser(businessId, userId);
 
     if (result.success) {
       return { success: true, message: 'User removed successfully' };
@@ -1523,13 +1444,13 @@ export const updateUserRole = onCall(functionOptions, async (request) => {
 
   try {
     // Check user permission to change roles
-    const businessResult = await businessService.getBusiness(businessId);
+    const businessResult = await businessService.getById(businessId);
     if (!businessResult.success || !businessResult.data) {
       throw new HttpsError('not-found', 'Business not found');
     }
 
     const userInfo = businessResult.data.users[request.auth.uid];
-    if (!userInfo || !userInfo.permissions.includes('canChangeUserRoles')) {
+    if (!userInfo || !Object.keys(userInfo.permissions).includes('canChangeUserRoles')) {
       throw new HttpsError('permission-denied', 'Insufficient permissions to change user roles');
     }
 

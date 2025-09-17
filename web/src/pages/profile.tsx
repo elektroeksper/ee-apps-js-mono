@@ -536,9 +536,11 @@ function ProfileContent() {
                     </label>
                     <p className="text-gray-900">
                       {appUser.createdAt
-                        ? new Date(appUser.createdAt).toLocaleDateString(
-                            'tr-TR'
-                          )
+                        ? (appUser.createdAt instanceof Date
+                            ? appUser.createdAt
+                            : appUser.createdAt.toDate?.() ||
+                              new Date(appUser.createdAt.seconds * 1000)
+                          ).toLocaleDateString('tr-TR')
                         : 'Bilinmiyor'}
                     </p>
                   </div>

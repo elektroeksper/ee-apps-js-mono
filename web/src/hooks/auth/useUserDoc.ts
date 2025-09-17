@@ -1,6 +1,6 @@
 'use client'
 
-import { AccountType, AuthRole, getAuthErrorMessage, IAppUser } from '@/shared-generated';
+import { AccountType, getAuthErrorMessage, IAppUser } from '@/shared-generated';
 import { UserService } from '@/shared-generated/services/user.service';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -120,17 +120,22 @@ export function useUserDoc(uid: string | null): UseUserDocState {
             }
           }
 
-          const userData = {
-            email,
-            firstName,
-            lastName,
-            displayName: `${firstName} ${lastName}`,
-            photoURL: currentFirebaseUser.photoURL || '',
-            phone,
-            accountType,
-            roles: [AuthRole.USER],
-            isEmailVerified: currentFirebaseUser.emailVerified,
-            isProfileComplete: false, // Will need to complete profile in setup
+          const userData: Partial<IAppUser> = {
+            email: email ?? '',
+            firstName: firstName ?? '',
+            lastName: lastName ?? '',
+            displayName: `${firstName ?? ''} ${lastName ?? ''}`.trim(),
+            photoURL: currentFirebaseUser.photoURL ?? '',
+            phone: phone ?? '',
+            accountType: accountType ?? AccountType.INDIVIDUAL,
+            isEmailVerified: currentFirebaseUser.emailVerified ?? false,
+            address: {
+              street: '',
+              city: '',
+              state: '',
+              zipCode: '',
+              country: ''
+            },
             preferences: {
               theme: 'light' as const,
               language: 'tr',
@@ -164,7 +169,44 @@ export function useUserDoc(uid: string | null): UseUserDocState {
           // Create AppUser object
           const newAppUser: IAppUser = {
             id: uid,
-            ...userData
+            firstName: userData.firstName ?? '',
+            lastName: userData.lastName ?? '',
+            displayName: userData.displayName ?? '',
+            email: userData.email ?? '',
+            phone: userData.phone ?? '',
+            photoURL: userData.photoURL ?? '',
+            accountType: userData.accountType ?? AccountType.INDIVIDUAL,
+            isEmailVerified: userData.isEmailVerified ?? false,
+            address: userData.address ?? {
+              street: '',
+              city: '',
+              state: '',
+              zipCode: '',
+              country: ''
+            },
+            preferences: userData.preferences ?? {
+              theme: 'light',
+              language: 'tr',
+              notifications: {
+                email: true,
+                push: true,
+                sms: false,
+                marketing: false,
+                orderUpdates: true,
+                securityAlerts: true,
+              },
+              privacy: {
+                profileVisibility: 'private',
+                showEmail: false,
+                showPhone: false,
+                allowAnalytics: true,
+              },
+            },
+            createdAt: userData.createdAt ?? new Date(),
+            updatedAt: userData.updatedAt ?? new Date(),
+            isPhoneVerified: false,
+            isActive: false,
+            isDeleted: false
           };
           console.log('✅ AppUser object created:', newAppUser);
           setAppUser(newAppUser);

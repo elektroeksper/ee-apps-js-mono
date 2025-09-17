@@ -1,9 +1,9 @@
-import { ISettingItem, SettingsKey } from "@/shared-generated";
-import settingsService from "@/shared-generated/services/settings.service";
+import { ISettingItem, SystemSettingsKey } from "@/shared-generated";
+import { settingsService } from "@/shared-generated/services/settings.service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-const useUpdateSettingMutation = (key: SettingsKey) => {
+const useUpdateSettingMutation = (key: SystemSettingsKey) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, error, isError, isSuccess, data } = useMutation({
@@ -93,8 +93,8 @@ const useUpdateSettingMutation = (key: SettingsKey) => {
 };
 
 // Helper function to get user-friendly setting names
-function getSettingDisplayName(key: SettingsKey): string {
-  const displayNames: Record<SettingsKey, string> = {
+function getSettingDisplayName(key: SystemSettingsKey): string {
+  const displayNames: Record<SystemSettingsKey, string> = {
     userRegistration: 'Kullanıcı Kaydı',
     emailVerificationRequired: 'Email Doğrulama Zorunluluğu',
     businessAccountApproval: 'İşletme Hesap Onayı',

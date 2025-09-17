@@ -17,9 +17,13 @@ export function useRoles(claims: Record<string, any> | null, appUser: IAppUser |
     if (Array.isArray(claimRolesRaw)) claimRoles = claimRolesRaw as string[]
     else if (typeof claimRolesRaw === 'string') claimRoles = [claimRolesRaw]
 
-    // Merge roles from user document if present (no roles on IAppUser currently)
+    // Get business role from user document businessInfo
     const docRoles: string[] = []
-    // Normalize to unique, preserve original casing; then remove any 'admin' role string (case-insensitive)
+    if (appUser?.businessInfo?.role) {
+      docRoles.push(appUser.businessInfo.role)
+    }
+
+    // Merge roles from claims and user document business role; then remove any 'admin' role string (case-insensitive)
     const mergedAll = Array.from(new Set([...claimRoles, ...docRoles]))
     const merged = mergedAll.filter(r => r.toLowerCase() !== 'admin')
     const mergedLower = merged.map(r => r.toLowerCase())
@@ -40,6 +44,7 @@ export function useRoles(claims: Record<string, any> | null, appUser: IAppUser |
       console.log('🔑 useRoles Debug:', {
         claimsAdmin: claims?.admin,
         claimRoles: claimRolesRaw,
+        businessRole: appUser?.businessInfo?.role,
         docRoles,
         merged,
         isAdmin,

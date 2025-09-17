@@ -30,12 +30,16 @@ export const useMyRepairRequests = (customerId?: string) => {
   return useQuery({
     queryKey: repairRequestQueryKeys.myRequests(customerId),
     queryFn: async () => {
+      if (!customerId) {
+        throw new Error('Customer ID is required');
+      }
       const result = await repairRequestService.getMyRepairRequests(customerId);
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch repair requests');
       }
       return result.data || [];
     },
+    enabled: !!customerId, // Only run query when customerId is provided
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

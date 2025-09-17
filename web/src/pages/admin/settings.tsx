@@ -6,7 +6,7 @@ import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import useSystemSettings from '@/hooks/useSystemSettings'
 import useUpdateSettingMutation from '@/hooks/useUpdateSettingMutation'
-import { SettingsKey } from '@/shared-generated'
+import { SystemSettingsKey } from '@/shared-generated'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
@@ -21,7 +21,7 @@ import {
 } from 'react-icons/fi'
 
 interface PendingUpdate {
-  key: SettingsKey
+  key: SystemSettingsKey
   value: any
   title: string
   message: string
@@ -50,9 +50,9 @@ function AdminSettingsPageContent() {
   })
 
   // Track recently updated settings for success feedback
-  const [recentlyUpdated, setRecentlyUpdated] = useState<Set<SettingsKey>>(
-    new Set()
-  )
+  const [recentlyUpdated, setRecentlyUpdated] = useState<
+    Set<SystemSettingsKey>
+  >(new Set())
 
   // Clear success indicators after 3 seconds
   useEffect(() => {
@@ -85,36 +85,39 @@ function AdminSettingsPageContent() {
   useEffect(() => {
     const mutations = [
       {
-        key: 'allowedFileTypes' as SettingsKey,
+        key: 'allowedFileTypes' as SystemSettingsKey,
         mutation: updateAllowedFileTypes,
       },
       {
-        key: 'userRegistration' as SettingsKey,
+        key: 'userRegistration' as SystemSettingsKey,
         mutation: updateUserRegistration,
       },
       {
-        key: 'emailVerificationRequired' as SettingsKey,
+        key: 'emailVerificationRequired' as SystemSettingsKey,
         mutation: updateEmailVerificationRequired,
       },
       {
-        key: 'businessAccountApproval' as SettingsKey,
+        key: 'businessAccountApproval' as SystemSettingsKey,
         mutation: updateBusinessAccountApproval,
       },
       {
-        key: 'maintenanceMode' as SettingsKey,
+        key: 'maintenanceMode' as SystemSettingsKey,
         mutation: updateMaintenanceMode,
       },
       {
-        key: 'emailNotifications' as SettingsKey,
+        key: 'emailNotifications' as SystemSettingsKey,
         mutation: updateEmailNotifications,
       },
-      { key: 'sessionTimeout' as SettingsKey, mutation: updateSessionTimeout },
-      { key: 'autoBackup' as SettingsKey, mutation: updateAutoBackup },
       {
-        key: 'analyticsEnabled' as SettingsKey,
+        key: 'sessionTimeout' as SystemSettingsKey,
+        mutation: updateSessionTimeout,
+      },
+      { key: 'autoBackup' as SystemSettingsKey, mutation: updateAutoBackup },
+      {
+        key: 'analyticsEnabled' as SystemSettingsKey,
         mutation: updateAnalyticsEnabled,
       },
-      { key: 'maxFileSize' as SettingsKey, mutation: updateMaxFileSize },
+      { key: 'maxFileSize' as SystemSettingsKey, mutation: updateMaxFileSize },
     ]
 
     mutations.forEach(({ key, mutation }) => {
@@ -137,7 +140,7 @@ function AdminSettingsPageContent() {
   ])
 
   // Helper function to get mutation hook by key
-  const getMutationByKey = (key: SettingsKey) => {
+  const getMutationByKey = (key: SystemSettingsKey) => {
     switch (key) {
       case 'allowedFileTypes':
         return updateAllowedFileTypes
@@ -165,7 +168,7 @@ function AdminSettingsPageContent() {
   }
 
   // Helper function to get setting value by key
-  const getSettingValue = (key: SettingsKey) => {
+  const getSettingValue = (key: SystemSettingsKey) => {
     const setting = settings?.find(s => s.key === key)
     const value = setting?.value
 
@@ -223,7 +226,7 @@ function AdminSettingsPageContent() {
 
   // Setting update handlers
   const handleUpdateSetting = (
-    key: SettingsKey,
+    key: SystemSettingsKey,
     value: any,
     title: string,
     message: string
@@ -232,7 +235,7 @@ function AdminSettingsPageContent() {
   }
 
   const handleToggleSetting = (
-    key: SettingsKey,
+    key: SystemSettingsKey,
     currentValue: boolean,
     settingName: string
   ) => {
