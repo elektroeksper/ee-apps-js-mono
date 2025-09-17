@@ -2,9 +2,9 @@
  * Business hooks for business data and operations
  */
 
-import { UserService } from '@/services/auth/user.service';
-import { BusinessService } from '@/services/business.service';
-import { BusinessUserRole, IBusiness, IUserWithBusiness } from '@/shared-generated';
+import { BusinessUserRole, IBusiness } from '@/shared-generated';
+import { BusinessService } from '@/shared-generated/services/business.service';
+import { UserService } from '@/shared-generated/services/user.service';
 import { useCallback, useEffect, useState } from 'react';
 
 // Business service instances

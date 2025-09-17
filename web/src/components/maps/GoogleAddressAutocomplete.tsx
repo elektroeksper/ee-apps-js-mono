@@ -4,7 +4,7 @@
  */
 
 import { GOOGLE_MAPS_CONFIG } from '@/config/maps'
-import { AddressComponent } from '@/types/maps'
+import { AddressComponent } from '@/shared-generated/types/map-types'
 import { useJsApiLoader } from '@react-google-maps/api'
 import React, { useEffect, useRef } from 'react'
 

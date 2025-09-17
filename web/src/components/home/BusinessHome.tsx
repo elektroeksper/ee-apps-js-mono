@@ -6,7 +6,7 @@
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
 import { useVideosByLocation } from '@/hooks/useContentQueries'
-import { IExtendedAppUser, getBusinessName } from '@/types/user'
+import type { IAppUser } from '@/shared-generated/types/user-types'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 
@@ -21,7 +21,7 @@ interface DashboardStats {
 
 const BusinessHome: React.FC = () => {
   const { appUser } = useAuth()
-  const extendedUser = appUser as IExtendedAppUser
+  const extendedUser = appUser as IAppUser
   const [stats, setStats] = useState<DashboardStats>({
     totalCustomers: 0,
     activeRequests: 0,

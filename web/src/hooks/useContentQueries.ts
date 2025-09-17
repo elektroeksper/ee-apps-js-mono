@@ -1,4 +1,3 @@
-import { contentService } from '@/services/content.service';
 import {
   IAboutInfo,
   IBrandingInfo,
@@ -8,6 +7,7 @@ import {
   IVideoItem,
   VideoLocation
 } from '@/shared-generated';
+import { contentService } from '@/shared-generated/services/content.service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 

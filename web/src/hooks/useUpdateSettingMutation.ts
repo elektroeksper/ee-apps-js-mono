@@ -1,5 +1,5 @@
-import settingsService from "@/services/settings.service";
 import { ISettingItem, SettingsKey } from "@/shared-generated";
+import settingsService from "@/shared-generated/services/settings.service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 

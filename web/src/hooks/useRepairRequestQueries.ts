@@ -1,10 +1,10 @@
-import { repairRequestService } from '@/services/repair.service';
 import {
   ICreateRepairRequestDTO,
   IRepairRequestFilter,
   IUpdateRepairRequestDTO,
   RepairRequestStatus
 } from '@/shared-generated';
+import { repairRequestService } from '@/shared-generated/services/repair.service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 

@@ -13,14 +13,18 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { DEFAULT_MAP_CENTER } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
 import { useVideosByLocation } from '@/hooks/useContentQueries'
-import { IAddressComponentItem, ICoordinates, IMarkerData } from '@/types/maps'
-import { IExtendedAppUser, getExtendedAddress } from '@/types/user'
+import type {
+  IAddressComponentItem,
+  ICoordinates,
+  IMarkerData,
+} from '@/shared-generated/types/map-types'
+import type { IAppUser } from '@/shared-generated/types/user-types'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 const IndividualHome: React.FC = () => {
   const { appUser } = useAuth()
-  const extendedUser = appUser as IExtendedAppUser
-  const userAddress = getExtendedAddress(extendedUser)
+  const extendedUser = appUser as IAppUser
+  const userAddress = extendedUser?.personalAddress
   const [loading, setLoading] = useState(true)
 
   // Video fetch and client guard

@@ -8,11 +8,8 @@ import BusinessSetup from '@/components/setup/BusinessSetup'
 import IndividualSetup from '@/components/setup/IndividualSetup'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
-import {
-  IExtendedAppUser,
-  isBusinessApproved,
-  isBusinessRejected,
-} from '@/types/user'
+import { AccountType } from '@/shared-generated'
+import type { IAppUser } from '@/shared-generated/types/user-types'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 
@@ -37,23 +34,14 @@ function SetupContent() {
       console.log('Profile is complete, redirecting...')
 
       // For business users with complete profile, check their approval status
-      if (appUser.accountType === 'business') {
-        const extendedUser = appUser as IExtendedAppUser
+      if (appUser.accountType === AccountType.BUSINESS) {
+        const extendedUser = appUser as IAppUser
 
-        if (isBusinessRejected(extendedUser)) {
-          console.log(
-            'Business profile rejected, redirecting to complete-documents'
-          )
-          router.replace('/complete-documents')
-        } else if (isBusinessApproved(extendedUser)) {
-          console.log('Business profile approved, redirecting to home')
-          router.replace('/home')
-        } else {
-          console.log(
-            'Business profile pending approval, redirecting to pending-approval'
-          )
-          router.replace('/pending-approval')
-        }
+        // For now, redirect business users to pending approval
+        console.log(
+          'Business profile pending approval, redirecting to pending-approval'
+        )
+        router.replace('/pending-approval')
       } else {
         console.log('Individual profile complete, redirecting to home')
         router.replace('/home')

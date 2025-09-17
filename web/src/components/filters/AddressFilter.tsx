@@ -3,9 +3,12 @@
  * Provides hierarchical address filtering for dealer search
  */
 
-import { BUSINESS_CATEGORIES } from '@/config/maps'
-import { AddressComponent, IAddressComponentItem } from '@/types/maps'
-import React, { useCallback, useEffect, useState } from 'react'
+import { BUSINESS_CATEGORIES } from '@/shared-generated/configs/contants'
+import type {
+  AddressComponent,
+  IAddressComponentItem,
+} from '@/shared-generated/types/map-types'
+import React, { useCallback, useState } from 'react'
 
 interface AddressFilterProps {
   availableComponents: IAddressComponentItem[]
@@ -26,7 +29,7 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
   onCategoryChange,
   onlyCertified = false,
   onCertifiedChange,
-  className = ''
+  className = '',
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['address', 'category'])
@@ -40,7 +43,7 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
     street: 'Sokak',
     streetNumber: 'Kapı No',
     postalCode: 'Posta Kodu',
-    country: 'Ülke'
+    country: 'Ülke',
   }
 
   // Hierarchical order for components
@@ -48,7 +51,7 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
     'city',
     'district',
     'neighborhood',
-    'street'
+    'street',
   ]
 
   // Get available components in hierarchical order
@@ -72,7 +75,7 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
   const handleComponentToggle = useCallback(
     (component: IAddressComponentItem) => {
       const isSelected = isComponentSelected(component)
-      
+
       if (isSelected) {
         // Remove this component and all child components
         const componentIndex = componentOrder.indexOf(component.key)
@@ -84,7 +87,7 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
       } else {
         // Add this component
         const componentIndex = componentOrder.indexOf(component.key)
-        
+
         // Keep only parent components and add the new one
         const newComponents = selectedComponents.filter(sc => {
           const scIndex = componentOrder.indexOf(sc.key)
@@ -101,14 +104,16 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
   const isComponentDisabled = useCallback(
     (component: IAddressComponentItem) => {
       const componentIndex = componentOrder.indexOf(component.key)
-      
+
       // Check if parent component is selected
       if (componentIndex > 0) {
         const parentKey = componentOrder[componentIndex - 1]
-        const hasParentSelected = selectedComponents.some(sc => sc.key === parentKey)
+        const hasParentSelected = selectedComponents.some(
+          sc => sc.key === parentKey
+        )
         return !hasParentSelected
       }
-      
+
       return false
     },
     [selectedComponents]
@@ -132,10 +137,8 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
     if (onCertifiedChange) onCertifiedChange(false)
   }
 
-  const hasActiveFilters = 
-    selectedComponents.length > 0 || 
-    selectedCategoryId || 
-    onlyCertified
+  const hasActiveFilters =
+    selectedComponents.length > 0 || selectedCategoryId || onlyCertified
 
   return (
     <div className={`bg-white rounded-lg shadow-md ${className}`}>
@@ -169,16 +172,21 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
-        
+
         {expandedSections.has('address') && (
           <div className="px-4 pb-4">
             {getOrderedComponents().map((component, index) => {
               const isSelected = isComponentSelected(component)
               const isDisabled = isComponentDisabled(component)
-              
+
               return (
                 <div
                   key={`${component.key}-${component.value}`}
@@ -193,7 +201,9 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      onChange={() => !isDisabled && handleComponentToggle(component)}
+                      onChange={() =>
+                        !isDisabled && handleComponentToggle(component)
+                      }
                       disabled={isDisabled}
                       className="mr-3 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                     />
@@ -209,7 +219,7 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
                 </div>
               )
             })}
-            
+
             {availableComponents.length === 0 && (
               <p className="text-sm text-gray-500 py-2">
                 Konum bilgisi mevcut değil
@@ -235,10 +245,15 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
-          
+
           {expandedSections.has('category') && (
             <div className="px-4 pb-4">
               <div className="space-y-2">
@@ -251,13 +266,19 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
                       type="radio"
                       name="category"
                       checked={selectedCategoryId === category.id}
-                      onChange={() => onCategoryChange(
-                        selectedCategoryId === category.id ? undefined : category.id
-                      )}
+                      onChange={() =>
+                        onCategoryChange(
+                          selectedCategoryId === category.id
+                            ? undefined
+                            : category.id
+                        )
+                      }
                       className="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                     />
                     <span className="text-2xl mr-2">{category.icon}</span>
-                    <span className="text-sm text-gray-700">{category.label}</span>
+                    <span className="text-sm text-gray-700">
+                      {category.label}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -273,7 +294,7 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
             <input
               type="checkbox"
               checked={onlyCertified}
-              onChange={(e) => onCertifiedChange(e.target.checked)}
+              onChange={e => onCertifiedChange(e.target.checked)}
               className="mr-3 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
             />
             <div className="flex items-center">
@@ -314,19 +335,24 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
                 </button>
               </span>
             ))}
-            
+
             {selectedCategoryId && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                {BUSINESS_CATEGORIES.find(c => c.id === selectedCategoryId)?.label}
+                {
+                  BUSINESS_CATEGORIES.find(c => c.id === selectedCategoryId)
+                    ?.label
+                }
                 <button
-                  onClick={() => onCategoryChange && onCategoryChange(undefined)}
+                  onClick={() =>
+                    onCategoryChange && onCategoryChange(undefined)
+                  }
                   className="ml-1 hover:text-purple-900"
                 >
                   ×
                 </button>
               </span>
             )}
-            
+
             {onlyCertified && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Yetkili Bayiler

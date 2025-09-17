@@ -9,7 +9,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { GOOGLE_MAPS_CONFIG } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
 import { useVideosByLocation } from '@/hooks/useContentQueries'
-import { IAddress, ICoordinates } from '@/types/maps'
+import type { IAddress, ICoordinates } from '@/shared-generated/types/map-types'
 import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useState } from 'react'
 import GoogleAddressAutocomplete, {

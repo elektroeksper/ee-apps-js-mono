@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useVideosByLocation } from '@/hooks/useContentQueries'
 import { storageClientService } from '@/services/storage.service'
 import { UserDocument } from '@/shared-generated'
-import { IExtendedAppUser } from '@/types/user'
+import type { IAppUser } from '@/shared-generated/types/user-types'
 import React, { useEffect, useState } from 'react'
 import { FiAlertCircle, FiUpload, FiX } from 'react-icons/fi'
 
@@ -18,8 +18,8 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 
 const CompleteDocuments: React.FC = () => {
   const { appUser, updateUser, logout } = useAuth()
-  const extendedUser = appUser as IExtendedAppUser
-  const businessInfo = extendedUser?.businessInfo
+  const extendedUser = appUser as IAppUser
+  const businessInfo = extendedUser?.businessId // Using businessId instead of businessInfo
 
   // Video fetch and client guard
   const { data: videos, isLoading: videosLoading } =

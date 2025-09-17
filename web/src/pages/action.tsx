@@ -6,7 +6,7 @@ import {
 } from '@/components/auth'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
-import { UserService } from '@/services/auth/user.service'
+import { UserService } from '@/shared-generated/services/user.service'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'

@@ -4,7 +4,7 @@
  */
 
 import { DEFAULT_MAP_OPTIONS, GOOGLE_MAPS_CONFIG } from '@/config/maps'
-import { ICoordinates } from '@/types/maps'
+import type { ICoordinates } from '@/shared-generated/types/map-types'
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -31,13 +31,13 @@ const GoogleMapWithMarker: React.FC<GoogleMapWithMarkerProps> = ({
   onAddressChange,
   height = '400px',
   width = '100%',
-  className = ''
+  className = '',
 }) => {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_CONFIG.apiKey,
     libraries,
     language: GOOGLE_MAPS_CONFIG.language,
-    region: GOOGLE_MAPS_CONFIG.region
+    region: GOOGLE_MAPS_CONFIG.region,
   })
 
   const [map, setMap] = useState<google.maps.Map | null>(null)
@@ -86,11 +86,11 @@ const GoogleMapWithMarker: React.FC<GoogleMapWithMarkerProps> = ({
 
       const newPosition: ICoordinates = {
         lat: e.latLng.lat(),
-        lng: e.latLng.lng()
+        lng: e.latLng.lng(),
       }
 
       setCurrentPosition(newPosition)
-      
+
       if (onMarkerDragEnd) {
         onMarkerDragEnd(newPosition)
       }
@@ -119,11 +119,11 @@ const GoogleMapWithMarker: React.FC<GoogleMapWithMarkerProps> = ({
 
       const newPosition: ICoordinates = {
         lat: e.latLng.lat(),
-        lng: e.latLng.lng()
+        lng: e.latLng.lng(),
       }
 
       setCurrentPosition(newPosition)
-      
+
       if (onMarkerDragEnd) {
         onMarkerDragEnd(newPosition)
       }
@@ -148,7 +148,7 @@ const GoogleMapWithMarker: React.FC<GoogleMapWithMarkerProps> = ({
   // Loading state
   if (!isLoaded) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center bg-gray-100 ${className}`}
         style={{ height, width }}
       >
@@ -160,13 +160,11 @@ const GoogleMapWithMarker: React.FC<GoogleMapWithMarkerProps> = ({
   // Error state
   if (loadError) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center bg-gray-100 ${className}`}
         style={{ height, width }}
       >
-        <div className="text-red-600">
-          Harita yüklenirken hata oluştu
-        </div>
+        <div className="text-red-600">Harita yüklenirken hata oluştu</div>
       </div>
     )
   }

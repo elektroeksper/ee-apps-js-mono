@@ -1,4 +1,4 @@
-import { SettingsService } from '@/services/settings.service';
+import { SettingsService } from '@/shared-generated/services/settings.service';
 import { useQuery } from '@tanstack/react-query';
 
 const settingsService = new SettingsService();

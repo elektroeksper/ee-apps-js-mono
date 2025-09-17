@@ -7,11 +7,8 @@ import { AuthGuard } from '@/components/auth'
 import { CompleteDocuments } from '@/components/business'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
-import {
-  IExtendedAppUser,
-  isBusinessApproved,
-  isBusinessRejected,
-} from '@/types/user'
+import { AccountType } from '@/shared-generated'
+import type { IAppUser } from '@/shared-generated/types/user-types'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 
@@ -23,24 +20,11 @@ function CompleteDocumentsContent() {
     if (isLoading || !appUser) return
 
     // Only for business users
-    if (appUser.accountType === 'business') {
-      const extendedUser = appUser as IExtendedAppUser
+    if (appUser.accountType === AccountType.BUSINESS) {
+      const extendedUser = appUser as IAppUser
 
-      // If approved, redirect to home
-      if (isBusinessApproved(extendedUser)) {
-        console.log('Business user approved, redirecting to home')
-        router.replace('/home')
-        return
-      }
-
-      // If not rejected, redirect to pending approval
-      if (!isBusinessRejected(extendedUser)) {
-        console.log(
-          'Business user not rejected, redirecting to pending-approval'
-        )
-        router.replace('/pending-approval')
-        return
-      }
+      // TODO: Add business status logic when available
+      // For now, stay on complete documents page
     }
   }, [appUser, isLoading, router])
 
