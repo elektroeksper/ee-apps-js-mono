@@ -36,7 +36,7 @@ interface IBusiness {
   id: string // Firestore document ID
 
   // Basic Business Information
-  companyName: string
+  businessName: string
   taxNumber: string
   taxNumberType: TaxNumberType
   identityNumber?: string // For individual business owners
@@ -401,7 +401,7 @@ interface BusinessRegistrationData {
   password: string
 
   // Business data
-  companyName: string
+  businessName: string
   taxNumber: string
   taxOffice: string
   address: IBusinessAddress

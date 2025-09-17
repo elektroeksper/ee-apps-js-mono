@@ -5,7 +5,7 @@
  * - Storage
  * - Firestore
  * 
- * Shared across all projects in the monorepo
+ * Moved from shared package to web-specific config
  */
 
 interface FirebaseErrorMessage {

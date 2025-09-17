@@ -1,5 +1,6 @@
 'use client'
 
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { GOOGLE_MAPS_CONFIG } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -7,12 +8,7 @@ import {
   transformToBusinessRegisterData,
   type BusinessRegisterFormData,
 } from '@/lib/validations/auth'
-import {
-  AccountType,
-  getAuthErrorMessage,
-  ICoordinates,
-  TaxNumberType,
-} from '@/shared-generated'
+import { AccountType, ICoordinates, TaxNumberType } from '@/shared-generated'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -66,7 +62,6 @@ export const BusinessRegisterForm: React.FC = () => {
       confirmPassword: '',
       accountType: AccountType.BUSINESS,
       businessName: '',
-      companyName: '',
       userTitle: '',
       taxNumber: '',
       taxNumberType: TaxNumberType.TAX,

@@ -10,13 +10,13 @@ import { FaCheckCircle, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MdSecurity } from 'react-icons/md'
 
 import { Button, Input } from '@/components/ui'
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   passwordChangeSchema,
   type PasswordChangeFormData,
 } from '@/lib/validations/auth'
-import { getAuthErrorMessage } from '@/shared-generated'
-import { authService } from '@/shared-generated/services/auth.service'
+import { authService } from '@/services/auth.service'
 
 interface PasswordChangeFormProps {
   onSuccess?: () => void

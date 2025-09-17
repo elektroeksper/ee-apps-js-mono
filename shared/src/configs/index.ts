@@ -4,6 +4,4 @@
  */
 
 export * from './contants';
-export * from './firebase';
-export * from './firebase-error-messages';
 

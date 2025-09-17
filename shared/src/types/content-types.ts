@@ -67,7 +67,7 @@ export interface IBrandingInfo {
     secondary: string;
     accent?: string;
   };
-  companyName: string;
+  businessName: string;
   tagline?: string;
   updatedAt?: Date;
 }

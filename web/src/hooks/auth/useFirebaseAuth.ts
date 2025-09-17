@@ -1,7 +1,7 @@
 'use client'
 
 import { auth } from '@/config/firebase';
-import { getAuthErrorMessage } from '@/shared-generated';
+import { getAuthErrorMessage } from '@/config/firebase-error-messages';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useCallback, useRef, useState } from 'react';
 

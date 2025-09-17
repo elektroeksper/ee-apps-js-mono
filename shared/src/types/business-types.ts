@@ -61,7 +61,7 @@ interface IBusinessSetupData {
 
 // Main Business Entity
 interface IBusiness extends IEntity {
-  companyName: string;
+  businessName: string;
   taxNumber?: string;
   taxOffice?: string;
   taxNumberType?: TaxNumberType;

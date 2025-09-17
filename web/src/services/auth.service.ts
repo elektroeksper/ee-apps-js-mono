@@ -1,8 +1,20 @@
 /**
  * Firebase Authentication Service
  * Handles all Firebase Auth operations with proper error handling
+ * Moved from shared package to web-specific implementation
  */
 
+import { auth } from '@/config/firebase';
+import { getAuthErrorMessage } from '@/config/firebase-error-messages';
+import {
+  AuthErrorCode,
+  IAuthService,
+  IFirebaseUser,
+  ILoginData,
+  IOperationResult,
+  IPasswordChangeData,
+  IRegisterData
+} from '@/shared-generated';
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -20,10 +32,6 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth';
-import { getAuthErrorMessage } from '../configs';
-import { auth } from '../configs/firebase';
-import { AuthErrorCode } from '../enums';
-import { IAuthService, IFirebaseUser, ILoginData, IOperationResult, IPasswordChangeData, IRegisterData } from '../types';
 
 export class AuthService implements IAuthService {
   /**

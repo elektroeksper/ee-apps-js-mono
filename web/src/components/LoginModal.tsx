@@ -1,8 +1,8 @@
 'use client'
 
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { useAuth } from '@/contexts/AuthContext'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
-import { getAuthErrorMessage } from '@/shared-generated'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useRouter } from 'next/router'

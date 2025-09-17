@@ -3,7 +3,7 @@
  * Helper functions for authentication flow and navigation
  */
 
-import { authService } from '@/shared-generated/services/auth.service'
+import { authService } from '@/services/auth.service'
 import { NextRouter } from 'next/router'
 
 /**

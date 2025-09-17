@@ -4,8 +4,8 @@
  */
 
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '../../../shared/src/configs/firebase'
 import { DeleteDocumentResponse, GetUserDocumentsResponse, IStorageService, UploadDocumentResponse, UserDocument, UserDocumentCategory, UserDocumentFileType } from '../../../shared/src/types'
+import { functions } from '../config/firebase'
 
 /**
  * Client storage service implementation

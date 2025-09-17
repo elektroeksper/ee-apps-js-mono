@@ -93,7 +93,7 @@ const ContactPage = () => {
   }
 
   const contact = contactInfo || defaultContact
-  const companyName = brandingInfo?.companyName || 'Electro Expert'
+  const businessName = brandingInfo?.businessName || 'Electro Expert'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,7 +125,7 @@ const ContactPage = () => {
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Bize Ulaşın</h1>
           <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
-            {companyName} ile elektrik ihtiyaçlarınız için iletişime geçin.
+            {businessName} ile elektrik ihtiyaçlarınız için iletişime geçin.
             Yardım için buradayız!
           </p>
         </div>

@@ -186,7 +186,7 @@ const BusinessDashboard = () => {
                 <BuildingOfficeIcon className="h-8 w-8 text-blue-600 mr-3" />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
-                    {business.companyName}
+                    {business.businessName}
                   </h1>
                   <p className="text-sm text-gray-500">
                     İşletme Yönetim Paneli
@@ -289,7 +289,7 @@ const BusinessDashboard = () => {
                   Şirket Adı
                 </dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {business.companyName}
+                  {business.businessName}
                 </dd>
               </div>
               <div>

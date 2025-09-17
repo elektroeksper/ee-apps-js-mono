@@ -1,7 +1,10 @@
 'use client'
 
-import { AccountType, getAuthErrorMessage, IAppUser } from '@/shared-generated';
+import { auth, db } from '@/config/firebase';
+import { getAuthErrorMessage } from '@/config/firebase-error-messages';
+import { AccountType, IAppUser } from '@/shared-generated';
 import { UserService } from '@/shared-generated/services/user.service';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseUserDocState {
@@ -32,7 +35,6 @@ export function useUserDoc(uid: string | null): UseUserDocState {
         let userData = result.data;
 
         // Check if we need to sync email verification status with Firebase Auth
-        const { auth } = await import('@/config/firebase');
         const currentFirebaseUser = auth.currentUser;
 
         if (currentFirebaseUser && currentFirebaseUser.uid === uid) {
@@ -40,9 +42,6 @@ export function useUserDoc(uid: string | null): UseUserDocState {
           if (currentFirebaseUser.emailVerified && !userData.isEmailVerified) {
             console.log('🔄 Syncing email verification status with Firestore');
             try {
-              const { doc, updateDoc } = await import('firebase/firestore');
-              const { db } = await import('@/config/firebase');
-
               await updateDoc(doc(db, 'users', uid), {
                 isEmailVerified: true,
                 updatedAt: new Date()
@@ -67,7 +66,6 @@ export function useUserDoc(uid: string | null): UseUserDocState {
 
         // Try to create a basic user document for Google sign-in users
         // We'll use the Firebase auth user data to populate basic info
-        const { auth } = await import('@/config/firebase');
         const currentFirebaseUser = auth.currentUser;
 
         if (currentFirebaseUser && currentFirebaseUser.uid === uid) {
@@ -101,7 +99,7 @@ export function useUserDoc(uid: string | null): UseUserDocState {
 
                   // Store business-specific data that will be used in setup
                   businessSetupData = {
-                    companyName: parsedData.companyName,
+                    businessName: parsedData.businessName,
                     taxNumber: parsedData.taxNumber,
                     businessAddress: parsedData.businessAddress,
                     businessPhone: parsedData.businessPhone,
@@ -158,12 +156,9 @@ export function useUserDoc(uid: string | null): UseUserDocState {
             updatedAt: new Date(),
           };
 
-          // Create the user document using setDoc to use the uid as document ID
-          const { doc, setDoc } = await import('firebase/firestore');
-          const { db } = await import('@/config/firebase');
-
           console.log('🔄 About to create user document with data:', userData);
-          await setDoc(doc(db, 'users', uid), userData);
+          const docRef = doc(db, 'users', uid);
+          await setDoc(docRef, userData);
           console.log('✅ User document created in Firestore');
 
           // Create AppUser object

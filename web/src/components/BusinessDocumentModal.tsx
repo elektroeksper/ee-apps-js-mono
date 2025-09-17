@@ -230,7 +230,7 @@ export default function BusinessDocumentModal({
             <p className="text-sm text-slate-600">İşletme Adı</p>
             <p className="font-medium text-slate-900">
               {businessInfo.businessName ||
-                businessInfo.companyName ||
+                businessInfo.businessName ||
                 'Belirtilmemiş'}
             </p>
           </div>

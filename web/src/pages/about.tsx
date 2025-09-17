@@ -95,7 +95,7 @@ const AboutPage = () => {
     )
   }
 
-  const companyName = brandingInfo?.companyName || 'Electro Expert'
+  const businessName = brandingInfo?.businessName || 'Electro Expert'
 
   return (
     <div className="min-h-screen bg-gradient-services">
@@ -193,7 +193,7 @@ const AboutPage = () => {
         <div className="absolute inset-0 bg-gradient-overlay opacity-50"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            {companyName} ile Çalışmaya Hazır mısınız?
+            {businessName} ile Çalışmaya Hazır mısınız?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
             Elektrik ihtiyaçlarınızı konuşmak ve ücretsiz teklif almak için

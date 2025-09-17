@@ -7,7 +7,7 @@ import * as orderService from './services/order.service';
 import * as productService from './services/product.service';
 import * as storageService from './services/storage.service';
 import * as userService from './services/user.service';
-import { BusinessUserRole, getAuthErrorMessage, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse } from './shared-generated';
+import { BusinessUserRole, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse } from './shared-generated';
 import { sendBusinessApprovalEmail, sendBusinessRejectionEmail } from './utils/email.service';
 import { auth, db } from './utils/firebase-admin';
 
@@ -489,7 +489,7 @@ export const getUserClaims = onCall(functionOptions, async (request) => {
     if (!user) {
       return {
         success: false,
-        error: getAuthErrorMessage('auth/user-not-found'),
+        error: 'User not found',
       };
     }
 
@@ -498,11 +498,11 @@ export const getUserClaims = onCall(functionOptions, async (request) => {
       claims: user.customClaims || {},
     };
   } catch (error) {
-    // Use shared error message system for consistent Turkish messages
-    const errorCode = (error as any)?.code || 'default';
+    // Return error details for debugging
+    const errorCode = (error as any)?.code || 'unknown';
     return {
       success: false,
-      error: getAuthErrorMessage(errorCode, 'tr'),
+      error: `Authentication error: ${errorCode}`,
     };
   }
 });
@@ -855,7 +855,7 @@ export const rejectBusinessAccount = onCall(async (request) => {
     }
 
     const userProfile = userProfileResult.data as any;
-    const businessName = userProfile.businessInfo?.businessName || userProfile.companyName || 'İşletmeniz';
+    const businessName = userProfile.businessInfo?.businessName || userProfile.businessName || 'İşletmeniz';
     const ownerName = userProfile.displayName || `${userProfile.firstName} ${userProfile.lastName}`;
 
     // Update business rejection status

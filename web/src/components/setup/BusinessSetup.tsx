@@ -132,8 +132,8 @@ const BusinessSetup: React.FC = () => {
           businessInfo: {
             ...(appUser as any)?.businessInfo,
             // Ensure company name is set (use existing or fallback to user's display name)
-            companyName:
-              (appUser as any)?.businessInfo?.companyName ||
+            businessName:
+              (appUser as any)?.businessInfo?.businessName ||
               appUser?.displayName ||
               'İşletme',
             isCertified: false, // Will be set to true after document verification

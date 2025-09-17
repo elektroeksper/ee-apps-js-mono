@@ -99,16 +99,10 @@ export const businessRegisterSchema = z.object({
     .string()
     .min(6, 'Şifre en az 6 karakter olmalıdır')
     .max(100, 'Şifre en fazla 100 karakter olabilir'),
-
-  // Business Information - Aligned with IBusinessRegisterData
   businessName: z
     .string()
     .min(2, 'İşletme adı en az 2 karakter olmalıdır')
-    .max(100, 'İşletme adı en fazla 100 karakter olabilir'),
-  companyName: z
-    .string()
-    .min(2, 'Şirket adı en az 2 karakter olmalıdır')
-    .max(100, 'Şirket adı en fazla 100 karakter olabilir')
+    .max(300, 'İşletme adı en fazla 300 karakter olabilir')
     .optional(),
   userTitle: z
     .string()
@@ -196,9 +190,9 @@ export const businessRegisterSchema = z.object({
     }
   }
 
-  // If companyName is not provided, use businessName as default
-  if (!data.companyName) {
-    (data as any).companyName = data.businessName;
+  // If businessName is not provided, use businessName as default
+  if (!data.businessName) {
+    (data as any).businessName = data.businessName;
   }
 });
 
@@ -217,11 +211,8 @@ export const transformToBusinessRegisterData = (
     phone: formData.phone,
     password: formData.password,
     accountType: formData.accountType || AccountType.BUSINESS,
-
-    // IBusinessRegisterData specific fields
-    businessName: formData.businessName,
+    businessName: formData.businessName ?? '',
     userTitle: formData.userTitle,
-    companyName: formData.companyName || formData.businessName,
     taxNumber: formData.taxNumber || '',
     taxNumberType: formData.taxNumberType,
     identityNumber: formData.identityNumber,

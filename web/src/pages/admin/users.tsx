@@ -5,8 +5,8 @@ import BusinessDocumentModal from '@/components/BusinessDocumentModal'
 import RejectReasonModal from '@/components/RejectReasonModal'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBusiness } from '@/hooks/useBusiness'
+import { userService } from '@/services/user.service'
 import { AuthRole, IAppUser } from '@/shared-generated'
-import { userService } from '@/shared-generated/services'
 import Link from 'next/link'
 import { use, useCallback, useEffect, useState } from 'react'
 import {
@@ -175,7 +175,7 @@ function AdminUsersPageContent() {
       const extendedUser = documentModalUser as any
       const businessName =
         extendedUser?.businessInfo?.businessName ||
-        extendedUser?.businessInfo?.companyName ||
+        extendedUser?.businessInfo?.businessName ||
         'İşletme'
       // DON'T set documentModalUser to null here - we need it for handleRejectWithReason
       setRejectModalOpen(true) // Open reject reason modal
@@ -607,7 +607,7 @@ function AdminUsersPageContent() {
           businessName={
             documentModalUser
               ? (documentModalUser as any)?.businessInfo?.businessName ||
-                (documentModalUser as any)?.businessInfo?.companyName ||
+                (documentModalUser as any)?.businessInfo?.businessName ||
                 'İşletme'
               : 'İşletme'
           }

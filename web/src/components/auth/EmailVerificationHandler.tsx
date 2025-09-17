@@ -1,7 +1,7 @@
 'use client'
 
 import { auth } from '@/config/firebase'
-import { getAuthErrorMessage } from '@/shared-generated'
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { applyActionCode } from 'firebase/auth'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'

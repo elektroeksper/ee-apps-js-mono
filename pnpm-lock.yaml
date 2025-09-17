@@ -32,6 +32,9 @@ importers:
 
   functions:
     dependencies:
+      '@electro-expert/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@googlemaps/google-maps-services-js':
         specifier: ^3.4.2
         version: 3.4.2

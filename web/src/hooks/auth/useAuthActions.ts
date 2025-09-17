@@ -1,7 +1,7 @@
 'use client'
 
+import { AuthService } from '@/services/auth.service';
 import { IBusinessRegisterData, IFirebaseUser, ILoginData, IOperationResult, IPasswordChangeData, IRegisterData } from '@/shared-generated';
-import { AuthService } from '@/shared-generated/services/auth.service';
 import { useCallback } from 'react';
 
 interface ActionResult<T = void> extends IOperationResult<T> { }

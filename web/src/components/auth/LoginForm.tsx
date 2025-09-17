@@ -11,9 +11,9 @@ import { useForm } from 'react-hook-form'
 import { FaEye, FaEyeSlash, FaGoogle } from 'react-icons/fa'
 
 import { Button, Checkbox, Input } from '@/components/ui'
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { useAuth } from '@/contexts/AuthContext'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
-import { getAuthErrorMessage } from '@/shared-generated'
 
 interface LoginFormProps {
   accountType?: 'individual' | 'business'

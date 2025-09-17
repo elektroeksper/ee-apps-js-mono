@@ -49,7 +49,6 @@ interface IBusinessRegisterData extends IRegisterData {
   // Basic Information
   businessName: string;
   userTitle: string;
-  companyName: string;
   taxNumber: string;
   taxNumberType: TaxNumberType;
   identityNumber?: string;

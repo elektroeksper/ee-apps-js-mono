@@ -134,7 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // 1. Has basic info AND
       // 2. Has company name AND
       // 3. Has uploaded documents (required for approval)
-      const result = !!(businessInfo.companyName && hasDocuments)
+      const result = !!(businessInfo.businessName && hasDocuments)
 
       console.log('🔍 isProfileComplete DEBUG:', {
         userId: appUser.id,
@@ -142,7 +142,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         lastName: appUser.lastName,
         isEmailVerified: appUser.isEmailVerified,
         hasBasicInfo,
-        companyName: businessInfo.companyName,
+        businessName: businessInfo.businessName,
         hasDocuments,
         businessInfo,
         isProfileComplete: result,

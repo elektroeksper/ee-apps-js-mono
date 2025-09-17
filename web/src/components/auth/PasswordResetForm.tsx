@@ -9,13 +9,13 @@ import { useForm } from 'react-hook-form'
 import { MdArrowBack, MdCheckCircle } from 'react-icons/md'
 
 import { Button, Input } from '@/components/ui'
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   passwordResetSchema,
   type PasswordResetFormData,
 } from '@/lib/validations/auth'
-import { getAuthErrorMessage } from '@/shared-generated'
-import { authService } from '@/shared-generated/services/auth.service'
+import { authService } from '@/services/auth.service'
 
 interface PasswordResetFormProps {
   onSuccess?: () => void

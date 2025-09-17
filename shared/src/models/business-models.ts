@@ -3,7 +3,7 @@ import { BusinessVerificationStatus, CompanySize, TaxNumberType } from "../enums
 import { IAddress, IBusiness, IBusinessDocument, IBusinessUserInfo } from "../types";
 
 class Business implements IBusiness {
-  companyName: string = '';
+  businessName: string = '';
   taxNumber?: string | undefined;
   taxOffice?: string | undefined;
   taxNumberType?: TaxNumberType | undefined;
@@ -26,7 +26,7 @@ class Business implements IBusiness {
   constructor(id?: string, data?: Partial<IBusiness>) {
     this.id = id;
     if (data) {
-      this.companyName = data.companyName || '';
+      this.businessName = data.businessName || '';
       this.taxNumber = data.taxNumber;
       this.taxNumberType = data.taxNumberType;
       this.identityNumber = data.identityNumber;

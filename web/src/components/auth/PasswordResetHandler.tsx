@@ -1,11 +1,11 @@
 'use client'
 
 import { auth } from '@/config/firebase'
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import {
   passwordResetCompletionSchema,
   type PasswordResetCompletionFormData,
 } from '@/lib/validations/auth'
-import { getAuthErrorMessage } from '@/shared-generated'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { confirmPasswordReset } from 'firebase/auth'
 import Link from 'next/link'

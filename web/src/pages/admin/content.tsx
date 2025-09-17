@@ -530,7 +530,7 @@ function AdminContentPageContent() {
           <div className="space-y-4">
             <div>
               <strong>Şirket Adı:</strong>
-              <p className="mt-1">{brandingInfo.companyName}</p>
+              <p className="mt-1">{brandingInfo.businessName}</p>
             </div>
             <div>
               <strong>Logo URL:</strong>
@@ -961,11 +961,11 @@ function AdminContentPageContent() {
                     </label>
                     <input
                       type="text"
-                      value={editingItem.companyName || ''}
+                      value={editingItem.businessName || ''}
                       onChange={e =>
                         setEditingItem({
                           ...editingItem,
-                          companyName: e.target.value,
+                          businessName: e.target.value,
                         })
                       }
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
