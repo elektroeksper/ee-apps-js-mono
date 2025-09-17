@@ -1,13 +1,13 @@
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { HttpsError, HttpsOptions, onCall } from 'firebase-functions/v2/https';
 import { ADMIN_USERS } from './configs/constant';
+import { businessService } from './services/business.service';
 import { geocodingService } from './services/geo-coding.service';
 import * as orderService from './services/order.service';
 import * as productService from './services/product.service';
 import * as storageService from './services/storage.service';
 import * as userService from './services/user.service';
 import { BusinessUserRole, getAuthErrorMessage, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse } from './shared-generated';
-import { businessService } from './shared-generated/services';
 import { sendBusinessApprovalEmail, sendBusinessRejectionEmail } from './utils/email.service';
 import { auth, db } from './utils/firebase-admin';
 
@@ -204,7 +204,7 @@ export const updateUserProfile = onCall(async (request) => {
     throw new HttpsError('permission-denied', 'Insufficient permissions to update this profile');
   }
 
-
+  return await userService.updateUserProfile(targetUserId, updates);
 });
 
 export const setAdminRole = onCall(async (request) => {
