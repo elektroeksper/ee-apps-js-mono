@@ -81,38 +81,54 @@ export class AuthService implements IAuthService {
   /**
    * Register new user with email and password
    * Supports both individual and business registration
+   * Implements proper error handling with rollback mechanism
    */
   async register(data: IRegisterData | IBusinessRegisterData): Promise<IOperationResult<IFirebaseUser>> {
+    let userCredential: any = null;
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(
+      // Step 1: Create Firebase Auth user
+      userCredential = await createUserWithEmailAndPassword(
         auth,
         data.email,
         data.password
       );
 
-      // Update the user's display name
+      // Step 2: Update the user's display name
       await updateProfile(userCredential.user, {
         displayName: data.email?.split('@')[0]
       });
 
-      try {
-        // Create user profile in Firestore
-        const profileResult = await userService.create(data, userCredential.user.uid);
-        if (!profileResult.success) {
-          // If profile creation fails, we should still succeed the auth
-          // but log the error for monitoring
-          console.error('Profile creation failed:', profileResult.error);
+      // Step 3: Create user profile in Firestore
+      const profileResult = await userService.create(data, userCredential.user.uid);
+
+      if (!profileResult.success) {
+        // If profile creation fails, rollback Firebase Auth user
+        console.error('Profile creation failed, rolling back Firebase Auth user:', profileResult.error);
+
+        try {
+          await deleteUser(userCredential.user);
+        } catch (rollbackError) {
+          console.error('Failed to rollback Firebase Auth user:', rollbackError);
         }
-      } catch (profileError) {
-        // Log but don't fail the registration
-        console.error('Error creating user profile:', profileError);
+
+        return {
+          success: false,
+          error: profileResult.error || 'Failed to create user profile',
+          code: 500,
+        };
       }
 
-      // Send email verification
-      await sendEmailVerification(userCredential.user, {
-        url: `/verify-email`,
-        handleCodeInApp: false,
-      });
+      // Step 4: Send email verification
+      try {
+        await sendEmailVerification(userCredential.user, {
+          url: `/verify-email`,
+          handleCodeInApp: false,
+        });
+      } catch (emailError) {
+        // Email verification failure shouldn't fail the registration
+        console.warn('Failed to send email verification:', emailError);
+      }
 
       return {
         success: true,
@@ -120,6 +136,18 @@ export class AuthService implements IAuthService {
         code: 201,
       };
     } catch (error: any) {
+      // If Firebase Auth creation failed, no cleanup needed
+      if (!userCredential) {
+        return this.handleAuthError(error);
+      }
+
+      // If any other step failed, try to cleanup Firebase Auth user
+      try {
+        await deleteUser(userCredential.user);
+      } catch (rollbackError) {
+        console.error('Failed to rollback Firebase Auth user after error:', rollbackError);
+      }
+
       return this.handleAuthError(error);
     }
   }

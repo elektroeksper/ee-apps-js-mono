@@ -1,4 +1,3 @@
-import { useAbout, useBranding, useContact } from '@/hooks/useContentQueries'
 import Link from 'next/link'
 import { FiAward, FiCalendar, FiCheckCircle, FiUsers } from 'react-icons/fi'
 import ReactMarkdown from 'react-markdown'
@@ -62,79 +61,31 @@ const MarkdownContent = ({ content }: { content: string }) => {
   )
 }
 
-const AboutPage = () => {
-  // Skip content loading during build time
-  const isBuildTime =
-    typeof window === 'undefined' && process.env.NODE_ENV === 'production'
-
-  // Return a static version during build time
-  if (isBuildTime) {
-    return (
-      <div className="min-h-screen bg-gradient-services">
-        {/* Hero Section */}
-        <div className="py-16 bg-gradient-hero text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-overlay"></div>
-          <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold mb-6">Hakkımızda</h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-              ElectroExpert olarak elektrik alanında güvenilir çözümler
-              sunuyoruz.
-            </p>
-          </div>
-        </div>
-
-        {/* About Content */}
-        <div className="py-16 bg-gradient-section-light">
-          <div className="max-w-4xl mx-auto px-4">
-            <div className="bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4 text-4xl">📄</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  İçerik Yükleniyor...
-                </h3>
-                <p className="text-gray-600">
-                  Sayfa içeriği yükleniyor. Lütfen bekleyin.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+interface AboutPageProps {
+  aboutInfo?: {
+    mdContent: string
+    updatedAt?: string
+    updatedBy: string
   }
-
-  const {
-    data: aboutInfo,
-    isLoading: aboutLoading,
-    error: aboutError,
-  } = useAbout()
-  const { data: brandingInfo, isLoading: brandingLoading } = useBranding()
-  const { data: contactInfo } = useContact()
-
-  if (aboutLoading || brandingLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-services flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading about information...</p>
-        </div>
-      </div>
-    )
+  brandingInfo?: {
+    businessName: string
+    brandColors: {
+      primary: string
+      secondary?: string
+    }
   }
-
-  if (aboutError) {
-    return (
-      <div className="min-h-screen bg-gradient-services flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Failed to load about information</p>
-          <Link href="/" className="text-blue-600 hover:text-blue-700">
-            Return to Home
-          </Link>
-        </div>
-      </div>
-    )
+  contactInfo?: {
+    phone: string
+    email: string
+    address: string
   }
+}
 
+const AboutPage = ({
+  aboutInfo,
+  brandingInfo,
+  contactInfo,
+}: AboutPageProps) => {
   const businessName = brandingInfo?.businessName || 'Electro Expert'
 
   return (
@@ -286,3 +237,14 @@ const AboutPage = () => {
 }
 
 export default AboutPage
+
+// Add empty getServerSideProps to force SSR and prevent static generation
+export const getServerSideProps = async () => {
+  return {
+    props: {
+      aboutInfo: null,
+      brandingInfo: null,
+      contactInfo: null,
+    },
+  }
+}

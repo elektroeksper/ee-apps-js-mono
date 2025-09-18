@@ -39,7 +39,6 @@ interface IRegisterData {
   firstName?: string;
   lastName?: string;
   email: string;
-  phone?: string;
   password: string;
   accountType: AccountType;
 }
@@ -56,7 +55,6 @@ interface IBusinessRegisterData extends IRegisterData {
 
   // Contact & Location
   address: IAddress;
-  phone: string;
   email: string;
   website?: string;
 

@@ -2,12 +2,13 @@ import { setGlobalOptions } from 'firebase-functions/v2';
 import { HttpsError, HttpsOptions, onCall } from 'firebase-functions/v2/https';
 import { ADMIN_USERS } from './configs/constant';
 import { businessService } from './services/business.service';
+import { contentService } from './services/content.service';
 import { geocodingService } from './services/geo-coding.service';
 import * as orderService from './services/order.service';
 import * as productService from './services/product.service';
 import * as storageService from './services/storage.service';
 import * as userService from './services/user.service';
-import { BusinessUserRole, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse } from './shared-generated';
+import { BusinessUserRole, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse, VideoLocation } from './shared-generated';
 import { sendBusinessApprovalEmail, sendBusinessRejectionEmail } from './utils/email.service';
 import { auth, db } from './utils/firebase-admin';
 
@@ -132,6 +133,210 @@ export const deleteProduct = onCall(async (request) => {
 
   const { productId } = request.data;
   return await productService.deleteProduct(productId);
+});
+
+// Content Functions
+export const getVideos = onCall(async (request) => {
+  try {
+    const result = await contentService.getVideos();
+    return result;
+  } catch (error: any) {
+    console.error('Error getting videos:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get videos'
+    };
+  }
+});
+
+export const getVideosByLocation = onCall(async (request) => {
+  try {
+    const { location } = request.data as { location: VideoLocation };
+
+    if (!location) {
+      return {
+        success: false,
+        error: 'Location parameter is required'
+      };
+    }
+
+    const result = await contentService.getVideosByLocation(location);
+    return result;
+  } catch (error: any) {
+    console.error('Error getting videos by location:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get videos by location'
+    };
+  }
+});
+
+export const addVideo = onCall(async (request) => {
+  // Check if user is admin or has content management role
+  if (!isAdminUser(request) && !userHasRole(request, 'content_manager')) {
+    return {
+      success: false,
+      error: 'Admin or content manager access required'
+    };
+  }
+
+  try {
+    const { videoData } = request.data;
+
+    if (!videoData) {
+      return {
+        success: false,
+        error: 'Video data is required'
+      };
+    }
+
+    const result = await contentService.addVideo(videoData);
+    return result;
+  } catch (error: any) {
+    console.error('Error adding video:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to add video'
+    };
+  }
+});
+
+export const updateVideo = onCall(async (request) => {
+  // Check if user is admin or has content management role
+  if (!isAdminUser(request) && !userHasRole(request, 'content_manager')) {
+    return {
+      success: false,
+      error: 'Admin or content manager access required'
+    };
+  }
+
+  try {
+    const { videoId, updates } = request.data;
+
+    if (!videoId || !updates) {
+      return {
+        success: false,
+        error: 'Video ID and updates are required'
+      };
+    }
+
+    const result = await contentService.updateVideo(videoId, updates);
+    return result;
+  } catch (error: any) {
+    console.error('Error updating video:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to update video'
+    };
+  }
+});
+
+export const deleteVideo = onCall(async (request) => {
+  // Check if user is admin or has content management role
+  if (!isAdminUser(request) && !userHasRole(request, 'content_manager')) {
+    return {
+      success: false,
+      error: 'Admin or content manager access required'
+    };
+  }
+
+  try {
+    const { videoId } = request.data;
+
+    if (!videoId) {
+      return {
+        success: false,
+        error: 'Video ID is required'
+      };
+    }
+
+    const result = await contentService.deleteVideo(videoId);
+    return result;
+  } catch (error: any) {
+    console.error('Error deleting video:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to delete video'
+    };
+  }
+});
+
+export const getSliderItems = onCall(async (request) => {
+  try {
+    const result = await contentService.getSliderItems();
+    return result;
+  } catch (error: any) {
+    console.error('Error getting slider items:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get slider items'
+    };
+  }
+});
+
+export const getServices = onCall(async (request) => {
+  try {
+    const result = await contentService.getServices();
+    return result;
+  } catch (error: any) {
+    console.error('Error getting services:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get services'
+    };
+  }
+});
+
+export const getContactInfo = onCall(async (request) => {
+  try {
+    const result = await contentService.getContactInfo();
+    return result;
+  } catch (error: any) {
+    console.error('Error getting contact info:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get contact info'
+    };
+  }
+});
+
+export const getAboutInfo = onCall(async (request) => {
+  try {
+    const result = await contentService.getAboutInfo();
+    return result;
+  } catch (error: any) {
+    console.error('Error getting about info:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get about info'
+    };
+  }
+});
+
+export const getBrandingInfo = onCall(async (request) => {
+  try {
+    const result = await contentService.getBrandingInfo();
+    return result;
+  } catch (error: any) {
+    console.error('Error getting branding info:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get branding info'
+    };
+  }
+});
+
+export const getVideoSettings = onCall(async (request) => {
+  try {
+    const result = await contentService.getVideoSettings();
+    return result;
+  } catch (error: any) {
+    console.error('Error getting video settings:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get video settings'
+    };
+  }
 });
 
 // User Functions

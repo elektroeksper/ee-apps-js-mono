@@ -1,5 +1,3 @@
-import { useBranding, useContact } from '@/hooks/useContentQueries'
-import Link from 'next/link'
 import { useState } from 'react'
 import {
   FiClock,
@@ -11,13 +9,34 @@ import {
   FiPhone,
 } from 'react-icons/fi'
 
-const ContactPage = () => {
-  const {
-    data: contactInfo,
-    isLoading: contactLoading,
-    error: contactError,
-  } = useContact()
-  const { data: brandingInfo, isLoading: brandingLoading } = useBranding()
+interface ContactPageProps {
+  contactInfo?: {
+    phone: string
+    email: string
+    address: string
+    workingHours: string
+    socialMedia: {
+      facebook?: string
+      instagram?: string
+      twitter?: string
+      linkedin?: string
+      whatsapp?: string
+    }
+    mapUrl?: string
+  }
+  brandingInfo?: {
+    businessName: string
+    logoUrl?: string
+    logoAltText?: string
+    brandColors: {
+      primary: string
+      secondary?: string
+      accent?: string
+    }
+  }
+}
+
+const ContactPage = ({ contactInfo, brandingInfo }: ContactPageProps) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -53,30 +72,6 @@ const ContactPage = () => {
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  if (contactLoading || brandingLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">İletişim bilgileri yükleniyor...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (contactError) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">İletişim bilgileri yüklenemedi</p>
-          <Link href="/" className="text-blue-600 hover:text-blue-700">
-            Return to Home
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   const defaultContact = {
@@ -444,6 +439,60 @@ const ContactPage = () => {
       </div>
     </div>
   )
+}
+
+export const getServerSideProps = async () => {
+  try {
+    // Create abort controller for timeout
+    const abortController = new AbortController()
+    const timeoutId = setTimeout(() => abortController.abort(), 10000)
+
+    // Fetch contact info from Firebase Functions
+    const contactResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_FUNCTIONS_URL}/api/content/contact`,
+      {
+        signal: abortController.signal,
+      }
+    )
+
+    // Fetch branding info from Firebase Functions
+    const brandingResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_FUNCTIONS_URL}/api/content/branding`,
+      {
+        signal: abortController.signal,
+      }
+    )
+
+    clearTimeout(timeoutId)
+
+    if (!contactResponse.ok || !brandingResponse.ok) {
+      console.error('Failed to fetch data from Firebase Functions')
+      return {
+        props: {
+          contactInfo: null,
+          brandingInfo: null,
+        },
+      }
+    }
+
+    const contactInfo = await contactResponse.json()
+    const brandingInfo = await brandingResponse.json()
+
+    return {
+      props: {
+        contactInfo,
+        brandingInfo,
+      },
+    }
+  } catch (error) {
+    console.error('Error fetching contact page data:', error)
+    return {
+      props: {
+        contactInfo: null,
+        brandingInfo: null,
+      },
+    }
+  }
 }
 
 export default ContactPage

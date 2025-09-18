@@ -10,7 +10,7 @@ class AppUser implements IAppUser {
   lastName: string;
   displayName: string;
   photoURL?: string | undefined;
-  phone?: string | undefined
+  phoneNumber?: string | undefined
   accountType: AccountType;
   isEmailVerified: boolean;
   preferences: IUserPreferences;
@@ -38,7 +38,7 @@ class AppUser implements IAppUser {
     this.lastName = data.lastName || '';
     this.displayName = data.displayName || `${this.firstName} ${this.lastName}`.trim();
     this.photoURL = data.photoURL;
-    this.phone = data.phone;
+    this.phoneNumber = data.phoneNumber;
     this.accountType = data.accountType ?? AccountType.INDIVIDUAL;
     this.isEmailVerified = data.isEmailVerified ?? false;
     this.preferences = data.preferences ?? {} as IUserPreferences;

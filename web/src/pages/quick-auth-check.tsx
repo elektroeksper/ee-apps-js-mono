@@ -2,6 +2,23 @@ import { auth } from '@/config/firebase'
 import { useEffect } from 'react'
 
 export default function QuickAuthCheck() {
+  // Build-time guard - prevent Firebase initialization during build
+  const isBuildTime =
+    typeof window === 'undefined' && process.env.NODE_ENV === 'production'
+
+  if (isBuildTime) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+            Quick Auth Check
+          </h1>
+          <p className="text-gray-600">Debug page loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   useEffect(() => {
     console.log('🔍 Quick Auth Check:')
     console.log('- Auth object:', auth)
@@ -21,10 +38,10 @@ export default function QuickAuthCheck() {
       // Try to get claims
       user
         .getIdTokenResult()
-        .then(result => {
+        .then((result: any) => {
           console.log('✅ Claims loaded:', result.claims)
         })
-        .catch(error => {
+        .catch((error: any) => {
           console.error('❌ Failed to get claims:', error)
         })
     } else {

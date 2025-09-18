@@ -32,11 +32,25 @@ import {
 } from 'firebase/firestore';
 
 export class ContentService implements IContentService {
-  private slidersRef = collection(db, 'sliders');
-  private servicesRef = collection(db, 'services');
-  private contentRef = collection(db, 'content');
-  private videosRef = collection(db, 'videos');
-  private videoSettingsRef = collection(db, 'video-settings');
+  private get slidersRef() {
+    return collection(db, 'sliders');
+  }
+
+  private get servicesRef() {
+    return collection(db, 'services');
+  }
+
+  private get contentRef() {
+    return collection(db, 'content');
+  }
+
+  private get videosRef() {
+    return collection(db, 'videos');
+  }
+
+  private get videoSettingsRef() {
+    return collection(db, 'video-settings');
+  }
 
   // Helper method for error handling
   private handleError(error: any, operation: string): IContentOperationResult<never> {
@@ -501,5 +515,22 @@ export class ContentService implements IContentService {
   }
 }
 
-export const contentService = new ContentService();
+// Lazy instantiation to prevent build-time Firebase calls
+let _contentService: ContentService | null = null;
+
+export const contentService = new Proxy({} as ContentService, {
+  get(target, prop) {
+    // During build/SSR, return a mock that won't execute
+    if (typeof window === 'undefined') {
+      return () => Promise.resolve({ success: false, error: 'Not available during build' });
+    }
+
+    if (!_contentService) {
+      _contentService = new ContentService();
+    }
+
+    return (_contentService as any)[prop];
+  }
+});
+
 export default contentService;

@@ -4,38 +4,44 @@
  */
 
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
-import { useVideosByLocation } from '@/hooks/useContentQueries'
-import { storageClientService } from '@/services/storage.service'
-import { UserDocument } from '@/shared-generated'
+import { IVideoItem, UserDocument } from '@/shared-generated'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 
-const BusinessSetup: React.FC = () => {
+interface BusinessSetupProps {
+  videos?: IVideoItem[]
+}
+
+const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
   const router = useRouter()
   const { appUser, updateUser, refreshUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
+  // Form data state
+  const [phone, setPhone] = useState(appUser?.phone || '')
+
   // Document upload states
   const [taxCertificate, setTaxCertificate] = useState<File | null>(null)
   const [placePhotos, setPlacePhotos] = useState<File[]>([])
 
-  // Video fetch and client guard
-  const { data: videos, isLoading: videosLoading } =
-    useVideosByLocation('business-setup')
-  const primaryVideo = videos?.find(v => v.isActive) || null
+  // Video display logic - using passed props instead of client-side fetch
+  const primaryVideo: IVideoItem | undefined = videos?.find(
+    (v: IVideoItem) => v.isActive
+  )
   const [isClient, setIsClient] = useState(false)
   useEffect(() => {
     setIsClient(true)
   }, [])
-  const showVideo = isClient ? videosLoading || !!primaryVideo : true
-  const boxLoading = isClient && videosLoading
+  const showVideo = isClient ? !!primaryVideo : true
+  const boxLoading = false // No loading needed since videos are pre-fetched
 
   // Handle tax certificate selection
   const handleTaxCertificateChange = (
@@ -86,12 +92,22 @@ const BusinessSetup: React.FC = () => {
     setError('')
     setLoading(true)
 
+    // Validate phone number if provided
+    if (phone && !/^(\+90|0)?[5-9]\d{9}$/.test(phone.replace(/\s/g, ''))) {
+      setError('Geçerli bir Türkiye telefon numarası girin (5XX XXX XX XX)')
+      setLoading(false)
+      return
+    }
+
     try {
       const uploadedDocuments: UserDocument[] = []
 
       // Upload tax certificate if provided
       if (taxCertificate && appUser?.id) {
         try {
+          const { storageClientService } = await import(
+            '@/services/storage.service'
+          )
           const uploadedTaxCert = await storageClientService.uploadUserDocument(
             appUser.id,
             taxCertificate,
@@ -110,6 +126,9 @@ const BusinessSetup: React.FC = () => {
       if (placePhotos.length > 0 && appUser?.id) {
         for (const photo of placePhotos) {
           try {
+            const { storageClientService } = await import(
+              '@/services/storage.service'
+            )
             const uploadedPhoto = await storageClientService.uploadUserDocument(
               appUser.id,
               photo,
@@ -127,6 +146,8 @@ const BusinessSetup: React.FC = () => {
 
       // Update user profile with upload information
       await updateUser({
+        // Update phone if provided
+        ...(phone && { phone: phone.trim() }),
         // Store business-specific data as a nested object
         ...{
           businessInfo: {
@@ -210,7 +231,7 @@ const BusinessSetup: React.FC = () => {
                       <p>Henüz video eklenmemiş</p>
                     </div>
                   </div>
-                ) : videosLoading ? (
+                ) : boxLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <LoadingSpinner />
                     <span className="ml-2">Video yükleniyor...</span>
@@ -271,6 +292,22 @@ const BusinessSetup: React.FC = () => {
                   profilinizde "Yetkili Bayi" rozeti görüntülenecektir. Ayrıca
                   hesabınızın yönetici tarafından onaylanması gerekmektedir.
                   <strong> Belge yükleme işlemi zorunludur.</strong>
+                </p>
+              </div>
+
+              {/* Contact Information */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  İşletme Telefon Numarası
+                </label>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="5XX XXX XX XX"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  İsteğe bağlı - Müşterilerin sizinle iletişim kurması için
                 </p>
               </div>
 
@@ -424,6 +461,22 @@ const BusinessSetup: React.FC = () => {
                   profilinizde "Yetkili Bayi" rozeti görüntülenecektir. Ayrıca
                   hesabınızın yönetici tarafından onaylanması gerekmektedir.
                   <strong> Belge yükleme işlemi zorunludur.</strong>
+                </p>
+              </div>
+
+              {/* Contact Information */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  İşletme Telefon Numarası
+                </label>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="5XX XXX XX XX"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  İsteğe bağlı - Müşterilerin sizinle iletişim kurması için
                 </p>
               </div>
 

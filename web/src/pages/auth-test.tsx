@@ -4,6 +4,21 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
 export default function AuthTest() {
+  // Build-time guard - prevent Firebase initialization during build
+  const isBuildTime =
+    typeof window === 'undefined' && process.env.NODE_ENV === 'production'
+
+  if (isBuildTime) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Auth Test</h1>
+          <p className="text-gray-600">Debug page loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

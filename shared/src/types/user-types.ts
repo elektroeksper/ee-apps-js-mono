@@ -10,7 +10,7 @@ interface IAppUser {
   lastName: string
   displayName: string // Add this
   email: string
-  phone?: string
+  phoneNumber?: string
   photoURL?: string // Add this
   accountType: AccountType // Account type for business/individual distinction
   isEmailVerified: boolean

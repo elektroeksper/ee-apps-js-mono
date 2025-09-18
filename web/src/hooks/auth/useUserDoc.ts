@@ -1,10 +1,9 @@
 'use client'
 
-import { auth, db } from '@/config/firebase';
+import { auth } from '@/config/firebase';
 import { getAuthErrorMessage } from '@/config/firebase-error-messages';
 import { AccountType, IAppUser } from '@/shared-generated';
 import { UserService } from '@/shared-generated/services/user.service';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseUserDocState {
@@ -42,6 +41,9 @@ export function useUserDoc(uid: string | null): UseUserDocState {
           if (currentFirebaseUser.emailVerified && !userData.isEmailVerified) {
             console.log('🔄 Syncing email verification status with Firestore');
             try {
+              const { db } = await import('@/config/firebase');
+              const { doc, updateDoc } = await import('firebase/firestore');
+
               await updateDoc(doc(db, 'users', uid), {
                 isEmailVerified: true,
                 updatedAt: new Date()
@@ -157,6 +159,9 @@ export function useUserDoc(uid: string | null): UseUserDocState {
           };
 
           console.log('🔄 About to create user document with data:', userData);
+          const { db } = await import('@/config/firebase');
+          const { doc, setDoc } = await import('firebase/firestore');
+
           const docRef = doc(db, 'users', uid);
           await setDoc(docRef, userData);
           console.log('✅ User document created in Firestore');

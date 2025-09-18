@@ -55,7 +55,25 @@ export default function AdminContentPage() {
 }
 
 function AdminContentPageContent() {
-  // Data fetching hooks
+  // Build-time guard to prevent Firebase hooks from running during Next.js build
+  const isBuildTime =
+    typeof window === 'undefined' && process.env.NODE_ENV === 'production'
+
+  if (isBuildTime) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-400 mb-4 text-4xl">⚙️</div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            Admin Panel
+          </h3>
+          <p className="text-gray-600">Loading admin content management...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Data fetching hooks - only run on client-side
   const { data: sliders = [], isLoading: slidersLoading } = useSliders()
   const { data: services = [], isLoading: servicesLoading } = useServices()
   const { data: videos = [], isLoading: videosLoading } = useVideos()
@@ -271,7 +289,7 @@ function AdminContentPageContent() {
       </div>
 
       <div className="grid gap-4">
-        {sliders.map(slider => (
+        {sliders.map((slider: any) => (
           <div key={slider.id} className="bg-white p-6">
             <div className="flex justify-between items-start">
               <div className="flex-1">
@@ -323,7 +341,7 @@ function AdminContentPageContent() {
       </div>
 
       <div className="grid gap-4">
-        {services.map(service => (
+        {services.map((service: any) => (
           <div key={service.id} className="bg-white p-6">
             <div className="flex justify-between items-start">
               <div className="flex-1">
@@ -380,7 +398,7 @@ function AdminContentPageContent() {
       </div>
 
       <div className="grid gap-4">
-        {videos.map(video => (
+        {videos.map((video: any) => (
           <div key={video.id} className="bg-white p-6">
             <div className="flex justify-between items-start">
               <div className="flex-1">

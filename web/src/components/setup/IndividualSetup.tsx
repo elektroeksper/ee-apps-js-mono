@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { GOOGLE_MAPS_CONFIG } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
-import { useVideosByLocation } from '@/hooks/useContentQueries'
+import { IVideoItem } from '@/shared-generated'
 import type { IAddress, ICoordinates } from '@/shared-generated/types/map-types'
 import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -25,20 +25,24 @@ interface IndividualFormData {
   address: IAddress
 }
 
-const IndividualSetup: React.FC = () => {
+interface IndividualSetupProps {
+  videos?: IVideoItem[]
+}
+
+const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
   const router = useRouter()
   const { appUser, updateUser } = useAuth()
 
-  // video fetch and client-only guard
-  const { data: videos, isLoading: videosLoading } =
-    useVideosByLocation('individual-setup')
-  const primaryVideo = videos?.find(v => v.isActive) || null
+  // Video display logic - using passed props instead of client-side fetch
+  const primaryVideo: IVideoItem | undefined = videos?.find(
+    (v: IVideoItem) => v.isActive
+  )
   const [isClient, setIsClient] = useState(false)
   useEffect(() => {
     setIsClient(true)
   }, [])
-  const showVideo = isClient ? videosLoading || !!primaryVideo : true
-  const boxLoading = isClient && videosLoading
+  const showVideo = isClient ? !!primaryVideo : true
+  const boxLoading = false // No loading needed since videos are pre-fetched
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -345,7 +349,7 @@ const IndividualSetup: React.FC = () => {
                       <p>Henüz video eklenmemiş</p>
                     </div>
                   </div>
-                ) : videosLoading ? (
+                ) : boxLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <LoadingSpinner />
                     <span className="ml-2">Video yükleniyor...</span>

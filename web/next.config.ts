@@ -5,9 +5,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    optimizePackageImports: ['react-icons'],
-  },
+  // Temporarily disable package optimizations that might be causing Firebase issues
+  // experimental: {
+  //   optimizePackageImports: ['react-icons'],
+  // },
   transpilePackages: ['@uiw/react-md-editor', '@uiw/react-markdown-preview'],
   images: {
     formats: ['image/webp', 'image/avif'],

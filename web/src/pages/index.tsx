@@ -1,44 +1,21 @@
 import { Button } from '@/components/ui/Button'
 import IndexVideoAndLoginSection from '@/components/ui/IndexVideoAndLoginSection'
 import { useAuth } from '@/contexts/AuthContext'
-import { useVideosByLocation } from '@/hooks/useContentQueries'
-// Auth service and error helpers are not needed here because we use the
-// shared LoginForm component which handles submission and errors.
+import { IVideoItem } from '@/shared-generated'
+import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 
-export default function LandingPage() {
+interface LandingPageProps {
+  appIndexVideos: IVideoItem[]
+}
+
+export default function LandingPage({ appIndexVideos }: LandingPageProps) {
   const { appUser, isLoading } = useAuth()
   const router = useRouter()
-  // Local email/password state and handler removed in favor of the
-  // reusable <LoginForm /> component below.
-
-  // Fetch videos for app-index location
-  const { data: appIndexVideos, isLoading: videosLoading } =
-    useVideosByLocation('app-index')
-
-  // Avoid rendering the video iframe on the server to prevent
-  // SSR/CSR markup mismatches (Next.js hydration errors). We render
-  // a neutral placeholder during SSR and until the component mounts
-  // on the client, then show the actual video state.
-  const [isClient, setIsClient] = useState(false)
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // login handled by LoginForm
 
   // Get the first active video for the app-index location
   const primaryVideo = appIndexVideos?.find(video => video.isActive) || null
-
-  // Decide whether to show the video column.
-  // - During SSR / initial render we keep the column (isClient=false) to avoid
-  //   hydration mismatches. After mount, showVideoColumn reflects actual data.
-  const showVideoColumn = isClient ? videosLoading || !!primaryVideo : true
-
-  // Show loading overlay for the whole content box (video + form)
-  const boxLoading = isClient && (videosLoading || isLoading)
 
   return (
     <div className="min-h-screen bg-gradient-section-light flex flex-col">
@@ -185,7 +162,7 @@ export default function LandingPage() {
 
       {/* Video and Login Section */}
       <section className="py-16 bg-gradient-section-light">
-        <IndexVideoAndLoginSection />
+        <IndexVideoAndLoginSection videos={appIndexVideos} />
       </section>
 
       {/* Testimonials Section */}
@@ -392,4 +369,61 @@ export default function LandingPage() {
       </footer>
     </div>
   )
+}
+
+// Server-side data fetching using Firebase Functions
+export const getServerSideProps: GetServerSideProps<
+  LandingPageProps
+> = async () => {
+  try {
+    // During build or if Functions not available, return static fallback
+    if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+      return {
+        props: {
+          appIndexVideos: [],
+        },
+      }
+    }
+
+    // Call Firebase Functions to get videos instead of direct Firestore
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/getVideosByLocation`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ location: 'app-index' }),
+        // Add timeout to prevent hanging during build
+        signal: AbortSignal.timeout(5000),
+      }
+    )
+
+    if (!response.ok) {
+      console.warn(
+        'Failed to fetch videos from Functions:',
+        response.statusText
+      )
+      return {
+        props: {
+          appIndexVideos: [],
+        },
+      }
+    }
+
+    const result = await response.json()
+
+    return {
+      props: {
+        appIndexVideos: result.data || [],
+      },
+    }
+  } catch (error) {
+    console.warn('Error fetching videos for index page:', error)
+    return {
+      props: {
+        appIndexVideos: [],
+      },
+    }
+  }
 }

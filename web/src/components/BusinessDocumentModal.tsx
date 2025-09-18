@@ -1,6 +1,5 @@
 'use client'
 
-import { storageClientService } from '@/services/storage.service'
 import { IAppUser, UserDocument } from '@/shared-generated'
 import { useEffect, useState } from 'react'
 import {
@@ -38,6 +37,23 @@ export default function BusinessDocumentModal({
   const [documents, setDocuments] = useState<UserDocument[]>([])
   const [loadingDocuments, setLoadingDocuments] = useState(false)
 
+  // Helper functions for display names (fallback for build time)
+  const getFileDisplayName = (fileName: string) => {
+    // Simple fallback for build time
+    return fileName.split('/').pop() || fileName
+  }
+
+  const getCategoryDisplayName = (category: string) => {
+    // Simple fallback for build time
+    const categoryMap: Record<string, string> = {
+      'tax-certificates': 'Vergi Levhası',
+      'place-photos': 'İşyeri Fotoğrafları',
+      'id-cards': 'Kimlik Kartları',
+      signatures: 'İmza Örnekleri',
+    }
+    return categoryMap[category] || category
+  }
+
   // Fetch documents when modal opens and user is available
   useEffect(() => {
     if (isOpen && user?.id) {
@@ -51,6 +67,9 @@ export default function BusinessDocumentModal({
     setLoadingDocuments(true)
     try {
       // Use the storage client service
+      const { storageClientService } = await import(
+        '@/services/storage.service'
+      )
       const userDocs = await storageClientService.getUserDocuments(user.id)
       setDocuments(userDocs)
     } catch (error) {
@@ -118,7 +137,7 @@ export default function BusinessDocumentModal({
 
   // Component to render document item
   const DocumentItem = ({ document }: { document: UserDocument }) => {
-    const displayName = storageClientService.getFileDisplayName(document.name)
+    const displayName = getFileDisplayName(document.name)
 
     // For PDF files, show as simple list item with icon
     if (document.type === 'pdf') {
@@ -164,9 +183,7 @@ export default function BusinessDocumentModal({
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {photos.map((photo, index) => {
-            const displayName = storageClientService.getFileDisplayName(
-              photo.name
-            )
+            const displayName = getFileDisplayName(photo.name)
             return (
               <div
                 key={`${photo.fullPath}-${index}`}
@@ -311,7 +328,7 @@ export default function BusinessDocumentModal({
                         <div className="flex items-center space-x-2">
                           <FiFolder className="h-4 w-4 text-slate-400" />
                           <h5 className="text-sm font-medium text-slate-700 uppercase tracking-wide">
-                            {storageClientService.getCategoryDisplayName(
+                            {getCategoryDisplayName(
                               category as UserDocument['category']
                             )}
                           </h5>

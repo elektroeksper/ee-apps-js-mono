@@ -89,7 +89,6 @@ export class UserService {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        phone: data.phone,
         accountType: data.accountType,
         isEmailVerified: false,
         isPhoneVerified: false,
@@ -189,15 +188,22 @@ export class UserService {
         const businessResult = await businessService.create(businessEntity);
 
         if (!businessResult.success) {
-          // TODO: Ideally we should rollback the user creation here
-          console.error('Failed to create business for user:', businessResult.error);
+          // Rollback user creation if business creation fails
+          console.error('Failed to create business for user, rolling back user profile:', businessResult.error);
+
+          try {
+            await this.delete(userId);
+          } catch (rollbackError) {
+            console.error('Failed to rollback user profile after business creation failure:', rollbackError);
+          }
+
           return {
             success: false,
-            error: `User created but business creation failed: ${businessResult.error}`
+            error: `Business registration failed: ${businessResult.error}`
           };
         }
 
-        // Update user with business reference
+        // Update user with business reference - this maintains user permissions and role info
         const updatedUserData = {
           ...createdUser,
           businessInfo: {
@@ -217,12 +223,24 @@ export class UserService {
 
         if (!updateResult.success) {
           console.error('Failed to update user with business info:', updateResult.error);
-          // Continue anyway, as the core creation was successful
+
+          // Try to rollback user creation (business will remain but orphaned)
+          // TODO: Implement business deletion in BusinessService for complete rollback
+          try {
+            await this.delete(userId);
+          } catch (rollbackError) {
+            console.error('Failed to rollback user after update failure:', rollbackError);
+          }
+
+          return {
+            success: false,
+            error: `Failed to complete business registration: ${updateResult.error}`
+          };
         }
 
         return {
           success: true,
-          data: updateResult.success ? updateResult.data! : createdUser
+          data: updateResult.data!
         };
       }
 

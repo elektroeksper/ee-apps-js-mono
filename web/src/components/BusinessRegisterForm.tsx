@@ -57,7 +57,6 @@ export const BusinessRegisterForm: React.FC = () => {
       firstName: '',
       lastName: '',
       email: '',
-      phone: '',
       password: '',
       confirmPassword: '',
       accountType: AccountType.BUSINESS,
@@ -236,7 +235,6 @@ export const BusinessRegisterForm: React.FC = () => {
   const firstName = watch('firstName')
   const lastName = watch('lastName')
   const email = watch('email')
-  const phone = watch('phone')
   const password = watch('password')
   const confirmPassword = watch('confirmPassword')
   const acceptTerms = watch('acceptTerms')
@@ -258,7 +256,7 @@ export const BusinessRegisterForm: React.FC = () => {
       mainCategoryId
     )
 
-    const hasRequiredPersonalInfo = !!(firstName && lastName && email && phone)
+    const hasRequiredPersonalInfo = !!(firstName && lastName && email)
 
     const hasRequiredSecurity = !!(password && confirmPassword && acceptTerms)
 
@@ -281,7 +279,6 @@ export const BusinessRegisterForm: React.FC = () => {
     firstName,
     lastName,
     email,
-    phone,
     password,
     confirmPassword,
     acceptTerms,
@@ -501,22 +498,13 @@ export const BusinessRegisterForm: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="E-posta Adresi"
-              type="email"
-              {...register('email')}
-              error={errors.email?.message}
-              placeholder="E-posta adresinizi girin"
-            />
-            <Input
-              label="Telefon Numarası"
-              type="tel"
-              {...register('phone')}
-              error={errors.phone?.message}
-              placeholder="Telefon numaranızı girin"
-            />
-          </div>
+          <Input
+            label="E-posta Adresi"
+            type="email"
+            {...register('email')}
+            error={errors.email?.message}
+            placeholder="E-posta adresinizi girin"
+          />
         </div>
 
         {/* Address Information Section */}

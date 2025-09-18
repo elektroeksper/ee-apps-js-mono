@@ -42,7 +42,6 @@ export const IndividualRegisterForm: React.FC = () => {
       firstName: '',
       lastName: '',
       email: '',
-      phoneNumber: '',
       password: '',
       confirmPassword: '',
       acceptTerms: false,
@@ -156,6 +155,29 @@ export const IndividualRegisterForm: React.FC = () => {
             </p>
           </div>
         )}
+
+        {/* First Name and Last Name - side by side */}
+        <div className="flex flex-col gap-4 md:flex-row md:gap-6">
+          <div className="flex-1">
+            <Input
+              label="Ad"
+              type="text"
+              {...register('firstName')}
+              error={errors.firstName?.message}
+              placeholder="Adınızı girin"
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              label="Soyad"
+              type="text"
+              {...register('lastName')}
+              error={errors.lastName?.message}
+              placeholder="Soyadınızı girin"
+            />
+          </div>
+        </div>
+
         {/* Email */}
         <Input
           label="E-posta Adresi"

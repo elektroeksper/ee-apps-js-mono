@@ -11,12 +11,25 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
 
 function FirebaseDirectDebug() {
+  // Build-time guard - prevent Firebase initialization during build
+  const isBuildTime =
+    typeof window === 'undefined' && process.env.NODE_ENV === 'production'
+
+  if (isBuildTime) {
+    return (
+      <div className="p-4 border border-gray-300 rounded">
+        <h3 className="font-bold text-gray-800">Direct Firebase Auth Data</h3>
+        <p className="text-gray-600">Loading debug info...</p>
+      </div>
+    )
+  }
+
   const [firebaseUser, setFirebaseUser] = useState<any>(null)
   const [firebaseLoading, setFirebaseLoading] = useState(true)
 
   useEffect(() => {
     console.log('🔥 Setting up direct Firebase auth listener')
-    const unsubscribe = auth.onAuthStateChanged(user => {
+    const unsubscribe = auth.onAuthStateChanged((user: any) => {
       console.log(
         '🔥 Direct Firebase auth state changed:',
         user?.email || 'null'

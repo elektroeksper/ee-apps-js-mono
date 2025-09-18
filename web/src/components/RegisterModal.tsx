@@ -127,7 +127,6 @@ const IndividualRegisterFormModal: React.FC<{
       firstName: '',
       lastName: '',
       email: '',
-      phoneNumber: '',
       password: '',
       confirmPassword: '',
       acceptTerms: false,
@@ -275,15 +274,6 @@ const IndividualRegisterFormModal: React.FC<{
           {...register('email')}
           error={errors.email?.message}
           placeholder="E-posta adresiniz"
-        />
-
-        {/* Phone Number */}
-        <Input
-          label="Telefon"
-          type="tel"
-          {...register('phoneNumber')}
-          error={errors.phoneNumber?.message}
-          placeholder="Telefon numaranız"
         />
 
         {/* Password */}

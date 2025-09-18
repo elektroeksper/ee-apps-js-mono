@@ -1,5 +1,4 @@
 import Layout from '@/components/Layout'
-import { AppProvider } from '@/contexts/AppContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { AppProps } from 'next/app'
@@ -23,33 +22,31 @@ export default function App({ Component, pageProps }: AppProps) {
         <title>ElectroExpert</title>
       </Head>
       <QueryClientProvider client={queryClient}>
-        <AppProvider>
-          <AuthProvider>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
+        <AuthProvider>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+              success: {
                 style: {
-                  background: '#363636',
-                  color: '#fff',
+                  background: '#10B981',
                 },
-                success: {
-                  style: {
-                    background: '#10B981',
-                  },
+              },
+              error: {
+                style: {
+                  background: '#EF4444',
                 },
-                error: {
-                  style: {
-                    background: '#EF4444',
-                  },
-                },
-              }}
-            />
-          </AuthProvider>
-        </AppProvider>
+              },
+            }}
+          />
+        </AuthProvider>
       </QueryClientProvider>
     </>
   )

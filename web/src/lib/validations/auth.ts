@@ -52,17 +52,16 @@ export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
 
 // Individual Registration Schema
 export const individualRegisterSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  firstName: z.string().min(2, 'Ad en az 2 karakter olmalıdır'),
+  lastName: z.string().min(2, 'Soyad en az 2 karakter olmalıdır'),
+  email: z.string().email('Geçerli bir e-posta adresi girin'),
+  password: z.string().min(8, 'Şifre en az 8 karakter olmalıdır'),
   confirmPassword: z.string(),
   acceptTerms: z.boolean().refine(val => val === true, {
-    message: 'You must accept the terms and conditions'
+    message: 'Hizmet şartlarını ve gizlilik politikasını kabul etmelisiniz'
   })
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: "Şifreler eşleşmiyor",
   path: ["confirmPassword"],
 });
 
@@ -70,6 +69,8 @@ export type IndividualRegisterFormData = z.infer<typeof individualRegisterSchema
 
 export const transformToIndividualRegisterData = (data: IndividualRegisterFormData): IRegisterData => {
   return {
+    firstName: data.firstName,
+    lastName: data.lastName,
     email: data.email,
     password: data.password,
     accountType: AccountType.INDIVIDUAL,
@@ -91,9 +92,6 @@ export const businessRegisterSchema = z.object({
   email: z
     .string()
     .email('Geçerli bir e-posta adresi girin'),
-  phone: z
-    .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, 'Geçerli bir telefon numarası girin'),
   accountType: z.literal(AccountType.BUSINESS).optional(),
   password: z
     .string()
@@ -208,7 +206,6 @@ export const transformToBusinessRegisterData = (
     firstName: formData.firstName,
     lastName: formData.lastName,
     email: formData.email,
-    phone: formData.phone,
     password: formData.password,
     accountType: formData.accountType || AccountType.BUSINESS,
     businessName: formData.businessName ?? '',

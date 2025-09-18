@@ -6,9 +6,7 @@
 import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
-import { useVideosByLocation } from '@/hooks/useContentQueries'
-import { storageClientService } from '@/services/storage.service'
-import { UserDocument } from '@/shared-generated'
+import { IVideoItem, UserDocument } from '@/shared-generated'
 import type { IAppUser } from '@/shared-generated/types/user-types'
 import React, { useEffect, useState } from 'react'
 import { FiAlertCircle, FiUpload, FiX } from 'react-icons/fi'
@@ -16,21 +14,27 @@ import { FiAlertCircle, FiUpload, FiX } from 'react-icons/fi'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 
-const CompleteDocuments: React.FC = () => {
+interface CompleteDocumentsProps {
+  videos?: IVideoItem[]
+}
+
+const CompleteDocuments: React.FC<CompleteDocumentsProps> = ({
+  videos = [],
+}) => {
   const { appUser, business, updateUser, logout } = useAuth()
   const extendedUser = appUser as IAppUser
   const businessInfo = extendedUser?.businessInfo // Using businessInfo for business association
 
-  // Video fetch and client guard
-  const { data: videos, isLoading: videosLoading } =
-    useVideosByLocation('business-setup')
-  const primaryVideo = videos?.find(v => v.isActive) || null
+  // Video display logic - using passed props instead of client-side fetch
+  const primaryVideo: IVideoItem | undefined = videos?.find(
+    (v: IVideoItem) => v.isActive
+  )
   const [isClient, setIsClient] = useState(false)
   useEffect(() => {
     setIsClient(true)
   }, [])
-  const showVideo = isClient ? videosLoading || !!primaryVideo : true
-  const boxLoading = isClient && videosLoading
+  const showVideo = isClient ? !!primaryVideo : true
+  const boxLoading = false // No loading needed since videos are pre-fetched
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -95,6 +99,9 @@ const CompleteDocuments: React.FC = () => {
       // Upload tax certificate if provided
       if (taxCertificate && appUser?.id) {
         try {
+          const { storageClientService } = await import(
+            '@/services/storage.service'
+          )
           const uploadedTaxCert = await storageClientService.uploadUserDocument(
             appUser.id,
             taxCertificate,
@@ -113,6 +120,9 @@ const CompleteDocuments: React.FC = () => {
       if (placePhotos.length > 0 && appUser?.id) {
         for (const photo of placePhotos) {
           try {
+            const { storageClientService } = await import(
+              '@/services/storage.service'
+            )
             const uploadedPhoto = await storageClientService.uploadUserDocument(
               appUser.id,
               photo,
@@ -221,7 +231,7 @@ const CompleteDocuments: React.FC = () => {
                       <p>Henüz video eklenmemiş</p>
                     </div>
                   </div>
-                ) : videosLoading ? (
+                ) : boxLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <LoadingSpinner />
                     <span className="ml-2">Video yükleniyor...</span>

@@ -4,24 +4,33 @@ import { LoginForm } from '@/components/auth'
 import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
-import { useVideosByLocation } from '@/hooks/useContentQueries'
+import { IVideoItem } from '@/shared-generated'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
-export default function IndexVideoAndLoginSection() {
+interface IndexVideoAndLoginSectionProps {
+  videos?: IVideoItem[]
+}
+
+export default function IndexVideoAndLoginSection({
+  videos = [],
+}: IndexVideoAndLoginSectionProps) {
   const { appUser, isLoading } = useAuth()
   const router = useRouter()
-  const { data: appIndexVideos, isLoading: videosLoading } =
-    useVideosByLocation('app-index')
-  const primaryVideo = appIndexVideos?.find(v => v.isActive) || null
+
+  // Use passed videos or fall back to empty array
+  const appIndexVideos = videos
+  const primaryVideo = appIndexVideos?.find((v: any) => v.isActive) || null
 
   const [isClient, setIsClient] = useState(false)
   useEffect(() => {
     setIsClient(true)
   }, [])
-  const showVideoColumn = isClient ? videosLoading || !!primaryVideo : true
-  const boxLoading = isClient && (videosLoading || isLoading)
+
+  // Simplified logic since videos are pre-loaded
+  const showVideoColumn = isClient ? !!primaryVideo : true
+  const boxLoading = isClient && isLoading
 
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -61,11 +70,6 @@ export default function IndexVideoAndLoginSection() {
                       </svg>
                       <p>Henüz video eklenmemiş</p>
                     </div>
-                  </div>
-                ) : videosLoading ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <LoadingSpinner />
-                    <span className="ml-2">Video yükleniyor...</span>
                   </div>
                 ) : primaryVideo ? (
                   <iframe

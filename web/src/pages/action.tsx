@@ -6,7 +6,6 @@ import {
 } from '@/components/auth'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
-import { UserService } from '@/shared-generated/services/user.service'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
@@ -20,6 +19,10 @@ const ActionHandler = () => {
   const onEmailVerificationSuccess = async () => {
     // If user is logged in, check if they need to complete setup
     if (appUser) {
+      // Lazy load the UserService to avoid Firebase initialization during build
+      const { UserService } = await import(
+        '@/shared-generated/services/user.service'
+      )
       const userService = new UserService()
       const exists = await userService.checkExists(appUser.id)
       if (exists) {
