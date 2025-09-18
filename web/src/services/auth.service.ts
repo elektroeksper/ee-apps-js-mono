@@ -9,6 +9,7 @@ import { getAuthErrorMessage } from '@/config/firebase-error-messages';
 import {
   AuthErrorCode,
   IAuthService,
+  IBusinessRegisterData,
   IFirebaseUser,
   ILoginData,
   IOperationResult,
@@ -32,6 +33,7 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth';
+import { userService } from './user.service';
 
 export class AuthService implements IAuthService {
   /**
@@ -80,7 +82,7 @@ export class AuthService implements IAuthService {
    * Register new user with email and password
    * Supports both individual and business registration
    */
-  async register(data: IRegisterData): Promise<IOperationResult<IFirebaseUser>> {
+  async register(data: IRegisterData | IBusinessRegisterData): Promise<IOperationResult<IFirebaseUser>> {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -92,6 +94,19 @@ export class AuthService implements IAuthService {
       await updateProfile(userCredential.user, {
         displayName: data.email?.split('@')[0]
       });
+
+      try {
+        // Create user profile in Firestore
+        const profileResult = await userService.create(data, userCredential.user.uid);
+        if (!profileResult.success) {
+          // If profile creation fails, we should still succeed the auth
+          // but log the error for monitoring
+          console.error('Profile creation failed:', profileResult.error);
+        }
+      } catch (profileError) {
+        // Log but don't fail the registration
+        console.error('Error creating user profile:', profileError);
+      }
 
       // Send email verification
       await sendEmailVerification(userCredential.user, {

@@ -268,16 +268,8 @@ export async function getUserByEmail(email: string): Promise<IOperationResult<IA
 }
 
 // Search users (admin only)
-export async function searchUsers(query: string, filters: any = {}): Promise<IOperationResult<IAppUser[]>> {
+export async function searchUsers(query: string = '', filters: any = {}): Promise<IOperationResult<IAppUser[]>> {
   try {
-    if (!query) {
-      return {
-        success: false,
-        error: 'Search query is required',
-        code: 400
-      };
-    }
-
     let usersRef = db.collection('users');
 
     // Apply filters
@@ -288,7 +280,7 @@ export async function searchUsers(query: string, filters: any = {}): Promise<IOp
     // isAdmin filter removed (admin now derived solely from auth custom claim at runtime)
 
     // Simple text search (in a real app, you'd use a search service like Algolia)
-    const usersSnapshot = await usersRef.limit(50).get();
+    const usersSnapshot = await usersRef.limit(100).get(); // Increased limit for "get all"
 
     const users = usersSnapshot.docs
       .map(doc => ({
@@ -296,6 +288,12 @@ export async function searchUsers(query: string, filters: any = {}): Promise<IOp
         ...doc.data()
       } as IAppUser))
       .filter((user: IAppUser) => {
+        // If no query provided, return all users (after applying filters)
+        if (!query || query.trim() === '') {
+          return true;
+        }
+
+        // Otherwise, do text search
         const searchText = `${user.firstName || ''} ${user.lastName || ''} ${user.email || ''}`.toLowerCase();
         return searchText.includes(query.toLowerCase());
       });

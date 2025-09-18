@@ -63,6 +63,46 @@ const MarkdownContent = ({ content }: { content: string }) => {
 }
 
 const AboutPage = () => {
+  // Skip content loading during build time
+  const isBuildTime =
+    typeof window === 'undefined' && process.env.NODE_ENV === 'production'
+
+  // Return a static version during build time
+  if (isBuildTime) {
+    return (
+      <div className="min-h-screen bg-gradient-services">
+        {/* Hero Section */}
+        <div className="py-16 bg-gradient-hero text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-overlay"></div>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
+            <h1 className="text-4xl font-bold mb-6">Hakkımızda</h1>
+            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+              ElectroExpert olarak elektrik alanında güvenilir çözümler
+              sunuyoruz.
+            </p>
+          </div>
+        </div>
+
+        {/* About Content */}
+        <div className="py-16 bg-gradient-section-light">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="bg-gradient-service-card p-8 rounded-2xl shadow-xl card-float border border-white/20">
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4 text-4xl">📄</div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  İçerik Yükleniyor...
+                </h3>
+                <p className="text-gray-600">
+                  Sayfa içeriği yükleniyor. Lütfen bekleyin.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const {
     data: aboutInfo,
     isLoading: aboutLoading,

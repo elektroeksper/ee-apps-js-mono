@@ -89,30 +89,6 @@ interface IBusiness extends IEntity {
   isActive: boolean;
 }
 
-// Business Invitation Entity (subcollection)
-interface IBusinessInvitation extends IEntity {
-  // Invitation Details
-  invitedEmail: string;
-  invitedRole: BusinessUserRole;
-  invitedBy: string; // User ID of who sent invitation
-
-  // Invitation Content
-  message?: string; // Optional personal message
-  token: string; // Secure invitation token for acceptance
-
-  // Status & Workflow
-  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'pending_approval';
-
-  // Approval Process (for non-owner invitations)
-  requiresApproval: boolean; // True if invited by non-owner
-  approvedBy?: string; // Admin user ID who approved (if applicable)
-  approvedAt?: Timestamp; // When invitation was approved
-
-  // Additional Timestamps
-  expiresAt: Timestamp; // Invitations expire after 7 days
-  respondedAt?: Timestamp; // When user accepted/declined
-}
-
 // Business Permissions Interface
 interface IBusinessPermissions {
   // Business Management
@@ -144,9 +120,10 @@ interface IBusinessPermissions {
 }
 
 
+
 export type {
   IBusiness,
-  IBusinessDocument, IBusinessFilter, IBusinessInvitation,
+  IBusinessDocument, IBusinessFilter,
   IBusinessPermissions,
   IBusinessService,
   IBusinessSetupData, IBusinessUserInfo

@@ -135,6 +135,34 @@ export const deleteProduct = onCall(async (request) => {
 });
 
 // User Functions
+export const createUserProfile = onCall(async (request) => {
+  if (!requireAuthentication(request)) {
+    return {
+      success: false,
+      error: 'Authentication required'
+    };
+  }
+
+  const { userData } = request.data;
+
+  if (!userData) {
+    throw new HttpsError('invalid-argument', 'User data is required');
+  }
+
+  try {
+    const result = await userService.createUserProfile(request.auth!.uid, userData);
+
+    if (result.success) {
+      return result;
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to create user profile');
+    }
+  } catch (error: any) {
+    console.error('Error creating user profile:', error);
+    throw new HttpsError('internal', error.message || 'Failed to create user profile');
+  }
+});
+
 export const getUserProfile = onCall(async (request) => {
   if (!requireAuthentication(request)) {
     return {
@@ -262,6 +290,29 @@ export const searchUsers = onCall(async (request) => {
 
   const { query, filters } = request.data;
   return await userService.searchUsers(query, filters);
+});
+
+// Get all users (Admin only)
+export const getAllUsers = onCall(async (request) => {
+  if (!request.auth || !request.auth.token.admin) {
+    return {
+      success: false,
+      error: 'Admin access required'
+    };
+  }
+
+  const { filter } = request.data || {};
+
+  try {
+    // Use empty search to get all users with optional filters
+    return await userService.searchUsers('', filter);
+  } catch (error: any) {
+    console.error('Error getting all users:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get users'
+    };
+  }
 });
 
 export const createBusinessDocument = onCall(async (request) => {
@@ -835,72 +886,6 @@ export const sendBusinessRejectionEmailFunction = onCall(async (request) => {
   }
 });
 
-export const rejectBusinessAccount = onCall(async (request) => {
-  // Only admins can reject business accounts
-  if (!isAdminUser(request)) {
-    throw new HttpsError('permission-denied', 'Admin access required');
-  }
-
-  const { userId, reason } = request.data;
-
-  if (!userId) {
-    throw new HttpsError('invalid-argument', 'userId is required');
-  }
-
-  try {
-    // Get user profile to extract business info
-    const userProfileResult = await userService.getUserProfile(userId);
-    if (!userProfileResult.success || !userProfileResult.data) {
-      throw new HttpsError('not-found', 'User profile not found');
-    }
-
-    const userProfile = userProfileResult.data as any;
-    const businessName = userProfile.businessInfo?.businessName || userProfile.businessName || 'İşletmeniz';
-    const ownerName = userProfile.displayName || `${userProfile.firstName} ${userProfile.lastName}`;
-
-    // Update business rejection status
-    const businessInfo = userProfile.businessInfo || {};
-
-    // Create a clean businessInfo object without approval fields
-    const { approvedAt, approvedBy, ...cleanBusinessInfo } = businessInfo;
-    const updatedBusinessInfo = {
-      ...cleanBusinessInfo,
-      isApproved: false,
-      rejectedAt: new Date().toISOString(),
-      rejectedBy: request.auth!.uid,
-      rejectionReason: reason || 'Belgeler gereksinimlerimizi karşılamıyor',
-    };
-
-    const updateResult = await userService.updateUserProfile(userId, {
-      businessInfo: updatedBusinessInfo
-    } as any);
-
-    if (!updateResult.success) {
-      throw new HttpsError('internal', 'Failed to update user profile');
-    }
-
-    // Get user email for sending notification
-    const userRecord = await auth.getUser(userId);
-    if (userRecord.email) {
-      // Send rejection email (don't fail the whole operation if email fails)
-      try {
-        await sendBusinessRejectionEmail(userRecord.email, businessName, ownerName, reason);
-      } catch (emailError) {
-        console.error('Failed to send rejection email, but rejection was successful:', emailError);
-      }
-    }
-
-    return {
-      success: true,
-      message: 'Business account rejected successfully',
-      data: updateResult.data,
-    };
-  } catch (error: any) {
-    console.error('Error rejecting business account:', error);
-    throw new HttpsError('internal', error.message || 'Failed to reject business account');
-  }
-});
-
 export const getUserDocuments = onCall(async (request): Promise<GetUserDocumentsResponse> => {
   try {
     // Require authentication
@@ -1184,6 +1169,114 @@ export const updateUserRole = onCall(functionOptions, async (request) => {
   } catch (error: any) {
     console.error('Error updating user role:', error);
     throw new HttpsError('internal', error.message || 'Failed to update user role');
+  }
+});
+
+// Get all businesses (Admin only)
+export const getAllBusinesses = onCall(functionOptions, async (request) => {
+  // Only admins can get all businesses
+  if (!isAdminUser(request)) {
+    throw new HttpsError('permission-denied', 'Admin access required');
+  }
+
+  try {
+    const { filter } = request.data || {};
+    const result = await businessService.getAll(filter);
+
+    if (result.success) {
+      return result;
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to get businesses');
+    }
+  } catch (error: any) {
+    console.error('Error getting all businesses:', error);
+    throw new HttpsError('internal', error.message || 'Failed to get businesses');
+  }
+});
+
+// Approve business (Admin only)
+export const approveBusiness = onCall(functionOptions, async (request) => {
+  // Only admins can approve businesses
+  if (!isAdminUser(request)) {
+    throw new HttpsError('permission-denied', 'Admin access required');
+  }
+
+  const { businessId } = request.data;
+
+  if (!businessId) {
+    throw new HttpsError('invalid-argument', 'Business ID is required');
+  }
+
+  try {
+    const result = await businessService.verifyBusiness(businessId, true, request.auth!.uid);
+
+    if (result.success) {
+      return { success: true, message: 'Business approved successfully' };
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to approve business');
+    }
+  } catch (error: any) {
+    console.error('Error approving business:', error);
+    throw new HttpsError('internal', error.message || 'Failed to approve business');
+  }
+});
+
+// Reject business (Admin only)
+export const rejectBusiness = onCall(functionOptions, async (request) => {
+  // Only admins can reject businesses
+  if (!isAdminUser(request)) {
+    throw new HttpsError('permission-denied', 'Admin access required');
+  }
+
+  const { businessId, reason } = request.data;
+
+  if (!businessId) {
+    throw new HttpsError('invalid-argument', 'Business ID is required');
+  }
+
+  try {
+    const result = await businessService.verifyBusiness(businessId, false, request.auth!.uid, reason);
+
+    if (result.success) {
+      return { success: true, message: 'Business rejected successfully' };
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to reject business');
+    }
+  } catch (error: any) {
+    console.error('Error rejecting business:', error);
+    throw new HttpsError('internal', error.message || 'Failed to reject business');
+  }
+});
+
+// Create business
+export const createBusiness = onCall(functionOptions, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { businessData } = request.data;
+
+  if (!businessData) {
+    throw new HttpsError('invalid-argument', 'Business data is required');
+  }
+
+  try {
+    // Set the owner ID to the current user
+    const businessDataWithOwner = {
+      ...businessData,
+      ownerId: request.auth.uid,
+    };
+
+    const result = await businessService.create(businessDataWithOwner);
+
+    if (result.success) {
+      return result;
+    } else {
+      throw new HttpsError('internal', result.error || 'Failed to create business');
+    }
+  } catch (error: any) {
+    console.error('Error creating business:', error);
+    throw new HttpsError('internal', error.message || 'Failed to create business');
   }
 });
 
