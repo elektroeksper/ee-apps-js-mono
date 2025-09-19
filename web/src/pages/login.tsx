@@ -10,8 +10,10 @@ export default function LoginPage() {
     (router.query.type as 'individual' | 'business') || 'individual'
 
   const handleLoginSuccess = () => {
-    // Redirect to home page after successful login
-    router.push('/home')
+    // Redirect directly instead of letting PublicRoute handle it
+    console.log('Login successful, redirecting to /home')
+    const redirectUrl = (router.query.redirect as string) || '/home'
+    router.push(redirectUrl)
   }
 
   const handleRegisterClick = () => {

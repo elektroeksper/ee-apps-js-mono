@@ -5,7 +5,7 @@
  */
 
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 // Firebase config (safe to use client-side)
 const firebaseConfig = {
@@ -28,7 +28,9 @@ if (getApps().length === 0) {
 // Initialize Firebase Auth (client-side only)
 export const auth = getAuth(app);
 
-// Connect to Auth Emulator in development
+// Connect to Auth Emulator in development (disabled for testing)
+// Uncomment below if you want to use Firebase emulators
+/*
 if (process.env.NODE_ENV === 'development') {
   try {
     connectAuthEmulator(auth, 'http://localhost:9099');
@@ -36,5 +38,6 @@ if (process.env.NODE_ENV === 'development') {
     // Emulator already connected
   }
 }
+*/
 
 export default app;

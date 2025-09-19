@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
+    // Temporarily disable Firebase Functions proxy since we're using Next.js API routes
+    return []
+
+    /* DISABLED - We're now using Next.js API routes instead of Firebase Functions
     // Only use local rewrites in development
     if (process.env.NODE_ENV === 'development') {
       return [
@@ -32,6 +36,7 @@ const nextConfig: NextConfig = {
 
     // In production, API calls should go directly to Firebase Functions
     return []
+    */
   },
 }
 

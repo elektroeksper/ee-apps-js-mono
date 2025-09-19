@@ -42,7 +42,12 @@ async function handleGet(
     const userDoc = await adminDb.collection('users').doc(uid).get();
 
     if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
+      // User document doesn't exist - this can happen with Google Auth
+      // Return a basic user structure that can be created later
+      return res.status(404).json({
+        error: 'User not found',
+        shouldCreateUser: true
+      });
     }
 
     const userData = userDoc.data() as IAppUser;
@@ -62,25 +67,33 @@ async function handleUpdate(
   uid: string
 ) {
   try {
-    // Verify authentication
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Authorization required' });
+    console.log('🔧 handleUpdate called for uid:', uid);
+
+    // Verify authentication via session cookie
+    const sessionCookie = req.cookies.session;
+
+    if (!sessionCookie) {
+      console.log('❌ No session cookie found');
+      return res.status(401).json({ error: 'No session found' });
     }
 
-    const token = authHeader.split(' ')[1];
-    const decodedResult = await verifyIdToken(token);
+    const decodedResult = await verifyIdToken(sessionCookie);
 
     if (!decodedResult.success || !decodedResult.user) {
-      return res.status(401).json({ error: 'Invalid token' });
+      console.log('❌ Session verification failed:', decodedResult.error);
+      return res.status(401).json({ error: 'Invalid session' });
     }
+
+    console.log('✅ Session verified for user:', decodedResult.user.uid);
 
     // Users can only update their own data
     if (decodedResult.user.uid !== uid) {
+      console.log('❌ User mismatch:', { sessionUid: decodedResult.user.uid, requestUid: uid });
       return res.status(403).json({ error: 'Unauthorized to update this user' });
     }
 
     const updateData = req.body;
+    console.log('📝 Update data received:', JSON.stringify(updateData, null, 2));
 
     // Remove undefined values and validate
     const cleanedData = Object.fromEntries(
@@ -88,18 +101,25 @@ async function handleUpdate(
     );
 
     if (Object.keys(cleanedData).length === 0) {
+      console.log('❌ No valid data to update');
       return res.status(400).json({ error: 'No valid data to update' });
     }
 
-    // Update the user document
-    await adminDb.collection('users').doc(uid).update({
+    console.log('📝 Cleaned data:', JSON.stringify(cleanedData, null, 2));
+
+    // Create or update the user document (use set with merge to handle both cases)
+    await adminDb.collection('users').doc(uid).set({
       ...cleanedData,
       updatedAt: new Date().toISOString()
-    });
+    }, { merge: true });
+
+    console.log('✅ User document updated successfully');
 
     // Fetch and return updated document
     const updatedDoc = await adminDb.collection('users').doc(uid).get();
     const updatedData = updatedDoc.data() as IAppUser;
+
+    console.log('✅ Returning updated data for user:', updatedData?.id);
 
     return res.status(200).json({
       success: true,

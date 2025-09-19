@@ -21,7 +21,7 @@ import GoogleMapWithMarker from '../maps/GoogleMapWithMarker'
 interface IndividualFormData {
   firstName: string
   lastName: string
-  phone: string
+  phoneNumber: string
   address: IAddress
 }
 
@@ -52,7 +52,7 @@ const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
   const [formData, setFormData] = useState<IndividualFormData>({
     firstName: appUser?.firstName || '',
     lastName: appUser?.lastName || '',
-    phone: appUser?.phone || '',
+    phoneNumber: appUser?.phoneNumber || '',
     address: {
       type: 'home',
       formattedAddress: '',
@@ -217,11 +217,13 @@ const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
       setError('Lütfen soyadınızı girin')
       return false
     }
-    if (!formData.phone.trim()) {
+    if (!formData.phoneNumber.trim()) {
       setError('Lütfen telefon numaranızı girin')
       return false
     }
-    if (!/^(\+90|0)?[5-9]\d{9}$/.test(formData.phone.replace(/\s/g, ''))) {
+    if (
+      !/^(\+90|0)?[5-9]\d{9}$/.test(formData.phoneNumber.replace(/\s/g, ''))
+    ) {
       setError('Geçerli bir telefon numarası girin')
       return false
     }
@@ -289,7 +291,7 @@ const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
       await updateUser({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone,
+        phoneNumber: formData.phoneNumber,
         address: sharedAddress,
       })
 
@@ -486,8 +488,10 @@ const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
                     </label>
                     <Input
                       type="tel"
-                      value={formData.phone}
-                      onChange={e => handleInputChange('phone', e.target.value)}
+                      value={formData.phoneNumber}
+                      onChange={e =>
+                        handleInputChange('phoneNumber', e.target.value)
+                      }
                       placeholder="5XX XXX XX XX"
                       required
                     />
@@ -756,8 +760,10 @@ const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
                   </label>
                   <Input
                     type="tel"
-                    value={formData.phone}
-                    onChange={e => handleInputChange('phone', e.target.value)}
+                    value={formData.phoneNumber}
+                    onChange={e =>
+                      handleInputChange('phoneNumber', e.target.value)
+                    }
                     placeholder="5XX XXX XX XX"
                     required
                   />

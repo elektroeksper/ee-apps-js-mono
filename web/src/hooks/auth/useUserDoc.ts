@@ -1,7 +1,8 @@
 'use client'
 
-import { IAppUser } from '@/shared-generated';
+import { AccountType, IAppUser } from '@/shared-generated';
 import { useCallback, useEffect, useState } from 'react';
+import { useFirebaseAuth } from './useFirebaseAuth';
 
 interface UseUserDocState {
   appUser: IAppUser | null;
@@ -16,32 +17,100 @@ export function useUserDoc(uid: string | null): UseUserDocState {
   const [appUser, setAppUser] = useState<IAppUser | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { fireUser } = useFirebaseAuth();
 
   const load = useCallback(async () => {
     if (!uid) {
       setAppUser(null);
       return;
     }
-    
+
     setIsUserLoading(true);
     setError(null);
-    
+
     try {
-      const response = await fetch(`/api/user/${uid}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
+      const response = await fetch(`/api/user/${uid}`, {
+        credentials: 'include',
+      });
+
+      if (response.status === 404) {
+        // User document doesn't exist, let's create it
+        if (fireUser && fireUser.uid === uid) {
+          console.log('🔧 Creating new user document for:', uid);
+
+          const userProfile: Partial<IAppUser> = {
+            id: fireUser.uid,
+            firstName: '',
+            lastName: '',
+            displayName: fireUser.displayName || '',
+            email: fireUser.email || '',
+            photoURL: fireUser.photoURL || '',
+            accountType: AccountType.INDIVIDUAL,
+            isEmailVerified: fireUser.emailVerified,
+            isPhoneVerified: false,
+            preferences: {
+              theme: 'system',
+              language: 'en',
+              notifications: {
+                email: true,
+                push: true,
+                sms: false,
+                marketing: false,
+                orderUpdates: true,
+                securityAlerts: true,
+              },
+              privacy: {
+                profileVisibility: 'private',
+                showEmail: false,
+                showPhone: false,
+                allowAnalytics: true,
+              },
+            },
+            isActive: true,
+            lastLoginAt: new Date(),
+            isDeleted: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          const createResponse = await fetch(`/api/user/${uid}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(userProfile),
+          });
+
+          if (createResponse.ok) {
+            const createResult = await createResponse.json();
+            if (createResult.success && createResult.data) {
+              console.log('✅ User document created successfully:', createResult.data.id);
+              setAppUser(createResult.data);
+              return;
+            }
+          } else {
+            const errorText = await createResponse.text();
+            console.error('❌ Failed to create user document:', {
+              status: createResponse.status,
+              statusText: createResponse.statusText,
+              error: errorText,
+            });
+            throw new Error(`Failed to create user document: ${createResponse.status} ${errorText}`);
+          }
+        } else {
           setAppUser(null);
           return;
         }
-        throw new Error(`Failed to fetch user: ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-      if (result.success && result.data) {
-        setAppUser(result.data);
+      } else if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setAppUser(result.data);
+        } else {
+          setAppUser(null);
+        }
       } else {
-        setAppUser(null);
+        throw new Error(`Failed to fetch user: ${response.statusText}`);
       }
     } catch (e) {
       console.error('🚨 Error in useUserDoc load:', e);
@@ -50,7 +119,7 @@ export function useUserDoc(uid: string | null): UseUserDocState {
     } finally {
       setIsUserLoading(false);
     }
-  }, [uid]);
+  }, [uid, fireUser]);
 
   const update = useCallback(async (data: Partial<IAppUser>): Promise<IAppUser | null> => {
     if (!uid) {
@@ -62,22 +131,12 @@ export function useUserDoc(uid: string | null): UseUserDocState {
     setError(null);
 
     try {
-      // Get auth token from Firebase Auth
-      const { auth } = await import('@/lib/firebase-auth-config');
-      const user = auth.currentUser;
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const token = await user.getIdToken();
-      
       const response = await fetch(`/api/user/${uid}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify(data)
       });
 
@@ -93,7 +152,7 @@ export function useUserDoc(uid: string | null): UseUserDocState {
         throw new Error('Failed to update user');
       }
     } catch (e) {
-      console.error('🚨 Error in useUserDoc update:', e);
+      console.error('�� Error in useUserDoc update:', e);
       setError(e instanceof Error ? e.message : 'Failed to update user data');
       return null;
     } finally {
@@ -109,7 +168,6 @@ export function useUserDoc(uid: string | null): UseUserDocState {
     setError(null);
   }, []);
 
-  // Load user data when uid changes
   useEffect(() => {
     load();
   }, [load]);

@@ -304,12 +304,31 @@ export function PublicRoute({
 }) {
   const router = useRouter()
   const { appUser, isLoading } = useAuth()
-  if (isLoading) return <>{children}</>
-  if (appUser) {
-    if (typeof window !== 'undefined') router.replace(redirectTo)
-    return null
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Only redirect if we're sure the user is authenticated and mounted
+  useEffect(() => {
+    if (mounted && !isLoading && appUser) {
+      console.log(
+        '🔄 PublicRoute: Redirecting authenticated user to:',
+        redirectTo
+      )
+      // Use replace to avoid adding to history
+      router.replace(redirectTo)
+    }
+  }, [mounted, isLoading, appUser, redirectTo, router])
+
+  // Show children while loading or if not authenticated
+  if (!mounted || isLoading || !appUser) {
+    return <>{children}</>
   }
-  return <>{children}</>
+
+  // User is authenticated, don't render children (redirect in progress)
+  return null
 }
 
 export function ProtectedRoute({

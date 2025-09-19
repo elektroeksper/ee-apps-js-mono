@@ -40,6 +40,16 @@ const GoogleMapWithMarker: React.FC<GoogleMapWithMarkerProps> = ({
     region: GOOGLE_MAPS_CONFIG.region,
   })
 
+  // Debug logging
+  console.log('🗺️ Google Maps Debug:', {
+    isLoaded,
+    loadError: loadError?.message,
+    apiKey: GOOGLE_MAPS_CONFIG.apiKey ? 'Present' : 'Missing',
+    libraries,
+    language: GOOGLE_MAPS_CONFIG.language,
+    region: GOOGLE_MAPS_CONFIG.region,
+  })
+
   const [map, setMap] = useState<google.maps.Map | null>(null)
   const [marker, setMarker] = useState<google.maps.Marker | null>(null)
   const [currentPosition, setCurrentPosition] = useState<ICoordinates | null>(
@@ -159,12 +169,21 @@ const GoogleMapWithMarker: React.FC<GoogleMapWithMarkerProps> = ({
 
   // Error state
   if (loadError) {
+    console.error('🚨 Google Maps Load Error:', loadError)
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 ${className}`}
+        className={`flex flex-col items-center justify-center bg-gray-100 ${className} p-4`}
         style={{ height, width }}
       >
-        <div className="text-red-600">Harita yüklenirken hata oluştu</div>
+        <div className="text-red-600 text-center">
+          <div className="font-semibold mb-2">
+            Harita yüklenirken hata oluştu
+          </div>
+          <div className="text-sm">{loadError.message}</div>
+          <div className="text-xs mt-2 text-gray-500">
+            Google Maps API anahtarını kontrol edin
+          </div>
+        </div>
       </div>
     )
   }

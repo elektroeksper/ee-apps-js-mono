@@ -34,14 +34,21 @@ export const adminDb = admin.firestore(app);
 export const adminStorage = admin.storage(app);
 // Note: Functions are not needed for admin operations
 
-// Utility function to verify Firebase ID tokens
-export async function verifyIdToken(idToken: string) {
+// Utility function to verify Firebase ID tokens or session cookies
+export async function verifyIdToken(tokenOrSessionCookie: string) {
   try {
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    return { success: true, user: decodedToken };
+    // First try to verify as session cookie
+    try {
+      const decodedToken = await adminAuth.verifySessionCookie(tokenOrSessionCookie);
+      return { success: true, user: decodedToken };
+    } catch (sessionError) {
+      // If session cookie verification fails, try as ID token
+      const decodedToken = await adminAuth.verifyIdToken(tokenOrSessionCookie);
+      return { success: true, user: decodedToken };
+    }
   } catch (error) {
-    console.error('Error verifying ID token:', error);
-    return { success: false, error: 'Invalid token' };
+    console.error('Error verifying token/session cookie:', error);
+    return { success: false, error: 'Invalid token or session' };
   }
 }
 

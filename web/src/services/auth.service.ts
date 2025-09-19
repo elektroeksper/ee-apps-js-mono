@@ -68,6 +68,26 @@ export class AuthService implements IAuthService {
         data.password
       );
 
+      // Create session cookie via API route for server-side authentication
+      try {
+        const idToken = await userCredential.user.getIdToken();
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.error('Failed to create session cookie:', response.statusText);
+          // Continue anyway - client-side auth still works
+        }
+      } catch (sessionError) {
+        console.error('Error creating session cookie:', sessionError);
+        // Continue anyway - client-side auth still works
+      }
+
       return {
         success: true,
         data: this.mapFirebaseUser(userCredential.user),
@@ -163,6 +183,16 @@ export class AuthService implements IAuthService {
    */
   async logout(): Promise<IOperationResult<void>> {
     try {
+      // Clear session cookie via API route
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+        });
+      } catch (sessionError) {
+        console.error('Error clearing session cookie:', sessionError);
+        // Continue anyway - client-side logout still works
+      }
+
       await signOut(auth);
       return {
         success: true,
@@ -183,6 +213,26 @@ export class AuthService implements IAuthService {
       provider.addScope('profile');
 
       const userCredential = await signInWithPopup(auth, provider);
+
+      // Create session cookie via API route for server-side authentication
+      try {
+        const idToken = await userCredential.user.getIdToken();
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.error('Failed to create session cookie:', response.statusText);
+          // Continue anyway - client-side auth still works
+        }
+      } catch (sessionError) {
+        console.error('Error creating session cookie:', sessionError);
+        // Continue anyway - client-side auth still works
+      }
 
       return {
         success: true,
