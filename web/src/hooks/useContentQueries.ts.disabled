@@ -1,4 +1,4 @@
-import { contentService } from '@/services/content.service';
+import { getClientContentService } from '@/config/firebase-client-content';
 import {
   IAboutInfo,
   IBrandingInfo,
@@ -28,6 +28,7 @@ export const useSliders = () => {
   return useQuery({
     queryKey: contentQueryKeys.sliders,
     queryFn: async () => {
+      const contentService = getClientContentService();
       const result = await contentService.getSliderItems();
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch sliders');
@@ -42,8 +43,10 @@ export const useCreateSliderMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (item: Omit<ISliderItem, 'id' | 'createdAt' | 'updatedAt'>) =>
-      contentService.addSliderItem(item),
+    mutationFn: async (item: Omit<ISliderItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const contentService = getClientContentService();
+      return contentService.addSliderItem(item);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.sliders });
       toast.success('Slider created successfully');
@@ -59,8 +62,10 @@ export const useUpdateSliderMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ISliderItem> }) =>
-      contentService.updateSliderItem(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: Partial<ISliderItem> }) => {
+      const contentService = getClientContentService();
+      return contentService.updateSliderItem(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.sliders });
       toast.success('Slider updated successfully');
@@ -76,7 +81,10 @@ export const useDeleteSliderMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => contentService.deleteSliderItem(id),
+    mutationFn: async (id: string) => {
+      const contentService = getClientContentService();
+      return contentService.deleteSliderItem(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.sliders });
       toast.success('Slider deleted successfully');
@@ -93,6 +101,7 @@ export const useServices = () => {
   return useQuery({
     queryKey: contentQueryKeys.services,
     queryFn: async () => {
+      const contentService = getClientContentService();
       const result = await contentService.getServices();
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch services');
@@ -107,8 +116,10 @@ export const useCreateServiceMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (service: Omit<IServiceItem, 'id' | 'createdAt' | 'updatedAt'>) =>
-      contentService.addService(service),
+    mutationFn: async (service: Omit<IServiceItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const contentService = getClientContentService();
+      return contentService.addService(service);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.services });
       toast.success('Service created successfully');
@@ -124,8 +135,10 @@ export const useUpdateServiceMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<IServiceItem> }) =>
-      contentService.updateService(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: Partial<IServiceItem> }) => {
+      const contentService = getClientContentService();
+      return contentService.updateService(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.services });
       toast.success('Service updated successfully');
@@ -141,7 +154,10 @@ export const useDeleteServiceMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => contentService.deleteService(id),
+    mutationFn: async (id: string) => {
+      const contentService = getClientContentService();
+      return contentService.deleteService(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.services });
       toast.success('Service deleted successfully');
@@ -158,6 +174,7 @@ export const useContact = () => {
   return useQuery({
     queryKey: contentQueryKeys.contact,
     queryFn: async () => {
+      const contentService = getClientContentService();
       const result = await contentService.getContactInfo();
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch contact info');
@@ -172,7 +189,10 @@ export const useUpdateContactMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (info: IContactInfo) => contentService.updateContactInfo(info),
+    mutationFn: async (info: IContactInfo) => {
+      const contentService = getClientContentService();
+      return contentService.updateContactInfo(info);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.contact });
       toast.success('Contact information updated successfully');
@@ -189,6 +209,7 @@ export const useAbout = () => {
   return useQuery<IAboutInfo>({
     queryKey: contentQueryKeys.about,
     queryFn: async (): Promise<IAboutInfo> => {
+      const contentService = getClientContentService();
       const result = await contentService.getAboutInfo();
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch about info');
@@ -206,7 +227,10 @@ export const useUpdateAboutMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (info: IAboutInfo) => contentService.updateAboutInfo(info),
+    mutationFn: async (info: IAboutInfo) => {
+      const contentService = getClientContentService();
+      return contentService.updateAboutInfo(info);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.about });
       toast.success('About information updated successfully');
@@ -223,6 +247,7 @@ export const useBranding = () => {
   return useQuery({
     queryKey: contentQueryKeys.branding,
     queryFn: async () => {
+      const contentService = getClientContentService();
       const result = await contentService.getBrandingInfo();
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch branding info');
@@ -237,7 +262,10 @@ export const useUpdateBrandingMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (info: IBrandingInfo) => contentService.updateBrandingInfo(info),
+    mutationFn: async (info: IBrandingInfo) => {
+      const contentService = getClientContentService();
+      return contentService.updateBrandingInfo(info);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.branding });
       toast.success('Branding information updated successfully');
@@ -254,6 +282,7 @@ export const useVideos = () => {
   return useQuery({
     queryKey: contentQueryKeys.videos,
     queryFn: async () => {
+      const contentService = getClientContentService();
       const result = await contentService.getVideos();
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch videos');
@@ -268,6 +297,7 @@ export const useVideosByLocation = (location: VideoLocation) => {
   return useQuery({
     queryKey: contentQueryKeys.videosByLocation(location),
     queryFn: async () => {
+      const contentService = getClientContentService();
       const result = await contentService.getVideosByLocation(location);
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch videos');
@@ -282,8 +312,10 @@ export const useCreateVideoMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (video: Omit<IVideoItem, 'id' | 'createdAt' | 'updatedAt'>) =>
-      contentService.addVideo(video),
+    mutationFn: async (video: Omit<IVideoItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const contentService = getClientContentService();
+      return contentService.addVideo(video);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.videos });
       // Also invalidate location-specific queries
@@ -305,8 +337,10 @@ export const useUpdateVideoMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<IVideoItem> }) =>
-      contentService.updateVideo(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: Partial<IVideoItem> }) => {
+      const contentService = getClientContentService();
+      return contentService.updateVideo(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.videos });
       // Also invalidate location-specific queries
@@ -328,7 +362,10 @@ export const useDeleteVideoMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => contentService.deleteVideo(id),
+    mutationFn: async (id: string) => {
+      const contentService = getClientContentService();
+      return contentService.deleteVideo(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.videos });
       // Also invalidate location-specific queries
@@ -350,6 +387,7 @@ export const useVideoSettings = () => {
   return useQuery({
     queryKey: contentQueryKeys.videoSettings,
     queryFn: async () => {
+      const contentService = getClientContentService();
       const result = await contentService.getVideoSettings();
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch video settings');
@@ -364,8 +402,10 @@ export const useUpdateVideoSettingsMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ location, settings }: { location: VideoLocation; settings: any }) =>
-      contentService.updateVideoSettings(location, settings),
+    mutationFn: async ({ location, settings }: { location: VideoLocation; settings: any }) => {
+      const contentService = getClientContentService();
+      return contentService.updateVideoSettings(location, settings);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contentQueryKeys.videoSettings });
       toast.success('Video settings updated successfully');

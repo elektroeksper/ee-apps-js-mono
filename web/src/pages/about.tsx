@@ -238,13 +238,68 @@ const AboutPage = ({
 
 export default AboutPage
 
-// Add empty getServerSideProps to force SSR and prevent static generation
+// Use getServerSideProps to fetch data from Firebase Functions API instead of client Firebase
 export const getServerSideProps = async () => {
-  return {
-    props: {
-      aboutInfo: null,
-      brandingInfo: null,
-      contactInfo: null,
-    },
+  try {
+    // Use Functions endpoint instead of client Firebase
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+    let aboutInfo = null
+    let brandingInfo = null
+    let contactInfo = null
+
+    // Fetch content from Firebase Functions API
+    try {
+      const aboutRes = await fetch(`${baseUrl}/api/content/about`)
+      if (aboutRes.ok) {
+        const data = await aboutRes.json()
+        if (data.success) {
+          aboutInfo = data.data
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch about info')
+    }
+
+    try {
+      const brandingRes = await fetch(`${baseUrl}/api/content/branding`)
+      if (brandingRes.ok) {
+        const data = await brandingRes.json()
+        if (data.success) {
+          brandingInfo = data.data
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch branding info')
+    }
+
+    try {
+      const contactRes = await fetch(`${baseUrl}/api/content/contact`)
+      if (contactRes.ok) {
+        const data = await contactRes.json()
+        if (data.success) {
+          contactInfo = data.data
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch contact info')
+    }
+
+    return {
+      props: {
+        aboutInfo,
+        brandingInfo,
+        contactInfo,
+      },
+    }
+  } catch (error) {
+    console.error('Error fetching about page data:', error)
+    return {
+      props: {
+        aboutInfo: null,
+        brandingInfo: null,
+        contactInfo: null,
+      },
+    }
   }
 }

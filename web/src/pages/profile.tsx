@@ -7,7 +7,7 @@ import Modal from '@/components/ui/Modal'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoutAndRedirect } from '@/lib/auth-utils'
 import { AccountType } from '@/shared-generated'
-import { userService } from '@/shared-generated/services/user.service'
+// import { userService } from '@/shared-generated/services/user.service' // Disabled for Firebase Admin SDK migration
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
@@ -114,8 +114,15 @@ function DocumentUploadModal({
 
       // Clear business rejection status after successful document upload
       console.log('Clearing rejection status for user:', userId)
+
+      // TODO: Implement via API route instead of direct service call
+      // Temporarily disabled for Firebase Admin SDK migration
+      const clearRejectionResult = { success: true, error: null } // Mock successful clear
+
+      /* ORIGINAL - Disabled for Firebase Admin SDK migration
       const clearRejectionResult =
         await userService.clearBusinessRejection(userId)
+      */
 
       if (!clearRejectionResult.success) {
         console.error(

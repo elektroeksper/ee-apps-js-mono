@@ -1,6 +1,5 @@
 'use client'
 
-import { auth } from '@/config/firebase'
 import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { applyActionCode } from 'firebase/auth'
 import Link from 'next/link'
@@ -27,31 +26,44 @@ const EmailVerificationHandler = ({
     const handleEmailVerification = async () => {
       try {
         setStatus('verifying')
+
+        // Import auth dynamically to avoid build-time issues
+        const { auth } = await import('@/lib/firebase-auth-config')
         await applyActionCode(auth, oobCode)
 
-        // After successful email verification, we need to update the user document in Firestore
+        // After successful email verification, we need to update the user document
         // Get the current Firebase user after verification
         const user = auth.currentUser
         if (user) {
           // Force refresh the user to get updated emailVerified status
           await user.reload()
 
-          // Update the Firestore user document
+          // Update the user document via API route
           if (user.emailVerified) {
             try {
-              const { doc, updateDoc } = await import('firebase/firestore')
-              const { db } = await import('@/config/firebase')
-
-              await updateDoc(doc(db, 'users', user.uid), {
-                isEmailVerified: true,
-                updatedAt: new Date(),
+              const token = await user.getIdToken()
+              const response = await fetch(`/api/user/${user.uid}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  isEmailVerified: true,
+                  updatedAt: new Date().toISOString(),
+                }),
               })
-              console.log(
-                '✅ Updated user document with email verification status'
-              )
+
+              if (response.ok) {
+                console.log(
+                  '✅ Updated user document with email verification status'
+                )
+              } else {
+                console.error('⚠️ Failed to update user document via API')
+              }
             } catch (updateError) {
               console.error('⚠️ Failed to update user document:', updateError)
-              // Don't fail the whole process if Firestore update fails
+              // Don't fail the whole process if update fails
             }
           }
         }

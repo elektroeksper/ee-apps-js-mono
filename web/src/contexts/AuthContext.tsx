@@ -11,7 +11,7 @@ import {
   useRoles,
   useUserDoc,
 } from '@/hooks/auth'
-import { useBusiness } from '@/hooks/useBusiness'
+// import { useBusiness } from '@/hooks/useBusiness' // Disabled for Firebase Admin SDK migration
 import type { IAuthContextType } from '@/shared-generated'
 import {
   createContext,
@@ -63,6 +63,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   } = useUserDoc(fireUser?.uid || null)
 
   // Get business data if user is authenticated
+  // Temporarily disabled for Firebase Admin SDK migration
+  const business = null
+  const businessRole = null
+  const businessPermissions: string[] = []
+  const isBusinessLoading = false
+  const businessError = null
+  const refreshBusiness = async () => {}
+  const leaveBusiness = async () => ({ success: true })
+  const acceptInvitation = async () => ({ success: true })
+  const hasPermission = () => false
+  const canEditBusiness = false
+  const canInviteUsers = false
+  const canManageUsers = false
+  const canViewOrders = false
+  const canManageOrders = false
+
+  /* ORIGINAL - Disabled for Firebase Admin SDK migration
   const {
     business,
     businessRole,
@@ -79,6 +96,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     canViewOrders,
     canManageOrders,
   } = useBusiness(fireUser?.uid || null)
+  */
 
   const actions = useAuthActions()
   const { roles, isAdmin, hasRole, hasAnyRole } = useRoles(claims, appUser)

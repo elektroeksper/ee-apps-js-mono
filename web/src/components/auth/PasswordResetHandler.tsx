@@ -1,6 +1,5 @@
 'use client'
 
-import { auth } from '@/config/firebase'
 import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import {
   passwordResetCompletionSchema,
@@ -38,6 +37,7 @@ const PasswordResetHandler = ({ oobCode }: PasswordResetHandlerProps) => {
 
   const onSubmit = async (data: PasswordResetCompletionFormData) => {
     try {
+      const { auth } = await import('@/lib/firebase-auth-config')
       await confirmPasswordReset(auth, oobCode, data.password)
       setStatus('success')
       setError('')

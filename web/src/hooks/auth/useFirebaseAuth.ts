@@ -1,6 +1,5 @@
 'use client'
 
-import { auth } from '@/config/firebase';
 import { getAuthErrorMessage } from '@/config/firebase-error-messages';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useCallback, useRef, useState } from 'react';
@@ -54,43 +53,56 @@ export function useFirebaseAuth(): FirebaseAuthState {
     mounted.current = true;
     console.log('🔄 useFirebaseAuth: Direct initialization (React 19 compatible)...');
 
-    // Check immediate auth state
-    const currentUser = auth.currentUser;
-    console.log('🔄 useFirebaseAuth: Current user on init:', currentUser?.email || 'null');
-
-    if (currentUser) {
-      setFireUser(currentUser);
-      loadClaims(currentUser, false);
-      setIsAuthLoading(false);
-    }
-
-    // Set up auth listener
-    onAuthStateChanged(auth, async (user) => {
-      console.log('🔄 useFirebaseAuth: Auth state changed to:', user?.email || 'null');
-
-      if (!mounted.current) return;
-
+    // Setup async initialization
+    (async () => {
       try {
-        setError(null);
-        if (user) {
-          console.log('🔄 useFirebaseAuth: Setting user and loading claims...');
-          setFireUser(user);
-          await loadClaims(user, false);
-        } else {
-          console.log('🔄 useFirebaseAuth: No user, clearing state...');
-          setFireUser(null);
-          setClaims(null);
-        }
-      } catch (e: any) {
-        console.error('🚨 useFirebaseAuth: Error in auth state change:', e);
-        setError(getAuthErrorMessage(e.code || e.message || 'default'));
-      } finally {
-        if (mounted.current) {
-          console.log('🔄 useFirebaseAuth: Setting loading to false');
+        const { auth } = await import('@/lib/firebase-auth-config');
+
+        // Check immediate auth state
+        const currentUser = auth.currentUser;
+        console.log('🔄 useFirebaseAuth: Current user on init:', currentUser?.email || 'null');
+
+        if (currentUser) {
+          setFireUser(currentUser);
+          loadClaims(currentUser, false);
           setIsAuthLoading(false);
         }
+
+        // Set up auth listener
+        onAuthStateChanged(auth, async (user) => {
+          console.log('🔄 useFirebaseAuth: Auth state changed to:', user?.email || 'null');
+
+          if (!mounted.current) return;
+
+          try {
+            setError(null);
+            if (user) {
+              console.log('🔄 useFirebaseAuth: Setting user and loading claims...');
+              setFireUser(user);
+              await loadClaims(user, false);
+            } else {
+              console.log('🔄 useFirebaseAuth: No user, clearing state...');
+              setFireUser(null);
+              setClaims(null);
+            }
+          } catch (e: any) {
+            console.error('🚨 useFirebaseAuth: Error in auth state change:', e);
+            setError(getAuthErrorMessage(e.code || e.message || 'default'));
+          } finally {
+            if (mounted.current) {
+              console.log('🔄 useFirebaseAuth: Setting loading to false');
+              setIsAuthLoading(false);
+            }
+          }
+        });
+      } catch (e) {
+        console.error('🚨 useFirebaseAuth: Error in async initialization:', e);
+        if (mounted.current) {
+          setIsAuthLoading(false);
+          setError('Failed to initialize authentication');
+        }
       }
-    });
+    })();
   }
 
   return { fireUser, claims, isAuthLoading, error, refreshClaims };
