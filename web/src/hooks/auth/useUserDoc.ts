@@ -110,6 +110,25 @@ export function useUserDoc(uid: string | null): UseUserDocState {
           setAppUser(null);
         }
       } else {
+        // Check for user mismatch error
+        if (response.status === 403) {
+          try {
+            const errorResult = await response.json();
+            if (errorResult.code === 'USER_MISMATCH' && errorResult.shouldLogout) {
+              console.log('🔄 User mismatch detected, forcing logout...');
+              // Force logout by calling logout API
+              await fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
+              });
+              // Reload the page to clear any cached state
+              window.location.reload();
+              return;
+            }
+          } catch (parseError) {
+            // If we can't parse the error, continue with default error handling
+          }
+        }
         throw new Error(`Failed to fetch user: ${response.statusText}`);
       }
     } catch (e) {
@@ -141,6 +160,25 @@ export function useUserDoc(uid: string | null): UseUserDocState {
       });
 
       if (!response.ok) {
+        // Check for user mismatch error in update function too
+        if (response.status === 403) {
+          try {
+            const errorResult = await response.json();
+            if (errorResult.code === 'USER_MISMATCH' && errorResult.shouldLogout) {
+              console.log('🔄 User mismatch detected during update, forcing logout...');
+              // Force logout by calling logout API
+              await fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
+              });
+              // Reload the page to clear any cached state
+              window.location.reload();
+              return null;
+            }
+          } catch (parseError) {
+            // If we can't parse the error, continue with default error handling
+          }
+        }
         throw new Error(`Failed to update user: ${response.statusText}`);
       }
 

@@ -155,7 +155,7 @@ export class AuthService implements IAuthService {
       // Step 5: Send email verification
       try {
         await sendEmailVerification(userCredential.user, {
-          url: `${window.location.origin}/verify-email`,
+          url: `${window.location.origin}/auth/verify-email`,
           handleCodeInApp: false,
         });
       } catch (emailError) {
@@ -337,7 +337,7 @@ export class AuthService implements IAuthService {
       }
 
       await sendEmailVerification(user, {
-        url: url || `/verify-email`,
+        url: url || `/auth/verify-email`,
         handleCodeInApp: false,
       });
 

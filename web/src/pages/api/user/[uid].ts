@@ -89,7 +89,18 @@ async function handleUpdate(
     // Users can only update their own data
     if (decodedResult.user.uid !== uid) {
       console.log('❌ User mismatch:', { sessionUid: decodedResult.user.uid, requestUid: uid });
-      return res.status(403).json({ error: 'Unauthorized to update this user' });
+
+      // Clear invalid session cookies to force re-authentication
+      res.setHeader('Set-Cookie', [
+        `session=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/`,
+        `user-id=; Max-Age=0; Secure; SameSite=Lax; Path=/`
+      ]);
+
+      return res.status(403).json({
+        error: 'Session user mismatch - please re-authenticate',
+        code: 'USER_MISMATCH',
+        shouldLogout: true
+      });
     }
 
     const updateData = req.body;

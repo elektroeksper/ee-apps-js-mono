@@ -14,6 +14,39 @@ interface IBusinessFilter {
   userIds: string[];
 }
 
+
+// Main Business Entity
+interface IBusiness extends IEntity {
+  businessName: string;
+  taxNumber?: string;
+  taxOffice?: string;
+  taxNumberType?: TaxNumberType;
+  identityNumber?: string;
+  addresses?: IAddress[];
+  phone?: string;
+  email?: string;
+  description?: string;
+  website?: string;
+  companySize?: CompanySize;
+  documents?: IBusinessDocument[];
+  mainCategoryId?: string;
+  subCategoryIds?: string[]; // Business sub-categories
+  verification: {
+    status: BusinessVerificationStatus;
+    history: {
+      approvedAt?: Date | Timestamp | null;
+      approvedBy?: string | null; // Admin user ID who approved
+      rejectedAt?: Date | Timestamp | null;
+      rejectedBy?: string | null; // Admin user ID who rejected
+      rejectionReason?: string | null;
+    }[]
+  };
+
+  ownerId: string; // Reference to user who owns the business
+  users: Record<string, IBusinessUserInfo>; // Map of userId -> user info for quick access
+  isActive: boolean;
+}
+
 interface IBusinessService {
   getAll: (filter?: IBusinessFilter) => Promise<IOperationResult<IBusiness[]>>;
   create: (data: IBusiness) => Promise<IOperationResult<IBusiness>>;
@@ -57,38 +90,6 @@ interface IBusinessSetupData {
   documents: IBusinessDocument[];
   otherAddresses?: IAddress[];
   website?: string;
-}
-
-// Main Business Entity
-interface IBusiness extends IEntity {
-  businessName: string;
-  taxNumber?: string;
-  taxOffice?: string;
-  taxNumberType?: TaxNumberType;
-  identityNumber?: string;
-  addresses?: IAddress[];
-  phone?: string;
-  email?: string;
-  description?: string;
-  website?: string;
-  companySize?: CompanySize;
-  documents?: IBusinessDocument[];
-  mainCategoryId?: string;
-  subCategoryIds?: string[]; // Business sub-categories
-  verification: {
-    status: BusinessVerificationStatus;
-    history: {
-      approvedAt?: Date | Timestamp | null;
-      approvedBy?: string | null; // Admin user ID who approved
-      rejectedAt?: Date | Timestamp | null;
-      rejectedBy?: string | null; // Admin user ID who rejected
-      rejectionReason?: string | null;
-    }[]
-  };
-
-  ownerId: string; // Reference to user who owns the business
-  users: Record<string, IBusinessUserInfo>; // Map of userId -> user info for quick access
-  isActive: boolean;
 }
 
 // Business Permissions Interface

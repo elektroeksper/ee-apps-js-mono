@@ -354,9 +354,14 @@ export function ProtectedRoute({
     requireEmailVerification &&
     appUser &&
     !appUser.isEmailVerified &&
-    router.pathname !== '/verify-email'
+    router.pathname !== '/auth/verify-email'
   ) {
-    if (typeof window !== 'undefined') router.replace('/verify-email')
+    const isBusinessUser =
+      appUser.accountType === AccountType.BUSINESS || appUser.businessInfo
+    const verifyEmailUrl = isBusinessUser
+      ? '/auth/verify-email?type=business'
+      : '/auth/verify-email'
+    if (typeof window !== 'undefined') router.replace(verifyEmailUrl)
     return null
   }
   return <>{children}</>

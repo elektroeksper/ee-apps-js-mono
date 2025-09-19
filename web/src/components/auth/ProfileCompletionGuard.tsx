@@ -18,7 +18,7 @@ export function ProfileCompletionGuard({
   children,
   requireComplete = false,
   redirectIncomplete = '/setup',
-  redirectUnverified = '/verify-email',
+  redirectUnverified = '/auth/verify-email',
 }: ProfileCompletionGuardProps) {
   const { appUser, isLoading, isProfileComplete } = useAuth()
   const router = useRouter()

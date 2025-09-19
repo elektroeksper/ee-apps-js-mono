@@ -4,6 +4,7 @@
  */
 
 import { useAuth } from '@/contexts/AuthContext'
+import { AccountType } from '@/shared-generated'
 import { useRouter } from 'next/router'
 import React from 'react'
 
@@ -72,9 +73,14 @@ export function ProtectedRoute({
   // If email verification is required and user email is not verified
   if (requireEmailVerification && appUser && !appUser.isEmailVerified) {
     // Don't redirect if already on verify-email page
-    if (router.pathname !== '/verify-email') {
+    if (router.pathname !== '/auth/verify-email') {
+      const isBusinessUser =
+        appUser.accountType === AccountType.BUSINESS || appUser.businessInfo
+      const verifyEmailUrl = isBusinessUser
+        ? '/auth/verify-email?type=business'
+        : '/auth/verify-email'
       if (typeof window !== 'undefined') {
-        router.replace('/verify-email')
+        router.replace(verifyEmailUrl)
       }
       return null
     }

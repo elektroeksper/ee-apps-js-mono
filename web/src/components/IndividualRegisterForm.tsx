@@ -57,7 +57,7 @@ export const IndividualRegisterForm: React.FC = () => {
 
       const result = await registerUser(registrationData)
       if (result.success) {
-        router.replace('/verify-email')
+        router.replace('/auth/verify-email')
       } else {
         setError('root', {
           type: 'manual',

@@ -4,7 +4,7 @@
  */
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { AccountType, IAppUser, IBusinessRegisterData, IRegisterData } from '@/shared-generated';
+import { AccountType, BusinessVerificationStatus, IAppUser, IBusiness, IBusinessRegisterData, IRegisterData } from '@/shared-generated';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 interface RegisterRequest {
@@ -95,14 +95,88 @@ export default async function handler(
     // Add business-specific data if this is a business registration
     if (userData.accountType === AccountType.BUSINESS) {
       const businessData = userData as IBusinessRegisterData;
-      userProfileData.businessInfo = {
-        businessId: '', // Will be set when business is created
+
+      // Create business document first
+      const businessDocData: Partial<IBusiness> = {
+        businessName: businessData.businessName,
+        taxNumber: businessData.taxNumber,
+        taxNumberType: businessData.taxNumberType,
+        taxOffice: businessData.taxOffice,
+        identityNumber: businessData.identityNumber,
+        addresses: [businessData.address],
+        email: businessData.email,
+        website: businessData.website,
+        ownerId: userId,
+        users: {},
+        verification: {
+          status: BusinessVerificationStatus.PENDING,
+          history: []
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Create business document
+      const businessDocRef = await adminDb.collection('businesses').add(businessDocData);
+      const businessId = businessDocRef.id;
+
+      // Add business user info to the business document
+      const businessUserInfo = {
+        businessId: businessId,
         userId: userId,
         businessTitle: businessData.userTitle,
         displayName: `${businessData.firstName} ${businessData.lastName}`,
         email: businessData.email,
-        role: 'owner' as any, // BusinessUserRole.OWNER
-        permissions: {} as any, // Default permissions will be set
+        role: 'owner' as any,
+        permissions: {
+          // Business Management
+          canEditBusinessInfo: true,
+          canDeleteBusiness: true,
+          canManageDocuments: true,
+
+          // User Management & Invitations
+          canInviteUsers: true,
+          canApproveInvitations: true,
+          canRemoveUsers: true,
+          canChangeUserRoles: true,
+
+          // Invitation Restrictions
+          canInviteOwners: true,
+          canInviteManagers: true,
+          canInviteTechnicians: true,
+          canInviteSupport: true,
+
+          // Operations
+          canViewOrders: true,
+          canManageOrders: true,
+          canViewAnalytics: true,
+          canManageInventory: true,
+
+          // Financial
+          canViewFinancials: true,
+          canManagePayments: true
+        },
+        isActive: true,
+        addedAt: new Date()
+      };
+
+      // Update business document with owner info
+      await businessDocRef.update({
+        users: {
+          [userId]: businessUserInfo
+        }
+      });
+
+      // Add business info to user profile
+      userProfileData.businessInfo = {
+        businessId: businessId,
+        userId: userId,
+        businessTitle: businessData.userTitle,
+        displayName: `${businessData.firstName} ${businessData.lastName}`,
+        email: businessData.email,
+        role: 'owner' as any,
+        permissions: businessUserInfo.permissions,
         isActive: true,
         addedAt: new Date()
       };

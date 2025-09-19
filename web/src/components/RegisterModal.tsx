@@ -144,7 +144,7 @@ const IndividualRegisterFormModal: React.FC<{
       if (result.success) {
         onClose()
         reset()
-        router.push('/verify-email')
+        router.push('/auth/verify-email')
       } else {
         setError('root', {
           type: 'manual',

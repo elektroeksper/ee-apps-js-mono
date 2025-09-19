@@ -14,7 +14,7 @@ export default function Layout({ children }: LayoutProps) {
     '/login',
     '/register',
     '/forgot-password',
-    '/verify-email',
+    '/auth/verify-email',
     '/auth-test',
     '/auth-debug',
     '/quick-auth-check',

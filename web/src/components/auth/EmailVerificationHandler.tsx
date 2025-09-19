@@ -154,7 +154,7 @@ const EmailVerificationHandler = ({
             <p className="text-gray-700 mb-6">{error}</p>
             <div className="space-y-3">
               <Link
-                href="/verify-email"
+                href="/auth/verify-email"
                 className="block bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition-colors"
               >
                 Tekrar Dene

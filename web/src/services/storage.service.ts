@@ -1,14 +1,12 @@
 /**
- * Client-side storage service that consumes Firebase Functions
+ * Client-side storage service that uses API routes
  * Implements the IStorageService interface for consistent API
  */
 
-import { httpsCallable } from 'firebase/functions'
-import { DeleteDocumentResponse, GetUserDocumentsResponse, IStorageService, UploadDocumentResponse, UserDocument, UserDocumentCategory, UserDocumentFileType } from '../../../shared/src/types'
-import { functions } from '../config/firebase'
+import { IStorageService, UserDocument, UserDocumentCategory, UserDocumentFileType } from '../../../shared/src/types'
 
 /**
- * Client storage service implementation
+ * Client storage service implementation using API routes
  */
 export class StorageClientService implements IStorageService {
 
@@ -17,15 +15,25 @@ export class StorageClientService implements IStorageService {
    */
   async getUserDocuments(userId: string): Promise<UserDocument[]> {
     try {
-      const getUserDocumentsFunction = httpsCallable(functions, 'getUserDocuments')
-      const result = await getUserDocumentsFunction({ userId })
+      const response = await fetch('/api/business/documents', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include session cookies
+      })
 
-      const response = result.data as GetUserDocumentsResponse
-      if (response.success && response.data) {
-        return response.data
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch documents`)
+      }
+
+      const result = await response.json()
+      if (result.success && result.data) {
+        return result.data
       } else {
-        console.error('Failed to fetch documents:', response.error)
-        throw new Error(response.error || 'Failed to fetch documents')
+        console.error('Failed to fetch documents:', result.error)
+        throw new Error(result.error || 'Failed to fetch documents')
       }
     } catch (error) {
       console.error('Error fetching user documents:', error)
@@ -41,25 +49,35 @@ export class StorageClientService implements IStorageService {
       // Convert file to base64 for transmission
       const fileData = await this.fileToBase64(file)
 
-      const uploadDocumentFunction = httpsCallable(functions, 'uploadUserDocument')
-      const result = await uploadDocumentFunction({
-        userId,
-        fileName: file.name,
-        category,
-        fileData,
-        metadata: {
-          originalName: file.name,
-          uploadedBy: userId,
-          size: file.size,
-          type: file.type
-        }
+      const response = await fetch('/api/business/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include session cookies
+        body: JSON.stringify({
+          fileName: file.name,
+          category,
+          fileData,
+          metadata: {
+            originalName: file.name,
+            uploadedBy: userId,
+            size: file.size,
+            type: file.type
+          }
+        })
       })
 
-      const response = result.data as UploadDocumentResponse
-      if (response.success && response.data) {
-        return response.data
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to upload document`)
+      }
+
+      const result = await response.json()
+      if (result.success && result.data) {
+        return result.data
       } else {
-        throw new Error(response.error || 'Failed to upload document')
+        throw new Error(result.error || 'Failed to upload document')
       }
     } catch (error) {
       console.error('Error uploading document:', error)
@@ -69,18 +87,31 @@ export class StorageClientService implements IStorageService {
 
   /**
    * Delete a user document
-   * TODO: Implement when delete function is available
    */
   async deleteUserDocument(userId: string, documentPath: string): Promise<boolean> {
     try {
-      const deleteDocumentFunction = httpsCallable(functions, 'deleteUserDocument')
-      const result = await deleteDocumentFunction({ userId, documentPath })
+      // Extract document ID from path or use the documentPath as ID
+      const documentId = documentPath.includes('/') ?
+        documentPath.split('/').pop() : documentPath
 
-      const response = result.data as DeleteDocumentResponse
-      if (response.success) {
+      const response = await fetch(`/api/business/documents?documentId=${documentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include session cookies
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to delete document`)
+      }
+
+      const result = await response.json()
+      if (result.success) {
         return true
       } else {
-        throw new Error(response.error || 'Failed to delete document')
+        throw new Error(result.error || 'Failed to delete document')
       }
     } catch (error) {
       console.error('Error deleting document:', error)

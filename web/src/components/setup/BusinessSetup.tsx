@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
-import { IVideoItem, UserDocument } from '@/shared-generated'
+import {
+  DocumentStatus,
+  DocumentType,
+  IBusiness,
+  IVideoItem,
+  UserDocument,
+} from '@/shared-generated'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
 
@@ -20,17 +26,79 @@ interface BusinessSetupProps {
 
 const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
   const router = useRouter()
-  const { appUser, updateUser, refreshUser } = useAuth()
+  const { appUser, refreshUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [businessData, setBusinessData] = useState<IBusiness | null>(null)
+  const [fetchingBusiness, setFetchingBusiness] = useState(true)
 
   // Form data state
-  const [phone, setPhone] = useState(appUser?.phone || '')
-
-  // Document upload states
+  const [phone, setPhone] = useState(appUser?.phoneNumber || '')
   const [taxCertificate, setTaxCertificate] = useState<File | null>(null)
   const [placePhotos, setPlacePhotos] = useState<File[]>([])
+
+  // Fetch business data for the current user using business API
+  useEffect(() => {
+    const fetchBusinessData = async () => {
+      if (!appUser?.businessInfo?.businessId) {
+        setFetchingBusiness(false)
+        return
+      }
+
+      try {
+        const response = await fetch(
+          `/api/business/${appUser.businessInfo.businessId}`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        )
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            setBusinessData(result.data)
+            // Update phone from business data if available
+            if (result.data.phone && !phone) {
+              setPhone(result.data.phone)
+            }
+          }
+        } else {
+          console.warn('Failed to fetch business data:', response.status)
+        }
+      } catch (error) {
+        console.error('Error fetching business data:', error)
+      } finally {
+        setFetchingBusiness(false)
+      }
+    }
+
+    if (appUser) {
+      fetchBusinessData()
+    }
+  }, [appUser, phone])
+
+  // Check if business setup is complete based on business document
+  const isBusinessSetupComplete = () => {
+    if (!businessData) return false
+
+    // Check if business has documents uploaded
+    const hasDocuments =
+      businessData.documents && businessData.documents.length > 0
+
+    // Check if business has required information
+    const hasBasicInfo = businessData.businessName && businessData.phone
+
+    return hasDocuments && hasBasicInfo
+  }
+
+  // If business setup is already complete, redirect to pending approval
+  useEffect(() => {
+    if (!fetchingBusiness && businessData && isBusinessSetupComplete()) {
+      router.push('/pending-approval')
+    }
+  }, [fetchingBusiness, businessData, router])
 
   // Video display logic - using passed props instead of client-side fetch
   const primaryVideo: IVideoItem | undefined = videos?.find(
@@ -65,7 +133,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
   // Handle place photos selection
   const handlePlacePhotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    const validFiles = files.filter(file => {
+    const validFiles: File[] = files.filter((file: File) => {
       if (file.size > MAX_IMAGE_SIZE) {
         setError("Fotoğraflar 5MB'dan küçük olmalıdır")
         return false
@@ -144,30 +212,105 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
         }
       }
 
-      // Update user profile with upload information
-      await updateUser({
-        // Update phone if provided
-        ...(phone && { phone: phone.trim() }),
-        // Store business-specific data as a nested object
-        ...{
-          businessInfo: {
-            ...(appUser as any)?.businessInfo,
-            // Ensure company name is set (use existing or fallback to user's display name)
-            businessName:
-              (appUser as any)?.businessInfo?.businessName ||
-              appUser?.displayName ||
-              'İşletme',
-            isCertified: false, // Will be set to true after document verification
-            isApproved: false, // Business users need admin approval
-            documentsUploadedAt:
-              uploadedDocuments.length > 0
-                ? new Date().toISOString()
-                : undefined,
-          },
-          // Store the actual uploaded documents array
-          documents: uploadedDocuments,
-        },
-      } as any)
+      // Update business document if it exists
+      if (businessData?.id) {
+        try {
+          const businessUpdateData: Partial<IBusiness> = {}
+
+          // Update phone if provided
+          if (phone && phone.trim() !== businessData.phone) {
+            businessUpdateData.phone = phone.trim()
+          }
+
+          // Add uploaded documents to business
+          if (uploadedDocuments.length > 0) {
+            const businessDocuments = uploadedDocuments.map(doc => {
+              // Map UserDocumentCategory to DocumentType enum
+              let documentType: DocumentType
+              if (doc.category === 'tax-certificates') {
+                documentType = DocumentType.TAX_CERTIFICATE
+              } else if (doc.category === 'place-photos') {
+                documentType = DocumentType.OTHER // Place photos are treated as 'other' documents
+              } else if (doc.category === 'business-documents') {
+                documentType = DocumentType.BUSINESS_LICENSE
+              } else {
+                documentType = DocumentType.OTHER
+              }
+
+              // Create a serializable document object for the API
+              return {
+                type: documentType,
+                url: doc.url,
+                uploadedAt: doc.uploadedAt || new Date().toISOString(), // Send as ISO string for API
+                uploadedBy: appUser?.id || '',
+                status: DocumentStatus.PENDING,
+              }
+            })
+
+            businessUpdateData.documents = [
+              ...(businessData.documents || []),
+              ...(businessDocuments as any), // Cast to allow Date/string for uploadedAt
+            ]
+          }
+
+          // Update business only if there are changes
+          if (Object.keys(businessUpdateData).length > 0) {
+            console.log('Updating business with data:', businessUpdateData)
+
+            const response = await fetch(`/api/business/${businessData.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify(businessUpdateData),
+            })
+
+            console.log('Business update response status:', response.status)
+
+            if (!response.ok) {
+              const errorData = await response.text()
+              console.error('Business update error response:', errorData)
+              throw new Error(
+                `Failed to update business information: ${response.status}`
+              )
+            }
+
+            const result = await response.json()
+            if (result.success) {
+              // Update local business data state
+              setBusinessData(result.data)
+            }
+          }
+        } catch (updateError) {
+          console.error('Failed to update business:', updateError)
+          setError('İşletme bilgileri güncellenirken hata oluştu')
+          setLoading(false)
+          return
+        }
+      }
+
+      // Also update user phone number if changed
+      if (phone && phone.trim() !== appUser?.phoneNumber) {
+        try {
+          const response = await fetch(`/api/user/${appUser?.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              phoneNumber: phone.trim(),
+            }),
+          })
+
+          if (!response.ok) {
+            console.warn('Failed to update user phone number')
+          }
+        } catch (userUpdateError) {
+          console.warn('Error updating user phone:', userUpdateError)
+        }
+      }
 
       setSuccess(true)
 
@@ -179,8 +322,12 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
       // Reset loading state after successful completion
       setLoading(false)
 
-      // The setup page will automatically redirect based on updated isProfileComplete
-      // No need for manual redirect here
+      // Redirect to pending approval page after successful document upload
+      console.log('🚀 Preparing to redirect to pending-approval page...')
+      setTimeout(() => {
+        console.log('🚀 Executing redirect to pending-approval page...')
+        router.replace('/pending-approval')
+      }, 1000) // 1 second delay to show success message
     } catch (err: any) {
       setError(err.message || 'Profil güncellenirken bir hata oluştu')
       setLoading(false)
@@ -189,7 +336,17 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center bg-gray-50">
-      {showVideo ? (
+      {/* Show loading while fetching business data */}
+      {fetchingBusiness ? (
+        <div className="bg-white rounded-lg shadow-md p-8 w-full max-w-md">
+          <div className="text-center">
+            <LoadingSpinner size="large" />
+            <p className="mt-4 text-gray-600">
+              İşletme bilgileri yükleniyor...
+            </p>
+          </div>
+        </div>
+      ) : showVideo ? (
         <div className="bg-white rounded-lg shadow-md p-8 w-full max-w-6xl relative">
           {boxLoading && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-lg">
@@ -272,7 +429,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
             {/* Success Message */}
             {success && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-                Profiliniz başarıyla güncellendi! Onay sürecine
+                Belgeleriniz başarıyla yüklendi! Onay durumu sayfasına
                 yönlendiriliyorsunuz...
               </div>
             )}
@@ -440,7 +597,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
           {/* Success Message */}
           {success && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-              Profiliniz başarıyla güncellendi! Onay sürecine
+              Belgeleriniz başarıyla yüklendi! Onay durumu sayfasına
               yönlendiriliyorsunuz...
             </div>
           )}

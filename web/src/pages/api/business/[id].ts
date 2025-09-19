@@ -5,7 +5,7 @@
 
 import { adminDb, verifyIdToken } from '@/lib/firebase-admin';
 import { IBusiness } from '@/shared-generated';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -154,7 +154,7 @@ async function handleUpdateBusiness(
     });
 
     // Add update metadata
-    filteredUpdateData.updatedAt = Timestamp.now();
+    (filteredUpdateData as any).updatedAt = Timestamp.now();
 
     // Update business document
     await adminDb.collection('businesses').doc(businessId).update(filteredUpdateData);
