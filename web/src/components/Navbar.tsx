@@ -115,7 +115,7 @@ export default function Navbar() {
                     href="/home"
                     className={buttonClassNames('outline', 'small')}
                   >
-                    Dashboard
+                    Anasayfa
                   </Link>
                 )}
                 <Link
@@ -229,7 +229,7 @@ export default function Navbar() {
                         className="block w-full text-center bg-gray-100 text-gray-900 py-2 px-4 rounded-md font-medium hover:bg-gray-200 transition-colors"
                         onClick={closeMobileMenu}
                       >
-                        Dashboard
+                        Anasayfa
                       </Link>
                     )}
                     <Link

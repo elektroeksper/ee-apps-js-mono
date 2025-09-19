@@ -31,7 +31,7 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
 
   const navItems: INavItem[] = [
     {
-      label: 'Dashboard',
+      label: 'Yönetici Paneli',
       href: '/admin',
       icon: FiHome,
       description: 'Ana kontrol paneli',

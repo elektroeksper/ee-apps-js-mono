@@ -310,9 +310,9 @@ const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
       {showVideo ? (
-        <div className="bg-white rounded-lg shadow-md p-8 w-full max-w-6xl relative">
+        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-full max-w-6xl relative border border-white/20">
           {boxLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-lg">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-2xl">
               <LoadingSpinner size="large" />
             </div>
           )}
@@ -649,7 +649,7 @@ const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md mx-auto">
+        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 max-w-md mx-auto border border-white/20">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">

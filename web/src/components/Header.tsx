@@ -109,7 +109,7 @@ export default function Header() {
                     href="/home"
                     className={buttonClassNames('outline', 'small')}
                   >
-                    Dashboard
+                    Anasayfa
                   </Link>
                 )}
                 <Link

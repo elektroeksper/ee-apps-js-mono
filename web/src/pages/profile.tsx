@@ -334,16 +334,30 @@ function ProfileContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="large" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-auth relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-4 -right-4 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+          <div className="absolute -bottom-8 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        </div>
+        <div className="relative z-10">
+          <LoadingSpinner size="large" />
+        </div>
       </div>
     )
   }
 
   if (!appUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-auth relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-4 -right-4 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+          <div className="absolute -bottom-8 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        </div>
+        <div className="relative z-10 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-8 max-w-md">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Kullanıcı Bulunamadı
           </h2>
@@ -386,170 +400,200 @@ function ProfileContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-              <FiUser className="h-8 w-8 text-gray-500" />
+    <div className="min-h-screen bg-gradient-auth relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-4 -right-4 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-8 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* Profile Header */}
+        <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-white/30 p-8 mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            {/* Avatar */}
+            <div className="relative">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                <FiUser className="h-12 w-12 text-white" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-md">
+                {appUser.isEmailVerified ? (
+                  <FiCheck className="h-4 w-4 text-white" />
+                ) : (
+                  <FiX className="h-4 w-4 text-white" />
+                )}
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900">
+
+            {/* User Info */}
+            <div className="flex-1 space-y-2">
+              <h1 className="text-3xl font-bold text-gray-900">
                 {appUser.displayName ||
                   `${appUser.firstName || ''} ${appUser.lastName || ''}`.trim() ||
-                  appUser.email?.split('@')[0]}
-              </h2>
-              <p className="text-gray-600">{appUser.email}</p>
-            </div>
-          </div>
-        </div>
+                  'Kullanıcı'}
+              </h1>
+              <p className="text-lg text-gray-600">{appUser.email}</p>
 
-        {/* Account Operations - Moved to top */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Hesap İşlemleri
-          </h3>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="outline"
-              size="small"
-              onClick={() => setShowPasswordModal(true)}
-              className="flex items-center"
-            >
-              <FiLock className="h-4 w-4 mr-2" />
-              Şifre Değiştir
-            </Button>
-            <Button
-              variant="outline"
-              size="small"
-              onClick={() => router.push('/profile/edit')}
-              className="flex items-center"
-            >
-              <FiUser className="h-4 w-4 mr-2" />
-              Profili Düzenle
-            </Button>
-            <Button
-              variant="outline"
-              size="small"
-              onClick={handleLogout}
-              className="text-red-600 border-red-300 hover:bg-red-50 flex items-center"
-            >
-              <FiLogOut className="h-4 w-4 mr-2" />
-              Çıkış Yap
-            </Button>
+              {/* Status Badges */}
+              <div className="flex flex-wrap gap-3 mt-4">
+                <span
+                  className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
+                    isBusinessAccount
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
+                      : 'bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-md'
+                  }`}
+                >
+                  <FiUser className="h-4 w-4 mr-2" />
+                  {isBusinessAccount ? 'İş Hesabı' : 'Bireysel Hesap'}
+                </span>
+
+                <span
+                  className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
+                    appUser.isEmailVerified
+                      ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-md'
+                      : 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
+                  }`}
+                >
+                  {appUser.isEmailVerified ? (
+                    <>
+                      <FiCheck className="h-4 w-4 mr-2" />
+                      E-posta Doğrulandı
+                    </>
+                  ) : (
+                    <>
+                      <FiX className="h-4 w-4 mr-2" />
+                      E-posta Doğrulanmadı
+                    </>
+                  )}
+                </span>
+
+                {/* Business Status Badge */}
+                {isBusinessAccount && (
+                  <span
+                    className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
+                      isBusinessApproved
+                        ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-md'
+                        : isBusinessRejected
+                          ? 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
+                          : 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-md'
+                    }`}
+                  >
+                    {isBusinessApproved ? (
+                      <>
+                        <FiCheck className="h-4 w-4 mr-2" />
+                        İşletme Onaylandı
+                      </>
+                    ) : isBusinessRejected ? (
+                      <>
+                        <FiX className="h-4 w-4 mr-2" />
+                        İşletme Reddedildi
+                      </>
+                    ) : (
+                      <>
+                        <FiClock className="h-4 w-4 mr-2" />
+                        Onay Bekliyor
+                      </>
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Member Since */}
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Üye Olma Tarihi</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {appUser.createdAt
+                  ? (appUser.createdAt instanceof Date
+                      ? appUser.createdAt
+                      : appUser.createdAt.toDate?.() ||
+                        new Date(appUser.createdAt.seconds * 1000)
+                    ).toLocaleDateString('tr-TR')
+                  : 'Bilinmiyor'}
+              </p>
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
-          <div className="space-y-6">
-            {/* Account Status */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Hesap Durumu
-              </h3>
-              <div className="space-y-3">
-                {/* Account Type */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Hesap Türü</span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    <FiUser className="h-3 w-3 mr-1" />
-                    {isBusinessAccount ? 'İş Hesabı' : 'Bireysel Hesap'}
-                  </span>
-                </div>
-
-                {/* Email Verification */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    E-posta Doğrulama
-                  </span>
-                  {appUser.isEmailVerified ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      <FiCheck className="h-3 w-3 mr-1" />
-                      Doğrulandı
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      <FiX className="h-3 w-3 mr-1" />
-                      Doğrulanmadı
-                    </span>
-                  )}
-                </div>
-
-                {/* Business Approval Status */}
-                {isBusinessAccount && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">İşletme Onayı</span>
-                    {isBusinessApproved ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <FiCheck className="h-3 w-3 mr-1" />
-                        Onaylandı
-                      </span>
-                    ) : isBusinessRejected ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <FiX className="h-3 w-3 mr-1" />
-                        Reddedildi
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        <FiClock className="h-3 w-3 mr-1" />
-                        Beklemede
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
+          <div className="space-y-8">
             {/* Personal Information */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-white/30 p-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-3">
+                  <FiUser className="h-4 w-4 text-white" />
+                </div>
                 Profil Bilgileri
               </h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
-                      Ad Soyad
-                    </label>
-                    <p className="text-gray-900">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name Field */}
+                <div className="p-4 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-gray-100">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Ad Soyad
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                      <FiUser className="h-4 w-4 text-white" />
+                    </div>
+                    <p className="text-lg font-medium text-gray-900">
                       {`${appUser.firstName || ''} ${appUser.lastName || ''}`.trim() ||
                         'Belirtilmemiş'}
                     </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
-                      E-posta Adresi
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-gray-900">{appUser.email}</p>
+                </div>
+
+                {/* Email Field */}
+                <div className="p-4 bg-gradient-to-br from-gray-50 to-green-50 rounded-xl border border-gray-100">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    E-posta Adresi
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        appUser.isEmailVerified
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                          : 'bg-gradient-to-r from-red-500 to-pink-600'
+                      }`}
+                    >
                       {appUser.isEmailVerified ? (
-                        <span className="inline-flex items-center text-green-600">
-                          <FiCheck className="h-4 w-4" />
-                        </span>
+                        <FiCheck className="h-4 w-4 text-white" />
                       ) : (
-                        <span className="inline-flex items-center text-red-600">
-                          <FiX className="h-4 w-4" />
-                        </span>
+                        <FiX className="h-4 w-4 text-white" />
                       )}
                     </div>
+                    <p className="text-lg font-medium text-gray-900">
+                      {appUser.email}
+                    </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
-                      Telefon Numarası
-                    </label>
-                    <p className="text-gray-900">
+                {/* Phone Field */}
+                <div className="p-4 bg-gradient-to-br from-gray-50 to-purple-50 rounded-xl border border-gray-100">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Telefon Numarası
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                      <FiFileText className="h-4 w-4 text-white" />
+                    </div>
+                    <p className="text-lg font-medium text-gray-900">
                       {appUser.phoneNumber || 'Belirtilmemiş'}
                     </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
-                      Hesap Oluşturma Tarihi
-                    </label>
-                    <p className="text-gray-900">
+                </div>
+
+                {/* Join Date Field */}
+                <div className="p-4 bg-gradient-to-br from-gray-50 to-yellow-50 rounded-xl border border-gray-100">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Hesap Oluşturma Tarihi
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
+                      <FiClock className="h-4 w-4 text-white" />
+                    </div>
+                    <p className="text-lg font-medium text-gray-900">
                       {appUser.createdAt
                         ? (appUser.createdAt instanceof Date
                             ? appUser.createdAt
@@ -561,14 +605,20 @@ function ProfileContent() {
                   </div>
                 </div>
 
+                {/* Address Field (if exists) */}
                 {appUser.address && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                  <div className="md:col-span-2 p-4 bg-gradient-to-br from-gray-50 to-indigo-50 rounded-xl border border-gray-100">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Adres
                     </label>
-                    <p className="text-gray-900">
-                      {formatAddress(appUser.address)}
-                    </p>
+                    <div className="flex items-start space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center mt-1">
+                        <FiFileText className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-lg font-medium text-gray-900 leading-relaxed">
+                        {formatAddress(appUser.address)}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -576,87 +626,154 @@ function ProfileContent() {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
-            {/* Business Rejection Reason */}
+          <div className="space-y-8">
+            {/* Business Rejection Alert */}
             {isBusinessAccount && isBusinessRejected && rejectionReason && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                <div className="flex items-start space-x-3">
-                  <FiAlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+              <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-3xl shadow-xl p-8 text-white">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <FiAlertTriangle className="h-6 w-6 text-white" />
+                  </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-red-900 mb-2">
+                    <h3 className="text-2xl font-bold mb-3">
                       İşletme Başvurusu Reddedildi
                     </h3>
-                    <p className="text-red-800 mb-4">{rejectionReason}</p>
-                    <Button
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6">
+                      <p className="text-white/90 text-lg leading-relaxed">
+                        {rejectionReason}
+                      </p>
+                    </div>
+                    <button
                       onClick={() => setShowDocumentModal(true)}
-                      className="bg-red-600 hover:bg-red-700"
+                      className="group bg-white text-red-600 px-6 py-3 rounded-xl font-semibold hover:bg-red-50 transition-all duration-200 hover:shadow-lg flex items-center"
                     >
-                      <FiUpload className="h-4 w-4 mr-2" />
+                      <FiUpload className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
                       Belgeleri Tekrar Yükle
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Business Information (if business account) */}
+            {/* Business Information */}
             {isBusinessAccount && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-white/30 p-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center mr-3">
+                    <FiFileText className="h-4 w-4 text-white" />
+                  </div>
                   İşletme Bilgileri
                 </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        İşletme Adı
-                      </label>
-                      <p className="text-gray-900">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Business Name */}
+                  <div className="p-4 bg-gradient-to-br from-gray-50 to-orange-50 rounded-xl border border-gray-100">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      İşletme Adı
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                        <FiFileText className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-lg font-medium text-gray-900">
                         {businessInfo?.businessName || 'Belirtilmemiş'}
                       </p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Vergi Numarası
-                      </label>
-                      <p className="text-gray-900">
+                  </div>
+
+                  {/* Tax Number */}
+                  <div className="p-4 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-gray-100">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Vergi Numarası
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <FiFileText className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-lg font-medium text-gray-900">
                         {businessInfo?.taxNumber || 'Belirtilmemiş'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Ticaret Sicil No
-                      </label>
-                      <p className="text-gray-900">
+                  {/* Trade Registry Number */}
+                  <div className="p-4 bg-gradient-to-br from-gray-50 to-purple-50 rounded-xl border border-gray-100">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Ticaret Sicil No
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                        <FiFileText className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-lg font-medium text-gray-900">
                         {businessInfo?.tradeRegistryNumber || 'Belirtilmemiş'}
                       </p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        İşletme Telefonu
-                      </label>
-                      <p className="text-gray-900">
+                  </div>
+
+                  {/* Business Phone */}
+                  <div className="p-4 bg-gradient-to-br from-gray-50 to-green-50 rounded-xl border border-gray-100">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      İşletme Telefonu
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                        <FiFileText className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-lg font-medium text-gray-900">
                         {businessInfo?.businessPhone || 'Belirtilmemiş'}
                       </p>
                     </div>
                   </div>
 
+                  {/* Business Address */}
                   {businessInfo?.businessAddress && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
+                    <div className="md:col-span-2 p-4 bg-gradient-to-br from-gray-50 to-indigo-50 rounded-xl border border-gray-100">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         İşletme Adresi
                       </label>
-                      <p className="text-gray-900">
-                        {formatAddress(businessInfo.businessAddress)}
-                      </p>
+                      <div className="flex items-start space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center mt-1">
+                          <FiFileText className="h-4 w-4 text-white" />
+                        </div>
+                        <p className="text-lg font-medium text-gray-900 leading-relaxed">
+                          {formatAddress(businessInfo.businessAddress)}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Account Operations - Lean Version */}
+        <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 p-6 mt-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Hesap İşlemleri
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              className="flex items-center px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg border border-indigo-200 transition-colors duration-200"
+            >
+              <FiLock className="h-4 w-4 mr-2" />
+              Şifre Değiştir
+            </button>
+            <button
+              onClick={() => router.push('/profile/edit')}
+              className="flex items-center px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200 transition-colors duration-200"
+            >
+              <FiUser className="h-4 w-4 mr-2" />
+              Profili Düzenle
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 transition-colors duration-200"
+            >
+              <FiLogOut className="h-4 w-4 mr-2" />
+              Çıkış Yap
+            </button>
           </div>
         </div>
       </div>
