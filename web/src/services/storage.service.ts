@@ -3,7 +3,7 @@
  * Implements the IStorageService interface for consistent API
  */
 
-import { IStorageService, UserDocument, UserDocumentCategory, UserDocumentFileType } from '../../../shared/src/types'
+import { DocumentCategory, DocumentFileType, IDocument, IStorageService } from '@/shared-generated/types'
 
 /**
  * Client storage service implementation using API routes
@@ -13,7 +13,7 @@ export class StorageClientService implements IStorageService {
   /**
    * Get all documents for a specific user
    */
-  async getUserDocuments(userId: string): Promise<UserDocument[]> {
+  async getUserDocuments(userId: string): Promise<IDocument[]> {
     try {
       const response = await fetch('/api/business/documents', {
         method: 'GET',
@@ -44,7 +44,7 @@ export class StorageClientService implements IStorageService {
   /**
    * Upload a new document for a user
    */
-  async uploadUserDocument(userId: string, file: File, category: UserDocumentCategory): Promise<UserDocument> {
+  async uploadUserDocument(userId: string, file: File, category: DocumentCategory): Promise<IDocument> {
     try {
       // Convert file to base64 for transmission
       const fileData = await this.fileToBase64(file)
@@ -122,7 +122,7 @@ export class StorageClientService implements IStorageService {
   /**
    * Get user-friendly display name for document categories
    */
-  getCategoryDisplayName(category: UserDocumentCategory): string {
+  getCategoryDisplayName(category: DocumentCategory): string {
     switch (category) {
       case 'business-documents':
         return 'İşletme Belgeleri'
@@ -170,7 +170,7 @@ export class StorageClientService implements IStorageService {
   /**
    * Get file type based on extension
    */
-  getFileType(fileName: string): UserDocumentFileType {
+  getFileType(fileName: string): DocumentFileType {
     const extension = fileName.toLowerCase().split('.').pop()
 
     if (extension === 'pdf') return 'pdf'
@@ -210,7 +210,7 @@ export class StorageClientService implements IStorageService {
   /**
    * Validate file for upload
    */
-  validateFile(file: File, category: UserDocumentCategory): { valid: boolean; error?: string } {
+  validateFile(file: File, category: DocumentCategory): { valid: boolean; error?: string } {
     // Check file size (max 10MB)
     const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {

@@ -4,21 +4,21 @@
  */
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { BusinessVerificationStatus, DocumentStatus, UserDocument, UserDocumentCategory } from '@/shared-generated';
+import { BusinessVerificationStatus, DocumentCategory, IDocument, StorageDocumentStatus, StorageDocumentType } from '@/shared-generated';
 import { randomUUID } from 'crypto';
 import { Timestamp } from 'firebase-admin/firestore';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 interface DocumentsResponse {
   success: boolean;
-  data?: UserDocument[] | UserDocument;
+  data?: IDocument[] | IDocument;
   error?: string;
   code?: number;
 }
 
 interface UploadDocumentRequest {
   fileName: string;
-  category: UserDocumentCategory;
+  category: DocumentCategory;
   fileData: string; // base64 encoded file
   metadata?: {
     description?: string;
@@ -107,7 +107,7 @@ async function getDocuments(
     const query = documentsCollection.where('userId', '==', userId);
     const snapshot = await query.get();
 
-    const documents: UserDocument[] = [];
+    const documents: IDocument[] = [];
     snapshot.forEach(doc => {
       const docData = doc.data();
       documents.push({
@@ -117,22 +117,25 @@ async function getDocuments(
         fullPath: docData.filePath,
         category: docData.category,
         uploadedAt: docData.uploadedAt,
-        size: docData.size || 0,
         metadata: {
           ...docData.metadata,
+          size: docData.size || 0,
           documentId: doc.id,
           userId: docData.userId,
-          status: docData.status || DocumentStatus.PENDING
-        }
+          status: docData.status || StorageDocumentStatus.PENDING
+        },
+        uploadedBy: '',
+        status: StorageDocumentStatus.PENDING,
+        fileType: 'pdf'
       });
     });
 
     // Sort by upload date (newest first)
-    documents.sort((a, b) => {
-      const aDate = new Date(a.uploadedAt || 0);
-      const bDate = new Date(b.uploadedAt || 0);
-      return bDate.getTime() - aDate.getTime();
-    });
+    // documents.sort((a, b) => {
+    //   const aDate = new Date(a.uploadedAt || 0);
+    //   const bDate = new Date(b.uploadedAt || 0);
+    //   return bDate.getTime() - aDate.getTime();
+    // });
 
     return res.status(200).json({
       success: true,
@@ -164,7 +167,7 @@ async function uploadDocument(
     }
 
     // Validate category
-    const validCategories: UserDocumentCategory[] = [
+    const validCategories: DocumentCategory[] = [
       'business-documents',
       'tax-certificates',
       'place-photos',
@@ -214,7 +217,7 @@ async function uploadDocument(
       category,
       fileType: getFileTypeFromName(fileName),
       size: fileSize,
-      status: DocumentStatus.PENDING,
+      status: StorageDocumentStatus.PENDING,
       uploadedAt: new Date().toISOString(),
       metadata: metadata || {},
       createdAt: new Date(),
@@ -226,20 +229,25 @@ async function uploadDocument(
     // Update business verification status when documents are uploaded
     await updateBusinessVerificationStatus(userId);
 
-    const createdDocument: UserDocument = {
+    const createdDocument: IDocument = {
       name: documentData.originalName,
       url: documentData.downloadUrl,
-      type: documentData.fileType,
+      fileType: documentData.fileType,
       fullPath: documentData.filePath,
       category: documentData.category,
       uploadedAt: documentData.uploadedAt,
-      size: documentData.size,
       metadata: {
+        size: documentData.size,
         ...documentData.metadata,
         documentId: docRef.id,
         userId: documentData.userId,
-        status: documentData.status
-      }
+        status: documentData.status,
+        originalName: documentData.originalName,
+        uploadedBy: ""
+      },
+      type: StorageDocumentType.BUSINESS_LICENSE,
+      uploadedBy: '',
+      status: StorageDocumentStatus.PENDING
     };
 
     return res.status(201).json({

@@ -1107,7 +1107,7 @@ export const getUserDocuments = onCall(async (request): Promise<GetUserDocuments
     }
 
     // Fetch documents using the storage service
-    const documents = await storageService.getUserDocuments(targetUserId);
+    const documents = await storageService.getDocuments(targetUserId);
 
     return {
       success: true,
@@ -1152,7 +1152,7 @@ export const uploadUserDocument = onCall(async (request): Promise<UploadDocument
     }
 
     // Upload document using storage service
-    const uploadedDocument = await storageService.uploadUserDocument(userId, fileName, category, fileData, metadata);
+    const uploadedDocument = await storageService.uploadDocument(userId, fileName, category, fileData, metadata);
 
     return {
       success: true,

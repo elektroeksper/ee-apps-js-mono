@@ -101,6 +101,33 @@ if ! firebase projects:list &> /dev/null; then
     exit 1
 fi
 
+# Ensure web directory has standalone lock file for Firebase App Hosting
+echo "🔧 Preparing web directory for deployment..."
+if [ ! -f "web/pnpm-lock.yaml" ]; then
+    echo "📦 Creating standalone pnpm-lock.yaml for web directory..."
+    cd web
+    pnpm install --frozen-lockfile=false --no-optional --ignore-workspace
+    cd ..
+    echo "✅ Standalone lock file created"
+else
+    echo "✅ Standalone lock file already exists"
+fi
+
+# Ensure shared types are built and available
+echo "🔨 Building shared types..."
+cd shared
+pnpm run build
+cd ..
+echo "✅ Shared types built"
+
+# Copy shared types to web directory for standalone deployment
+echo "📂 Copying shared types to web directory..."
+if [ -d "web/src/shared-generated" ]; then
+    rm -rf web/src/shared-generated
+fi
+cp -r shared/dist web/src/shared-generated
+echo "✅ Shared types copied to web directory"
+
 # Note: Firebase predeploy will build shared types automatically before upload
 # Note: We don't run the full web:build here since App Hosting will build the app
 # in the cloud using the apphosting.yaml configuration

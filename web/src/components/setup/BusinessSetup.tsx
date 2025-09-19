@@ -8,11 +8,11 @@ import { Input } from '@/components/ui/Input'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
 import {
-  DocumentStatus,
-  DocumentType,
   IBusiness,
+  IDocument,
   IVideoItem,
-  UserDocument,
+  StorageDocumentStatus,
+  StorageDocumentType,
 } from '@/shared-generated'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
@@ -176,7 +176,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
     }
 
     try {
-      const uploadedDocuments: UserDocument[] = []
+      const uploadedDocuments: IDocument[] = []
 
       // Upload tax certificate if provided
       if (taxCertificate && appUser?.id) {
@@ -235,25 +235,25 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
           // Add uploaded documents to business
           if (uploadedDocuments.length > 0) {
             const businessDocuments = uploadedDocuments.map(doc => {
-              // Map UserDocumentCategory to DocumentType enum
-              let documentType: DocumentType
+              // Map UserDocumentCategory to StorageDocumentType enum
+              let dt: StorageDocumentType
               if (doc.category === 'tax-certificates') {
-                documentType = DocumentType.TAX_CERTIFICATE
+                dt = StorageDocumentType.TAX_CERTIFICATE
               } else if (doc.category === 'place-photos') {
-                documentType = DocumentType.OTHER // Place photos are treated as 'other' documents
+                dt = StorageDocumentType.OTHER // Place photos are treated as 'other' documents
               } else if (doc.category === 'business-documents') {
-                documentType = DocumentType.BUSINESS_LICENSE
+                dt = StorageDocumentType.BUSINESS_LICENSE
               } else {
-                documentType = DocumentType.OTHER
+                dt = StorageDocumentType.OTHER
               }
 
               // Create a serializable document object for the API
               return {
-                type: documentType,
+                type: dt,
                 url: doc.url,
                 uploadedAt: doc.uploadedAt || new Date().toISOString(), // Send as ISO string for API
                 uploadedBy: appUser?.id || '',
-                status: DocumentStatus.PENDING,
+                status: StorageDocumentStatus.PENDING,
               }
             })
 

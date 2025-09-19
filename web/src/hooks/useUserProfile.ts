@@ -3,7 +3,7 @@
  * Provides hooks for managing user profile data using Next.js API routes
  */
 
-import { userService } from '@/services/userService';
+import { userService } from '@/services/user.service';
 import { IAppUser, IBusiness } from '@/shared-generated';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -170,7 +170,7 @@ export function useBusinessOperations() {
 
     try {
       // Import business service to avoid circular dependencies
-      const { businessService } = await import('@/services/businessService');
+      const { businessService } = await import('@/services/business.service');
       const result = await businessService.clearBusinessRejection(businessId);
 
       if (result.success && result.data) {

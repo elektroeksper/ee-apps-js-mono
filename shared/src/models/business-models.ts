@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { BusinessVerificationStatus, CompanySize, TaxNumberType } from "../enums";
-import { IAddress, IBusiness, IBusinessDocument, IBusinessUserInfo } from "../types";
+import { IAddress, IBusiness, IBusinessUserInfo, IDocument } from "../types";
 
 class Business implements IBusiness {
   businessName: string = '';
@@ -12,7 +12,7 @@ class Business implements IBusiness {
   phone?: string | undefined;
   website?: string | undefined;
   companySize?: CompanySize | undefined;
-  documents?: IBusinessDocument[] | undefined;
+  documents?: IDocument[] | undefined;
   verification: { status: BusinessVerificationStatus; history: { approvedAt?: Date | Timestamp | null; approvedBy?: string | null; rejectedAt?: Date | Timestamp | null; rejectedBy?: string | null; rejectionReason?: string | null; }[]; } = { status: BusinessVerificationStatus.PENDING, history: [] };
   ownerId: string = '';
   users: Record<string, IBusinessUserInfo> = {};

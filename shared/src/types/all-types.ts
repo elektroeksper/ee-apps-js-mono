@@ -8,10 +8,10 @@ export type * from './auth-types';
 export type * from './business-types';
 export type * from './common-types';
 export type * from './content-types';
-export type * from './document-types';
 export type * from './map-types';
 export type * from './order-types';
 export type * from './repair-types';
+export type * from './storage-types';
 export type * from './user-types';
 
 // Ensure specific interfaces are available for easy access

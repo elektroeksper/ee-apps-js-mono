@@ -4,11 +4,11 @@
  * Uses Next.js API routes for server-side operations
  */
 
-import { IOperationResult, UserDocument, UserDocumentCategory } from '@/shared-generated';
+import { DocumentCategory, IDocument, IOperationResult, } from '@/shared-generated';
 
 export interface BusinessDocumentService {
-  getDocuments(): Promise<IOperationResult<UserDocument[]>>;
-  uploadDocument(file: File, category: UserDocumentCategory, metadata?: any): Promise<IOperationResult<UserDocument>>;
+  getDocuments(): Promise<IOperationResult<IDocument[]>>;
+  uploadDocument(file: File, category: DocumentCategory, metadata?: any): Promise<IOperationResult<IDocument>>;
   deleteDocument(documentId: string): Promise<IOperationResult<void>>;
 }
 
@@ -16,7 +16,7 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
   /**
    * Get all business documents for the current user
    */
-  async getDocuments(): Promise<IOperationResult<UserDocument[]>> {
+  async getDocuments(): Promise<IOperationResult<IDocument[]>> {
     try {
       const response = await fetch('/api/business/documents', {
         method: 'GET',
@@ -53,9 +53,9 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
    */
   async uploadDocument(
     file: File,
-    category: UserDocumentCategory,
+    category: DocumentCategory,
     metadata?: any
-  ): Promise<IOperationResult<UserDocument>> {
+  ): Promise<IOperationResult<IDocument>> {
     try {
       // Validate file
       if (!file) {
@@ -183,8 +183,8 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
   /**
    * Get display name for document category
    */
-  getCategoryDisplayName(category: UserDocumentCategory): string {
-    const categoryMap: Record<UserDocumentCategory, string> = {
+  getCategoryDisplayName(category: DocumentCategory): string {
+    const categoryMap: Record<DocumentCategory, string> = {
       'business-documents': 'İşletme Belgeleri',
       'tax-certificates': 'Vergi Levhaları',
       'place-photos': 'İşyeri Fotoğrafları',

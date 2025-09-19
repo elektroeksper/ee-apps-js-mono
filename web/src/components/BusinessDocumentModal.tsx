@@ -1,6 +1,6 @@
 'use client'
 
-import { IAppUser, UserDocument } from '@/shared-generated'
+import { IAppUser, IDocument } from '@/shared-generated'
 import { useEffect, useState } from 'react'
 import {
   FiCheck,
@@ -34,7 +34,7 @@ export default function BusinessDocumentModal({
   onReject,
   isLoading,
 }: BusinessDocumentModalProps) {
-  const [documents, setDocuments] = useState<UserDocument[]>([])
+  const [documents, setDocuments] = useState<IDocument[]>([])
   const [loadingDocuments, setLoadingDocuments] = useState(false)
 
   // Helper functions for display names (fallback for build time)
@@ -57,11 +57,11 @@ export default function BusinessDocumentModal({
   // Fetch documents when modal opens and user is available
   useEffect(() => {
     if (isOpen && user?.id) {
-      fetchUserDocuments()
+      fetchIDocuments()
     }
   }, [isOpen, user?.id])
 
-  const fetchUserDocuments = async () => {
+  const fetchIDocuments = async () => {
     if (!user?.id) return
 
     setLoadingDocuments(true)
@@ -94,7 +94,7 @@ export default function BusinessDocumentModal({
       acc[doc.category].push(doc)
       return acc
     },
-    {} as Record<string, UserDocument[]>
+    {} as Record<string, IDocument[]>
   )
 
   const handleApprove = async () => {
@@ -136,11 +136,13 @@ export default function BusinessDocumentModal({
   }
 
   // Component to render document item
-  const DocumentItem = ({ document }: { document: UserDocument }) => {
-    const displayName = getFileDisplayName(document.name)
+  const DocumentItem = ({ document }: { document: IDocument }) => {
+    const displayName = document?.name
+      ? getFileDisplayName(document.name)
+      : 'Unknown Document'
 
     // For PDF files, show as simple list item with icon
-    if (document.type === 'pdf') {
+    if (document.fileType === 'pdf') {
       return (
         <div className="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg hover:border-blue-300 transition-colors group">
           <div className="flex-shrink-0">
@@ -168,7 +170,7 @@ export default function BusinessDocumentModal({
   }
 
   // Component to render photo gallery for images
-  const PhotoGallery = ({ photos }: { photos: UserDocument[] }) => {
+  const PhotoGallery = ({ photos }: { photos: IDocument[] }) => {
     if (photos.length === 0) return null
 
     return (
@@ -183,7 +185,9 @@ export default function BusinessDocumentModal({
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {photos.map((photo, index) => {
-            const displayName = getFileDisplayName(photo.name)
+            const displayName = photo.name
+              ? getFileDisplayName(photo.name)
+              : 'Unknown Photo'
             return (
               <div
                 key={`${photo.fullPath}-${index}`}
@@ -303,8 +307,10 @@ export default function BusinessDocumentModal({
           <div className="space-y-6">
             {/* Separate photos from other documents */}
             {(() => {
-              const photos = documents.filter(doc => doc.type === 'image')
-              const otherDocs = documents.filter(doc => doc.type !== 'image')
+              const photos = documents.filter(doc => doc.fileType === 'image')
+              const otherDocs = documents.filter(
+                doc => doc.fileType !== 'image'
+              )
               const otherDocsByCategory = otherDocs.reduce(
                 (acc, doc) => {
                   if (!acc[doc.category]) {
@@ -313,7 +319,7 @@ export default function BusinessDocumentModal({
                   acc[doc.category].push(doc)
                   return acc
                 },
-                {} as Record<string, UserDocument[]>
+                {} as Record<string, IDocument[]>
               )
 
               return (
@@ -329,7 +335,7 @@ export default function BusinessDocumentModal({
                           <FiFolder className="h-4 w-4 text-slate-400" />
                           <h5 className="text-sm font-medium text-slate-700 uppercase tracking-wide">
                             {getCategoryDisplayName(
-                              category as UserDocument['category']
+                              category as IDocument['category']
                             )}
                           </h5>
                           <span className="text-xs text-slate-400">

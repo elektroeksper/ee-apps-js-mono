@@ -1,5 +1,6 @@
+import { StorageDocumentStatus } from '@electro-expert/shared';
 import { getStorage } from 'firebase-admin/storage';
-import { UserDocument, UserDocumentCategory, UserDocumentFileType } from '../shared-generated';
+import { DocumentCategory, DocumentFileType, IDocument, StorageDocumentType } from '../shared-generated';
 
 // Initialize Firebase Admin Storage (bucket configured in firebase-admin.ts)
 const storage = getStorage();
@@ -7,7 +8,7 @@ const storage = getStorage();
 /**
  * Get file type based on extension
  */
-function getFileType(fileName: string): UserDocumentFileType {
+function getFileType(fileName: string): DocumentFileType {
   const extension = fileName.toLowerCase().split('.').pop();
 
   if (extension === 'pdf') return 'pdf';
@@ -18,7 +19,7 @@ function getFileType(fileName: string): UserDocumentFileType {
 /**
  * Get document category based on folder path
  */
-function getDocumentCategory(fullPath: string): UserDocumentCategory {
+function getDocumentCategory(fullPath: string): DocumentCategory {
   if (fullPath.includes('business-documents')) return 'business-documents';
   if (fullPath.includes('taxCertificates')) return 'tax-certificates';
   if (fullPath.includes('placePhotos')) return 'place-photos';
@@ -29,7 +30,7 @@ function getDocumentCategory(fullPath: string): UserDocumentCategory {
 /**
  * Get a user-friendly name for document categories
  */
-export function getCategoryDisplayName(category: UserDocumentCategory): string {
+export function getCategoryDisplayName(category: DocumentCategory): string {
   switch (category) {
     case 'business-documents':
       return 'İşletme Belgeleri';
@@ -78,9 +79,17 @@ export function getFileDisplayName(fileName: string): string {
  * Fetch all documents for a specific user from Firebase Storage
  * This function runs in the Firebase Functions environment
  */
-export async function getUserDocuments(userId: string): Promise<UserDocument[]> {
+
+function inferDocumentTypeByFolderPath(folderPath: string): StorageDocumentType {
+  if (folderPath.includes('business-documents')) return StorageDocumentType.BUSINESS_LICENSE;
+  if (folderPath.includes('taxCertificates')) return StorageDocumentType.TAX_CERTIFICATE;
+  if (folderPath.includes('placePhotos')) return StorageDocumentType.OTHER;
+  if (folderPath.includes('identity-documents')) return StorageDocumentType.UTILITY_BILL;
+  return StorageDocumentType.OTHER;
+}
+export async function getDocuments(userId: string): Promise<IDocument[]> {
   try {
-    const documents: UserDocument[] = [];
+    const documents: IDocument[] = [];
     const bucket = storage.bucket(); // Use default bucket (configured in firebase-admin.ts)
 
     // Define the possible document folders for a user
@@ -100,6 +109,7 @@ export async function getUserDocuments(userId: string): Promise<UserDocument[]> 
     for (const folderPath of documentFolders) {
       try {
         console.log(`Checking folder: ${folderPath}`);
+        const documentType: StorageDocumentType = inferDocumentTypeByFolderPath(folderPath);
 
         // List files in the folder
         const [files] = await bucket.getFiles({ prefix: folderPath });
@@ -163,10 +173,14 @@ export async function getUserDocuments(userId: string): Promise<UserDocument[]> 
 
             documents.push({
               name: fileName,
+              type: documentType,
               url: fileUrl,
-              type: getFileType(fileName),
+              fileType: getFileType(fileName),
               fullPath: file.name,
-              category: getDocumentCategory(file.name)
+              category: getDocumentCategory(file.name),
+              uploadedAt: file.metadata?.timeCreated ? new Date(file.metadata.timeCreated) : new Date(),
+              uploadedBy: '',
+              status: StorageDocumentStatus.APPROVED
             });
             console.log(`Added document: ${fileName} with URL: ${fileUrl.substring(0, 100)}...`);
           } catch (error) {
@@ -190,13 +204,13 @@ export async function getUserDocuments(userId: string): Promise<UserDocument[]> 
 /**
  * Upload a document to Firebase Storage
  */
-export async function uploadUserDocument(
+export async function uploadDocument(
   userId: string,
   fileName: string,
-  category: UserDocumentCategory,
+  category: DocumentCategory,
   fileData: string,
   metadata?: any
-): Promise<UserDocument> {
+): Promise<IDocument> {
   try {
     const bucket = storage.bucket(); // Use default bucket (configured in firebase-admin.ts)
 
@@ -248,24 +262,27 @@ export async function uploadUserDocument(
     // Create a public download URL instead of signed URL
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filePath)}?alt=media`;
 
-    // Return the UserDocument object
-    const userDocument: UserDocument = {
+    // Return the IDocument object
+    const document: IDocument = {
       name: fileName,
       url: publicUrl,
-      type: getFileType(fileName),
+      fileType: getFileType(fileName),
       fullPath: filePath,
       category,
       uploadedAt: new Date().toISOString(),
-      size: fileBuffer.length,
       metadata: {
+        size: fileBuffer.length,
         uploadedBy: userId,
         originalName: fileName,
         ...metadata
-      }
+      },
+      type: StorageDocumentType.BUSINESS_LICENSE,
+      uploadedBy: '',
+      status: StorageDocumentStatus.PENDING
     };
 
-    console.log(`Document created successfully:`, userDocument);
-    return userDocument;
+    console.log(`Document created successfully:`, document);
+    return document;
 
   } catch (error) {
     console.error('Error uploading document:', error);

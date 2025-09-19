@@ -107,7 +107,7 @@ enum CompanySize {
 
 
 // Document Types
-enum DocumentType {
+enum StorageDocumentType {
   BUSINESS_LICENSE = 'business_license',
   TAX_CERTIFICATE = 'tax_certificate',
   ARTICLES_OF_INCORPORATION = 'articles_of_incorporation',
@@ -116,7 +116,7 @@ enum DocumentType {
 }
 
 // Document Status
-enum DocumentStatus {
+enum StorageDocumentStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
@@ -134,8 +134,8 @@ enum BusinessVerificationStatus {
 
 export {
   AccountType, AuthErrorCode, AuthRole, AuthState, BusinessUserRole, BusinessVerificationStatus,
-  CompanySize, DocumentStatus, DocumentType, NotificationType,
+  CompanySize, NotificationType,
   OperationStatus, OrderStatus,
-  PaymentStatus, ProductCategory, TaxNumberType
+  PaymentStatus, ProductCategory, StorageDocumentStatus, StorageDocumentType, TaxNumberType
 };
 

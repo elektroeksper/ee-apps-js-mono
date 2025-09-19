@@ -6,7 +6,7 @@
 
 import { IBusiness, IBusinessFilter, IOperationResult } from '@/shared-generated';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { businessService } from '../services/businessService';
+import { businessService } from '../services/business.service';
 
 // Query keys for caching
 export const businessKeys = {

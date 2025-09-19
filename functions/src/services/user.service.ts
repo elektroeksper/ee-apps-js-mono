@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { auth, db } from '../utils/firebase-admin';
 // Import types from shared-generated (will be copied at build time)
-import { DocumentStatus, DocumentType, IAppUser, IBusinessDocument, IOperationResult } from '../shared-generated';
+import { IAppUser, IDocument, IOperationResult, StorageDocumentStatus } from '../shared-generated';
 
 // Get user profile
 export async function getUserProfile(userId: string): Promise<IOperationResult<IAppUser>> {
@@ -318,7 +318,7 @@ export async function createBusinessDocument(userId: string, documentData: {
   type: DocumentType;
   fileName: string;
   fileUrl: string;
-}): Promise<IOperationResult<IBusinessDocument>> {
+}): Promise<IOperationResult<IDocument>> {
   try {
     if (!userId) {
       return {
@@ -331,7 +331,7 @@ export async function createBusinessDocument(userId: string, documentData: {
     const docData = {
       userId,
       ...documentData,
-      status: DocumentStatus.PENDING,
+      status: StorageDocumentStatus.PENDING,
       uploadedAt: new Date().toISOString(),
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -346,7 +346,7 @@ export async function createBusinessDocument(userId: string, documentData: {
       fileName: documentData.fileName,
       fileUrl: documentData.fileUrl,
       uploadedAt: docData.uploadedAt,
-      status: DocumentStatus.PENDING
+      status: StorageDocumentStatus.PENDING
     };
 
     return {

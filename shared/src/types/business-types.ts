@@ -4,9 +4,10 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import { BusinessUserRole, BusinessVerificationStatus, CompanySize, DocumentStatus, DocumentType, TaxNumberType } from '../enums';
+import { BusinessUserRole, BusinessVerificationStatus, CompanySize, TaxNumberType } from '../enums';
 import { IEntity, IOperationResult } from './common-types';
 import { IAddress } from './map-types';
+import { IDocument } from './storage-types';
 
 interface IBusinessFilter {
   status?: BusinessVerificationStatus;
@@ -28,7 +29,7 @@ interface IBusiness extends IEntity {
   description?: string;
   website?: string;
   companySize?: CompanySize;
-  documents?: IBusinessDocument[];
+  documents?: IDocument[];
   mainCategoryId?: string;
   subCategoryIds?: string[]; // Business sub-categories
   verification: {
@@ -69,17 +70,6 @@ interface IBusinessUserInfo {
   lastActiveAt?: Timestamp | Date; // Last activity timestamp
 }
 
-interface IBusinessDocument {
-  type: DocumentType;
-  url: string; // Storage URL or public URL
-  uploadedAt: Timestamp;
-  uploadedBy: string; // User ID who uploaded
-  status: DocumentStatus;
-  reviewedAt?: Timestamp;
-  reviewedBy?: string; // Admin user ID who reviewed
-  rejectionReason?: string; // Reason if rejected
-  expiresAt?: Timestamp; // Optional expiration date
-}
 
 
 interface IBusinessSetupData {
@@ -87,7 +77,7 @@ interface IBusinessSetupData {
   companySize?: CompanySize;
   address?: IAddress;
   phone?: string;
-  documents: IBusinessDocument[];
+  documents: IDocument[];
   otherAddresses?: IAddress[];
   website?: string;
 }
@@ -123,10 +113,31 @@ interface IBusinessPermissions {
 }
 
 
+/**
+ * Business document verification interface
+ */
+export interface BusinessDocumentReview {
+  userId: string
+  documents: IDocument[]
+  businessInfo: {
+    businessName: string
+    ownerName: string
+    email: string
+    phone?: string
+    address?: string
+  }
+  verificationStatus: BusinessVerificationStatus
+  reviewedBy?: string
+  reviewedAt?: string
+  notes?: string
+}
+
+
+
 
 export type {
   IBusiness,
-  IBusinessDocument, IBusinessFilter,
+  IBusinessFilter,
   IBusinessPermissions,
   IBusinessService,
   IBusinessSetupData, IBusinessUserInfo

@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Configure output file tracing to use web directory as root for standalone deployment
+  output: 'standalone',
+  outputFileTracingRoot: process.cwd(),
   // Temporarily disable package optimizations that might be causing Firebase issues
   // experimental: {
   //   optimizePackageImports: ['react-icons'],

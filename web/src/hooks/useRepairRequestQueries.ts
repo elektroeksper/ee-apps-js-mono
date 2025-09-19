@@ -5,7 +5,7 @@
  * which in turn calls Next.js API routes under /pages/api/repair-requests
  */
 
-import { repairRequestService } from '@/services/repairRequestService';
+import { repairRequestService } from '@/services/repair-request.service';
 import {
   ICreateRepairRequestDTO,
   IRepairRequestFilter,

@@ -57,7 +57,7 @@ interface IBusiness {
 
   // Verification & Compliance
   verificationStatus: BusinessVerificationStatus
-  documents: IBusinessDocument[]
+  documents: IDocument[]
   isApproved: boolean
   approvedAt?: Timestamp
   approvedBy?: string // Admin user ID
@@ -315,7 +315,7 @@ class BusinessService {
   ): Promise<IOperationResult<void>>
   async uploadDocument(
     businessId: string,
-    document: IBusinessDocument
+    document: IDocument
   ): Promise<IOperationResult<void>>
 }
 ```

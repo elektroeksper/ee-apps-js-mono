@@ -3,16 +3,16 @@
  * React hooks for managing business document operations
  */
 
-import { businessDocumentService } from '@/services/businessDocumentService';
-import { UserDocument, UserDocumentCategory } from '@/shared-generated';
+import { businessDocumentService } from '@/services/business-documents.service';
+import { DocumentCategory, IDocument } from '@/shared-generated';
 import { useCallback, useEffect, useState } from 'react';
 
 export interface UseBusinessDocumentsState {
-  documents: UserDocument[];
+  documents: IDocument[];
   isLoading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  uploadDocument: (file: File, category: UserDocumentCategory, metadata?: any) => Promise<boolean>;
+  uploadDocument: (file: File, category: DocumentCategory, metadata?: any) => Promise<boolean>;
   deleteDocument: (documentId: string) => Promise<boolean>;
   clearError: () => void;
 }
@@ -21,7 +21,7 @@ export interface UseBusinessDocumentsState {
  * Hook for managing business documents
  */
 export function useBusinessDocuments(): UseBusinessDocumentsState {
-  const [documents, setDocuments] = useState<UserDocument[]>([]);
+  const [documents, setDocuments] = useState<IDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +52,7 @@ export function useBusinessDocuments(): UseBusinessDocumentsState {
 
   const uploadDocument = useCallback(async (
     file: File,
-    category: UserDocumentCategory,
+    category: DocumentCategory,
     metadata?: any
   ): Promise<boolean> => {
     setIsLoading(true);
@@ -125,7 +125,7 @@ export interface UseDocumentUploadState {
   isUploading: boolean;
   uploadProgress: number;
   error: string | null;
-  uploadDocument: (file: File, category: UserDocumentCategory, metadata?: any) => Promise<boolean>;
+  uploadDocument: (file: File, category: DocumentCategory, metadata?: any) => Promise<boolean>;
   clearError: () => void;
 }
 
@@ -140,7 +140,7 @@ export function useDocumentUpload(onSuccess?: () => void): UseDocumentUploadStat
 
   const uploadDocument = useCallback(async (
     file: File,
-    category: UserDocumentCategory,
+    category: DocumentCategory,
     metadata?: any
   ): Promise<boolean> => {
     setIsUploading(true);
@@ -194,7 +194,7 @@ export function useDocumentUpload(onSuccess?: () => void): UseDocumentUploadStat
  */
 export interface UseDocumentValidationState {
   validateFile: (file: File) => { isValid: boolean; error?: string };
-  getCategoryDisplayName: (category: UserDocumentCategory) => string;
+  getCategoryDisplayName: (category: DocumentCategory) => string;
   getFileTypeIcon: (fileName: string) => string;
   formatFileSize: (size: number) => string;
 }
@@ -230,7 +230,7 @@ export function useDocumentValidation(): UseDocumentValidationState {
     return { isValid: true };
   }, []);
 
-  const getCategoryDisplayName = useCallback((category: UserDocumentCategory): string => {
+  const getCategoryDisplayName = useCallback((category: DocumentCategory): string => {
     return businessDocumentService.getCategoryDisplayName(category);
   }, []);
 
