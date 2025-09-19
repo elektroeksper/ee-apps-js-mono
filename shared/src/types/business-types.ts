@@ -68,6 +68,8 @@ interface IBusiness extends IEntity {
   identityNumber?: string;
   addresses?: IAddress[];
   phone?: string;
+  email?: string;
+  description?: string;
   website?: string;
   companySize?: CompanySize;
   documents?: IBusinessDocument[];

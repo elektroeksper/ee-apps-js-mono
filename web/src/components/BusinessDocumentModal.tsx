@@ -270,7 +270,7 @@ export default function BusinessDocumentModal({
               Telefon
             </div>
             <p className="font-medium text-slate-900">
-              {user.phone || businessInfo.phone || 'Belirtilmemiş'}
+              {user.phoneNumber || businessInfo.phone || 'Belirtilmemiş'}
             </p>
           </div>
           {businessInfo.address && (

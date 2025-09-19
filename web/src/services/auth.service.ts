@@ -33,7 +33,6 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth';
-// import { userService } from './user.service'; // Disabled for Firebase Admin SDK migration
 
 export class AuthService implements IAuthService {
   /**
@@ -101,7 +100,7 @@ export class AuthService implements IAuthService {
   /**
    * Register new user with email and password
    * Supports both individual and business registration
-   * Implements proper error handling with rollback mechanism
+   * Uses the new registration API route for proper user profile creation
    */
   async register(data: IRegisterData | IBusinessRegisterData): Promise<IOperationResult<IFirebaseUser>> {
     let userCredential: any = null;
@@ -116,20 +115,29 @@ export class AuthService implements IAuthService {
 
       // Step 2: Update the user's display name
       await updateProfile(userCredential.user, {
-        displayName: data.email?.split('@')[0]
+        displayName: `${data.firstName} ${data.lastName}`.trim()
       });
 
-      // Step 3: Create user profile in Firestore
-      // TODO: Implement via API route instead of direct service call
-      // Temporarily disabled for Firebase Admin SDK migration
-      const profileResult = { success: true }; // Mock successful profile creation
+      // Step 3: Get ID token for API call
+      const idToken = await userCredential.user.getIdToken();
 
-      /* ORIGINAL - Disabled for Firebase Admin SDK migration
-      const profileResult = await userService.create(data, userCredential.user.uid);
+      // Step 4: Create user profile via API route
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userData: data,
+          idToken: idToken
+        }),
+      });
 
-      if (!profileResult.success) {
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
         // If profile creation fails, rollback Firebase Auth user
-        console.error('Profile creation failed, rolling back Firebase Auth user:', profileResult.error);
+        console.error('Profile creation failed, rolling back Firebase Auth user:', result.error);
 
         try {
           await deleteUser(userCredential.user);
@@ -139,16 +147,15 @@ export class AuthService implements IAuthService {
 
         return {
           success: false,
-          error: profileResult.error || 'Failed to create user profile',
-          code: 500,
+          error: result.error || 'Failed to create user profile',
+          code: result.code || 500,
         };
       }
-      */
 
-      // Step 4: Send email verification
+      // Step 5: Send email verification
       try {
         await sendEmailVerification(userCredential.user, {
-          url: `/verify-email`,
+          url: `${window.location.origin}/verify-email`,
           handleCodeInApp: false,
         });
       } catch (emailError) {
@@ -156,6 +163,7 @@ export class AuthService implements IAuthService {
         console.warn('Failed to send email verification:', emailError);
       }
 
+      // Session cookie is already set by the API route
       return {
         success: true,
         data: this.mapFirebaseUser(userCredential.user),

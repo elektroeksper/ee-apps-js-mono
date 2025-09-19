@@ -6,8 +6,8 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import Modal from '@/components/ui/Modal'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoutAndRedirect } from '@/lib/auth-utils'
+import { businessService } from '@/services/businessService'
 import { AccountType } from '@/shared-generated'
-// import { userService } from '@/shared-generated/services/user.service' // Disabled for Firebase Admin SDK migration
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
@@ -27,13 +27,15 @@ interface DocumentUploadModalProps {
   isOpen: boolean
   onClose: () => void
   userId: string
-  onSuccess?: () => void // Callback to refresh user data after successful upload
+  appUser: any // Current user data including businessInfo
+  onSuccess?: () => void
 }
 
 function DocumentUploadModal({
   isOpen,
   onClose,
   userId,
+  appUser,
   onSuccess,
 }: DocumentUploadModalProps) {
   const [uploading, setUploading] = useState(false)
@@ -115,14 +117,20 @@ function DocumentUploadModal({
       // Clear business rejection status after successful document upload
       console.log('Clearing rejection status for user:', userId)
 
-      // TODO: Implement via API route instead of direct service call
-      // Temporarily disabled for Firebase Admin SDK migration
-      const clearRejectionResult = { success: true, error: null } // Mock successful clear
+      // Get the user's business ID from their businessInfo
+      if (!appUser?.businessInfo?.businessId) {
+        console.error('No business ID found in user businessInfo')
+        setUploading(false)
+        setError('User is not associated with a business')
+        return
+      }
 
-      /* ORIGINAL - Disabled for Firebase Admin SDK migration
+      const businessId = appUser.businessInfo.businessId
+      console.log('Clearing rejection status for business:', businessId)
+
+      // Use business service to clear rejection status on the business document
       const clearRejectionResult =
-        await userService.clearBusinessRejection(userId)
-      */
+        await businessService.clearBusinessRejection(businessId)
 
       if (!clearRejectionResult.success) {
         console.error(
@@ -534,7 +542,7 @@ function ProfileContent() {
                       Telefon Numarası
                     </label>
                     <p className="text-gray-900">
-                      {appUser.phone || 'Belirtilmemiş'}
+                      {appUser.phoneNumber || 'Belirtilmemiş'}
                     </p>
                   </div>
                   <div>
@@ -658,6 +666,7 @@ function ProfileContent() {
         isOpen={showDocumentModal}
         onClose={() => setShowDocumentModal(false)}
         userId={appUser?.id || ''}
+        appUser={appUser}
         onSuccess={handleDocumentUploadSuccess}
       />
 
