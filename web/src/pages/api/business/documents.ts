@@ -4,8 +4,9 @@
  */
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { DocumentStatus, UserDocument, UserDocumentCategory } from '@/shared-generated';
+import { BusinessVerificationStatus, DocumentStatus, UserDocument, UserDocumentCategory } from '@/shared-generated';
 import { randomUUID } from 'crypto';
+import { Timestamp } from 'firebase-admin/firestore';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 interface DocumentsResponse {
@@ -222,6 +223,9 @@ async function uploadDocument(
 
     const docRef = await adminDb.collection('businessDocuments').add(documentData);
 
+    // Update business verification status when documents are uploaded
+    await updateBusinessVerificationStatus(userId);
+
     const createdDocument: UserDocument = {
       name: documentData.originalName,
       url: documentData.downloadUrl,
@@ -323,4 +327,61 @@ function getFileTypeFromName(fileName: string): 'pdf' | 'image' | 'other' {
   }
 
   return 'other';
+}
+
+// Helper function to update business verification status when documents are uploaded
+async function updateBusinessVerificationStatus(userId: string) {
+  try {
+    // Find the user's business
+    const userDoc = await adminDb.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      console.error('User not found for verification status update:', userId);
+      return;
+    }
+
+    const userData = userDoc.data();
+    const businessId = userData?.businessInfo?.businessId;
+
+    if (!businessId) {
+      console.error('No business ID found for user:', userId);
+      return;
+    }
+
+    // Get the business document
+    const businessDoc = await adminDb.collection('businesses').doc(businessId).get();
+    if (!businessDoc.exists) {
+      console.error('Business not found:', businessId);
+      return;
+    }
+
+    const businessData = businessDoc.data();
+    const currentStatus = businessData?.verification?.status;
+
+    // Only update if status is UNVERIFIED or undefined (new business)
+    if (!currentStatus || currentStatus === BusinessVerificationStatus.UNVERIFIED) {
+      const now = Timestamp.now();
+
+      // Update verification status to PENDING with history entry
+      const verificationUpdate = {
+        'verification.status': BusinessVerificationStatus.PENDING,
+        'verification.history': [
+          ...(businessData?.verification?.history || []),
+          {
+            status: BusinessVerificationStatus.PENDING,
+            changedAt: now,
+            changedBy: userId,
+            reason: 'Documents uploaded - pending admin review'
+          }
+        ],
+        updatedAt: now
+      };
+
+      await adminDb.collection('businesses').doc(businessId).update(verificationUpdate);
+
+      console.log(`Business verification status updated to PENDING for business: ${businessId}`);
+    }
+  } catch (error) {
+    console.error('Error updating business verification status:', error);
+    // Don't throw error to avoid failing document upload
+  }
 }

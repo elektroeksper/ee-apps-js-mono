@@ -112,7 +112,6 @@ export function AuthGuard({
       requireProfileComplete &&
       router.pathname !== '/home' &&
       router.pathname !== '/verification' &&
-      router.pathname !== '/complete-documents' &&
       router.pathname !== '/setup'
     ) {
       // Check business verification status by fetching business data
@@ -153,11 +152,11 @@ export function AuthGuard({
               // Redirect based on verification status and documents
               if (verificationStatus === BusinessVerificationStatus.REJECTED) {
                 console.log('🚨 AuthGuard Business Redirect:', {
-                  reason: 'Business rejected - redirect to complete-documents',
-                  redirectTo: '/complete-documents',
+                  reason: 'Business rejected - redirect to setup',
+                  redirectTo: '/setup',
                   pathname: router.pathname,
                 })
-                router.replace('/complete-documents')
+                router.replace('/setup')
               } else if (
                 verificationStatus === BusinessVerificationStatus.VERIFIED
               ) {
@@ -168,12 +167,11 @@ export function AuthGuard({
                 })
                 router.replace('/home')
               } else if (
-                hasDocuments &&
                 verificationStatus === BusinessVerificationStatus.PENDING
               ) {
                 console.log('🚨 AuthGuard Business Redirect:', {
                   reason:
-                    'Business has documents and pending approval - redirect to verification',
+                    'Business pending approval - redirect to verification',
                   redirectTo: '/verification',
                   pathname: router.pathname,
                 })

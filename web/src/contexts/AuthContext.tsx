@@ -150,9 +150,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Business profile is complete if:
       // 1. Has basic info AND
-      // 2. Has company name AND
-      // 3. Has uploaded documents (required for approval)
-      const result = !!(businessInfo.businessName && hasDocuments)
+      // 2. Has company name
+      // Note: Document verification is handled by BusinessApprovalGuard
+      const result = !!businessInfo.businessName
 
       console.log('🔍 isProfileComplete DEBUG:', {
         userId: appUser.id,
@@ -161,7 +161,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isEmailVerified: appUser.isEmailVerified,
         hasBasicInfo,
         businessName: businessInfo.businessName,
-        hasDocuments,
         businessInfo,
         isProfileComplete: result,
       })

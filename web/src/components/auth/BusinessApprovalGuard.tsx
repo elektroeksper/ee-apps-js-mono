@@ -5,10 +5,10 @@
  */
 
 import { useAuth } from '@/contexts/AuthContext'
-import { AccountType } from '@/shared-generated'
+import { AccountType, BusinessVerificationStatus } from '@/shared-generated'
 import type { IAppUser } from '@/shared-generated/types/user-types'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 
 // Utility function to check if user is a business user
@@ -27,38 +27,105 @@ const BusinessApprovalGuard: React.FC<BusinessApprovalGuardProps> = ({
 }) => {
   const { appUser, isLoading } = useAuth()
   const router = useRouter()
+  const [checkingBusiness, setCheckingBusiness] = useState(false)
+  const [businessVerificationStatus, setBusinessVerificationStatus] =
+    useState<BusinessVerificationStatus | null>(null)
 
   useEffect(() => {
     if (isLoading || !appUser) return
 
     // Only check approval for business users
     if (isBusinessUser(appUser) && requireApproval) {
-      const extendedUser = appUser as any
-      const isApproved = extendedUser?.businessInfo?.isApproved
-      const rejectionReason = extendedUser?.businessInfo?.rejectionReason
+      const businessId = appUser.businessInfo?.businessId
 
-      // If business user is rejected (isApproved === false with rejection reason), redirect to complete-documents
-      if (isApproved === false && rejectionReason) {
+      if (!businessId) {
         console.log(
-          'BusinessApprovalGuard: Business rejected, redirecting to complete-documents'
+          'BusinessApprovalGuard: No business ID found, redirecting to setup'
         )
-        router.replace('/complete-documents')
+        router.replace('/setup')
         return
       }
 
-      // If business user is not approved and not explicitly rejected, redirect to pending approval page
-      if (!isApproved) {
-        console.log(
-          'BusinessApprovalGuard: Business pending approval, redirecting to verification'
-        )
-        router.replace('/verification')
-        return
+      // Fetch business verification status
+      const fetchBusinessVerificationStatus = async () => {
+        setCheckingBusiness(true)
+        try {
+          const response = await fetch(`/api/business/${businessId}`, {
+            method: 'GET',
+            credentials: 'include',
+          })
+
+          if (response.ok) {
+            const result = await response.json()
+            if (result.success && result.data) {
+              const business = result.data
+              const verificationStatus = business.verification?.status
+              setBusinessVerificationStatus(verificationStatus)
+
+              console.log(
+                'BusinessApprovalGuard: Business verification status:',
+                {
+                  businessId,
+                  verificationStatus,
+                  hasDocuments: business.documents?.length > 0,
+                }
+              )
+
+              // Handle redirects based on verification status
+              if (verificationStatus === BusinessVerificationStatus.REJECTED) {
+                console.log(
+                  'BusinessApprovalGuard: Business rejected, redirecting to setup'
+                )
+                router.replace('/setup')
+                return
+              } else if (
+                !verificationStatus ||
+                verificationStatus === BusinessVerificationStatus.UNVERIFIED
+              ) {
+                console.log(
+                  'BusinessApprovalGuard: Business unverified, redirecting to setup'
+                )
+                router.replace('/setup')
+                return
+              } else if (
+                verificationStatus === BusinessVerificationStatus.PENDING
+              ) {
+                console.log(
+                  'BusinessApprovalGuard: Business pending approval, redirecting to verification'
+                )
+                router.replace('/verification')
+                return
+              }
+              // If VERIFIED, continue to render children
+            } else {
+              console.log(
+                'BusinessApprovalGuard: Failed to get business data, redirecting to setup'
+              )
+              router.replace('/setup')
+            }
+          } else {
+            console.log(
+              'BusinessApprovalGuard: Business API call failed, redirecting to setup'
+            )
+            router.replace('/setup')
+          }
+        } catch (error) {
+          console.error(
+            'BusinessApprovalGuard: Error fetching business verification status:',
+            error
+          )
+          router.replace('/setup')
+        } finally {
+          setCheckingBusiness(false)
+        }
       }
+
+      fetchBusinessVerificationStatus()
     }
   }, [appUser, isLoading, router, requireApproval])
 
   // Show loading while checking
-  if (isLoading) {
+  if (isLoading || checkingBusiness) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center space-y-4">
@@ -74,16 +141,13 @@ const BusinessApprovalGuard: React.FC<BusinessApprovalGuardProps> = ({
     return <>{children}</>
   }
 
-  // For business users, check approval status
+  // For business users, only render children if verification status is VERIFIED
   if (isBusinessUser(appUser) && requireApproval) {
-    const extendedUser = appUser as any
-    const isApproved = extendedUser?.businessInfo?.isApproved
-    const rejectionReason = extendedUser?.businessInfo?.rejectionReason
-
-    // If rejected or not approved, return nothing (will redirect above)
-    if (isApproved === false || !isApproved) {
-      return null
+    if (businessVerificationStatus === BusinessVerificationStatus.VERIFIED) {
+      return <>{children}</>
     }
+    // If not verified, return null (redirect will happen in useEffect)
+    return null
   }
 
   // All checks passed, render children
