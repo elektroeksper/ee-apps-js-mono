@@ -102,7 +102,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
       businessData &&
       isBusinessSetupComplete()
     ) {
-      router.push('/pending-approval')
+      router.push('/verification')
     }
   }, [fetchingBusiness, businessData, router, isSubmitting])
 
@@ -334,11 +334,11 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
       setLoading(false)
 
       // Redirect to pending approval page after successful document upload
-      console.log('🚀 Preparing to redirect to pending-approval page...')
+      console.log('🚀 Preparing to redirect to verification page...')
       setTimeout(() => {
-        console.log('🚀 Executing redirect to pending-approval page...')
+        console.log('🚀 Executing redirect to verification page...')
         setIsSubmitting(false)
-        router.replace('/pending-approval')
+        router.replace('/verification')
       }, 1000) // 1 second delay to show success message
     } catch (err: any) {
       setError(err.message || 'Profil güncellenirken bir hata oluştu')

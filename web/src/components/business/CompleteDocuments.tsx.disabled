@@ -161,7 +161,7 @@ const CompleteDocuments: React.FC<CompleteDocumentsProps> = ({
 
       // Redirect to pending approval after a delay
       setTimeout(() => {
-        window.location.href = '/pending-approval'
+        window.location.href = '/verification'
       }, 3000)
     } catch (err: any) {
       setError(err.message || 'Belgeler yüklenirken bir hata oluştu')

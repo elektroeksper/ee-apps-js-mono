@@ -29,7 +29,7 @@ function PendingApprovalContent() {
       const businessId = extendedUser.businessInfo?.businessId
 
       if (!hasBusinessInfo) {
-        console.log('🔄 No business info found, staying on pending-approval')
+        console.log('🔄 No business info found, staying on verification')
         return
       }
 

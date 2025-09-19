@@ -7,7 +7,11 @@
 
 import { LoadingSpinner } from '@/components/ui'
 import { useAuth } from '@/contexts/AuthContext'
-import { AccountType, AuthRole } from '@/shared-generated'
+import {
+  AccountType,
+  AuthRole,
+  BusinessVerificationStatus,
+} from '@/shared-generated'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
@@ -85,7 +89,7 @@ export function AuthGuard({
       appUser &&
       !isProfileComplete &&
       router.pathname !== '/setup' &&
-      router.pathname !== '/pending-approval'
+      router.pathname !== '/verification'
     ) {
       console.log('🚨 AuthGuard Profile Redirect:', {
         reason: 'Profile incomplete',
@@ -107,44 +111,117 @@ export function AuthGuard({
       appUser.accountType === 'business' &&
       requireProfileComplete &&
       router.pathname !== '/home' &&
-      router.pathname !== '/pending-approval' &&
-      router.pathname !== '/complete-documents'
+      router.pathname !== '/verification' &&
+      router.pathname !== '/complete-documents' &&
+      router.pathname !== '/setup'
     ) {
-      // Import the helper functions locally to avoid circular dependencies
-      const isBusinessRejected = (user: any) => {
-        return (
-          user?.businessInfo?.isApproved === false &&
-          user?.businessInfo?.rejectionReason
-        )
+      // Check business verification status by fetching business data
+      const checkBusinessVerificationStatus = async () => {
+        const businessId = appUser?.businessInfo?.businessId
+        if (!businessId) {
+          console.log('🚨 AuthGuard Business Redirect:', {
+            reason: 'No business ID - redirect to setup',
+            redirectTo: '/setup',
+            pathname: router.pathname,
+          })
+          router.replace('/setup')
+          return
+        }
+
+        try {
+          const response = await fetch(`/api/business/${businessId}`, {
+            method: 'GET',
+            credentials: 'include',
+          })
+
+          if (response.ok) {
+            const result = await response.json()
+            if (result.success && result.data) {
+              const business = result.data
+              const verificationStatus = business.verification?.status
+              const hasDocuments =
+                business.documents && business.documents.length > 0
+
+              console.log('🔍 Business Verification Check:', {
+                businessId,
+                verificationStatus,
+                hasDocuments,
+                documentsCount: business.documents?.length || 0,
+                pathname: router.pathname,
+              })
+
+              // Redirect based on verification status and documents
+              if (verificationStatus === BusinessVerificationStatus.REJECTED) {
+                console.log('🚨 AuthGuard Business Redirect:', {
+                  reason: 'Business rejected - redirect to complete-documents',
+                  redirectTo: '/complete-documents',
+                  pathname: router.pathname,
+                })
+                router.replace('/complete-documents')
+              } else if (
+                verificationStatus === BusinessVerificationStatus.VERIFIED
+              ) {
+                console.log('🚨 AuthGuard Business Redirect:', {
+                  reason: 'Business verified - redirect to home',
+                  redirectTo: '/home',
+                  pathname: router.pathname,
+                })
+                router.replace('/home')
+              } else if (
+                hasDocuments &&
+                verificationStatus === BusinessVerificationStatus.PENDING
+              ) {
+                console.log('🚨 AuthGuard Business Redirect:', {
+                  reason:
+                    'Business has documents and pending approval - redirect to verification',
+                  redirectTo: '/verification',
+                  pathname: router.pathname,
+                })
+                router.replace('/verification')
+              } else {
+                // No documents or unverified status - redirect to setup
+                console.log('🚨 AuthGuard Business Redirect:', {
+                  reason:
+                    'Business has no documents or unverified - redirect to setup',
+                  redirectTo: '/setup',
+                  pathname: router.pathname,
+                  verificationStatus,
+                  hasDocuments,
+                })
+                router.replace('/setup')
+              }
+            } else {
+              // Failed to get business data - redirect to setup
+              console.log('🚨 AuthGuard Business Redirect:', {
+                reason: 'Failed to fetch business data - redirect to setup',
+                redirectTo: '/setup',
+                pathname: router.pathname,
+              })
+              router.replace('/setup')
+            }
+          } else {
+            // API call failed - redirect to setup
+            console.log('🚨 AuthGuard Business Redirect:', {
+              reason: 'Business API call failed - redirect to setup',
+              redirectTo: '/setup',
+              pathname: router.pathname,
+            })
+            router.replace('/setup')
+          }
+        } catch (error) {
+          console.error('Error checking business verification status:', error)
+          // On error, redirect to setup
+          console.log('🚨 AuthGuard Business Redirect:', {
+            reason: 'Error checking business status - redirect to setup',
+            redirectTo: '/setup',
+            pathname: router.pathname,
+            error: error,
+          })
+          router.replace('/setup')
+        }
       }
 
-      const isBusinessApproved = (user: any) => {
-        return user?.businessInfo?.isApproved === true
-      }
-
-      if (isBusinessRejected(appUser)) {
-        console.log('🚨 AuthGuard Business Redirect:', {
-          reason: 'Business rejected - direct to complete-documents',
-          redirectTo: '/complete-documents',
-          pathname: router.pathname,
-        })
-        router.replace('/complete-documents')
-      } else if (isBusinessApproved(appUser)) {
-        console.log('🚨 AuthGuard Business Redirect:', {
-          reason: 'Business approved - direct to home',
-          redirectTo: '/home',
-          pathname: router.pathname,
-        })
-        router.replace('/home')
-      } else {
-        // Business is pending
-        console.log('🚨 AuthGuard Business Redirect:', {
-          reason: 'Business pending - direct to pending-approval',
-          redirectTo: '/pending-approval',
-          pathname: router.pathname,
-        })
-        router.replace('/pending-approval')
-      }
+      checkBusinessVerificationStatus()
     }
   }, [
     mounted,

@@ -49,9 +49,9 @@ const BusinessApprovalGuard: React.FC<BusinessApprovalGuardProps> = ({
       // If business user is not approved and not explicitly rejected, redirect to pending approval page
       if (!isApproved) {
         console.log(
-          'BusinessApprovalGuard: Business pending approval, redirecting to pending-approval'
+          'BusinessApprovalGuard: Business pending approval, redirecting to verification'
         )
-        router.replace('/pending-approval')
+        router.replace('/verification')
         return
       }
     }
