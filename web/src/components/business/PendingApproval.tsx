@@ -4,16 +4,79 @@
  */
 
 import { Button } from '@/components/ui/Button'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
+import { AccountType, IBusiness } from '@/shared-generated'
 import Link from 'next/link'
-import React from 'react'
-import { FiCheckCircle, FiClock, FiMail } from 'react-icons/fi'
+import React, { useEffect, useState } from 'react'
+import { FiAlertCircle, FiCheckCircle, FiClock, FiMail } from 'react-icons/fi'
 
 const PendingApproval: React.FC = () => {
   const { appUser, logout } = useAuth()
+  const [businessData, setBusinessData] = useState<IBusiness | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // Fetch business data to show verification status
+  useEffect(() => {
+    const fetchBusinessData = async () => {
+      if (!appUser?.businessInfo?.businessId) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        const response = await fetch(
+          `/api/business/${appUser.businessInfo.businessId}`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        )
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            setBusinessData(result.data)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching business data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (appUser && appUser.accountType === AccountType.BUSINESS) {
+      fetchBusinessData()
+    } else {
+      setLoading(false)
+    }
+  }, [appUser])
 
   const handleLogout = async () => {
     await logout()
+  }
+
+  // Check verification status
+  const hasDocuments =
+    businessData?.documents && businessData.documents.length > 0
+  const hasBusinessPhone =
+    businessData?.phone && businessData.phone.trim() !== ''
+  const documentsCount = businessData?.documents?.length || 0
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <LoadingSpinner size="large" />
+            <p className="mt-4 text-gray-600">
+              Doğrulama durumu kontrol ediliyor...
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -77,26 +140,69 @@ const PendingApproval: React.FC = () => {
             </div>
           </div>
 
-          {/* Information Box */}
+          {/* Information Box - Show Verification Status */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-semibold text-blue-900 mb-2">
-              Bu süre zarfında:
+            <h3 className="text-sm font-semibold text-blue-900 mb-3">
+              Doğrulama Durumu:
             </h3>
-            <ul className="text-sm text-blue-800 space-y-1 text-left">
-              <li>• Hesabınıza giriş yapabilirsiniz</li>
-              <li>• Profil bilgilerinizi düzenleyebilirsiniz</li>
-              <li>• Platformu keşfedebilirsiniz</li>
-              <li>• Tam erişim onay sonrası aktif olacaktır</li>
-            </ul>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-blue-800">Yüklenen Belgeler:</span>
+                <div className="flex items-center space-x-2">
+                  {hasDocuments ? (
+                    <FiCheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <FiAlertCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  <span
+                    className={
+                      hasDocuments
+                        ? 'text-green-600 font-medium'
+                        : 'text-red-600 font-medium'
+                    }
+                  >
+                    {hasDocuments
+                      ? `${documentsCount} belge yüklendi`
+                      : 'Belge yüklenmedi'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-blue-800">İşletme Telefonu:</span>
+                <div className="flex items-center space-x-2">
+                  {hasBusinessPhone ? (
+                    <FiCheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <FiAlertCircle className="h-4 w-4 text-orange-600" />
+                  )}
+                  <span
+                    className={
+                      hasBusinessPhone
+                        ? 'text-green-600 font-medium'
+                        : 'text-orange-600 font-medium'
+                    }
+                  >
+                    {hasBusinessPhone ? 'Doğrulandı' : 'Opsiyonel'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Actions */}
           <div className="space-y-3">
             <Link
-              href="/profile"
+              href="/home"
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
             >
-              Profili Düzenle
+              Ana Sayfaya Git
+            </Link>
+
+            <Link
+              href="/setup"
+              className="w-full inline-flex justify-center items-center px-4 py-2 border border-blue-600 text-sm font-medium rounded-lg text-blue-600 bg-white hover:bg-blue-50 transition-colors"
+            >
+              Kurulum Sayfasına Git
             </Link>
 
             <Button variant="outline" onClick={handleLogout} className="w-full">

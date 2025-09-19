@@ -32,6 +32,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
   const [success, setSuccess] = useState(false)
   const [businessData, setBusinessData] = useState<IBusiness | null>(null)
   const [fetchingBusiness, setFetchingBusiness] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Form data state
   const [phone, setPhone] = useState(appUser?.phoneNumber || '')
@@ -95,10 +96,15 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
 
   // If business setup is already complete, redirect to pending approval
   useEffect(() => {
-    if (!fetchingBusiness && businessData && isBusinessSetupComplete()) {
+    if (
+      !fetchingBusiness &&
+      !isSubmitting &&
+      businessData &&
+      isBusinessSetupComplete()
+    ) {
       router.push('/pending-approval')
     }
-  }, [fetchingBusiness, businessData, router])
+  }, [fetchingBusiness, businessData, router, isSubmitting])
 
   // Video display logic - using passed props instead of client-side fetch
   const primaryVideo: IVideoItem | undefined = videos?.find(
@@ -159,11 +165,13 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
     e.preventDefault()
     setError('')
     setLoading(true)
+    setIsSubmitting(true)
 
     // Validate phone number if provided
     if (phone && !/^(\+90|0)?[5-9]\d{9}$/.test(phone.replace(/\s/g, ''))) {
       setError('Geçerli bir Türkiye telefon numarası girin (5XX XXX XX XX)')
       setLoading(false)
+      setIsSubmitting(false)
       return
     }
 
@@ -186,6 +194,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
           console.error('Failed to upload tax certificate:', uploadError)
           setError('Vergi levhası yüklenirken hata oluştu')
           setLoading(false)
+          setIsSubmitting(false)
           return
         }
       }
@@ -207,6 +216,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
             console.error('Failed to upload place photo:', uploadError)
             setError('İşyeri fotoğrafları yüklenirken hata oluştu')
             setLoading(false)
+            setIsSubmitting(false)
             return
           }
         }
@@ -286,6 +296,7 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
           console.error('Failed to update business:', updateError)
           setError('İşletme bilgileri güncellenirken hata oluştu')
           setLoading(false)
+          setIsSubmitting(false)
           return
         }
       }
@@ -326,11 +337,13 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
       console.log('🚀 Preparing to redirect to pending-approval page...')
       setTimeout(() => {
         console.log('🚀 Executing redirect to pending-approval page...')
+        setIsSubmitting(false)
         router.replace('/pending-approval')
       }, 1000) // 1 second delay to show success message
     } catch (err: any) {
       setError(err.message || 'Profil güncellenirken bir hata oluştu')
       setLoading(false)
+      setIsSubmitting(false)
     }
   }
 

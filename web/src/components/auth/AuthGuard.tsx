@@ -84,7 +84,8 @@ export function AuthGuard({
       !loading &&
       appUser &&
       !isProfileComplete &&
-      router.pathname !== '/setup'
+      router.pathname !== '/setup' &&
+      router.pathname !== '/pending-approval'
     ) {
       console.log('🚨 AuthGuard Profile Redirect:', {
         reason: 'Profile incomplete',
