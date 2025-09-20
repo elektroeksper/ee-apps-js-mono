@@ -4,7 +4,7 @@
  */
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { BusinessVerificationStatus, DocumentCategory, IDocument, StorageDocumentStatus, StorageDocumentType } from '@/shared-generated';
+import { BusinessVerificationStatus, DocumentCategory, FB_COLL_NAMES, IDocument, StorageDocumentStatus, StorageDocumentType } from '@/shared-generated';
 import { randomUUID } from 'crypto';
 import { Timestamp } from 'firebase-admin/firestore';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -103,7 +103,7 @@ async function getDocuments(
   userId: string
 ) {
   try {
-    const documentsCollection = adminDb.collection('businessDocuments');
+    const documentsCollection = adminDb.collection(FB_COLL_NAMES.documents);
     const query = documentsCollection.where('userId', '==', userId);
     const snapshot = await query.get();
 
@@ -224,7 +224,7 @@ async function uploadDocument(
       updatedAt: new Date()
     };
 
-    const docRef = await adminDb.collection('businessDocuments').add(documentData);
+    const docRef = await adminDb.collection(FB_COLL_NAMES.documents).add(documentData);
 
     // Update business verification status when documents are uploaded
     await updateBusinessVerificationStatus(userId);
@@ -282,7 +282,7 @@ async function deleteDocument(
     }
 
     // Check if document exists and belongs to user
-    const docRef = adminDb.collection('businessDocuments').doc(documentId);
+    const docRef = adminDb.collection(FB_COLL_NAMES.documents).doc(documentId);
     const doc = await docRef.get();
 
     if (!doc.exists) {

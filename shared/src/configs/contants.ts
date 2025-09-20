@@ -25,6 +25,7 @@ export const FB_COLL_NAMES = {
   messages: "messages",
   notifications: "notifications",
   logs: "logs",
+  documents: "documents",
 }
 
 export const ACTIVE_SETTINGS: {

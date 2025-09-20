@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { auth, db } from '../utils/firebase-admin';
 // Import types from shared-generated (will be copied at build time)
-import { IAppUser, IDocument, IOperationResult, StorageDocumentStatus } from '../shared-generated';
+import { FB_COLL_NAMES, IAppUser, IDocument, IOperationResult, StorageDocumentStatus } from '../shared-generated';
 
 // Get user profile
 export async function getUserProfile(userId: string): Promise<IOperationResult<IAppUser>> {
@@ -337,7 +337,7 @@ export async function createBusinessDocument(userId: string, documentData: {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    const docRef = await db.collection('businessDocuments').add(docData);
+    const docRef = await db.collection(FB_COLL_NAMES.documents).add(docData);
     const createdDoc = await docRef.get();
 
     const businessDocument: any = {
