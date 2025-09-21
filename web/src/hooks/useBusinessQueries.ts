@@ -1,7 +1,7 @@
 /**
  * Business Query Hooks
  * React Query hooks for business entity operations
- * Follows the established pattern from user and repair request hooks
+ * Follows the established pattern from user hooks
  */
 
 import { IBusiness, IBusinessFilter, IOperationResult } from '@/shared-generated';

@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import { ReactNode, useState } from 'react'
 import {
   FiBarChart,
+  FiEdit,
   FiHome,
   FiLogOut,
   FiMenu,
@@ -42,6 +43,12 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
       href: '/admin/users',
       icon: FiUsers,
       description: 'Kullanıcı yönetimi',
+    },
+    {
+      label: 'İçerik Yönetimi',
+      href: '/admin/contents',
+      icon: FiEdit,
+      description: 'Site içeriği yönetimi',
     },
     {
       label: 'Analitik',
@@ -127,7 +134,7 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
           </button>
         </div>
       </div>
-      {/* Main content */}logout pu
+      {/* Main content */}
       <div className="flex-1 lg:flex lg:flex-col">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-slate-200">

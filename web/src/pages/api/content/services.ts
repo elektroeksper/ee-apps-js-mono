@@ -42,12 +42,15 @@ async function getServices(
   res: NextApiResponse<ServicesResponse>
 ) {
   try {
-    const servicesCollection = adminDb.collection('services');
+    const servicesCollection = adminDb.collection('content').doc('services').collection('items');
     const snapshot = await servicesCollection.orderBy('order', 'asc').get();
 
     const services: IServiceItem[] = [];
     snapshot.forEach(doc => {
-      services.push({ id: doc.id, ...doc.data() } as IServiceItem);
+      const data = doc.data() as IServiceItem;
+      if (data.isActive) { // Only return active services for public API
+        services.push({ id: doc.id, ...data });
+      }
     });
 
     return res.status(200).json({

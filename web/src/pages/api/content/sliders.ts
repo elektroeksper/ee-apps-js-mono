@@ -42,12 +42,15 @@ async function getSliders(
   res: NextApiResponse<SlidersResponse>
 ) {
   try {
-    const slidersCollection = adminDb.collection('sliders');
+    const slidersCollection = adminDb.collection('content').doc('sliders').collection('items');
     const snapshot = await slidersCollection.orderBy('order', 'asc').get();
 
     const sliders: ISliderItem[] = [];
     snapshot.forEach(doc => {
-      sliders.push({ id: doc.id, ...doc.data() } as ISliderItem);
+      const data = doc.data() as ISliderItem;
+      if (data.isActive) { // Only return active sliders for public API
+        sliders.push({ id: doc.id, ...data });
+      }
     });
 
     return res.status(200).json({

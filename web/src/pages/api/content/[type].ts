@@ -4,7 +4,7 @@
  * Solves Next.js 15 build issues by moving Firebase operations to API routes
  */
 
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, verifyIdToken } from '@/lib/firebase-admin';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 type ContentType = 'about' | 'branding' | 'contact';
@@ -85,10 +85,44 @@ async function updateContent(
   res: NextApiResponse<ContentResponse>,
   type: ContentType
 ) {
-  // TODO: Add authentication middleware here
-  // For now, allowing all updates for development
-
   try {
+    // Verify admin authentication for updates
+    let token = req.cookies.session;
+
+    if (!token) {
+      // Fallback to Authorization header (for ID tokens)
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'No authentication token found'
+      });
+    }
+
+    const decodedResult = await verifyIdToken(token);
+
+    if (!decodedResult.success || !decodedResult.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid token'
+      });
+    }
+
+    // Check if user has admin privileges
+    const isAdmin = decodedResult.user.admin === true;
+
+    if (!isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Insufficient permissions'
+      });
+    }
+
     const contentData = req.body;
 
     if (!contentData) {
@@ -103,7 +137,8 @@ async function updateContent(
     // Update with timestamp
     const updateData = {
       ...contentData,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      updatedBy: decodedResult.user.uid
     };
 
     await docRef.set(updateData, { merge: true });

@@ -3,7 +3,7 @@
  * React hooks for managing business document operations
  */
 
-import { businessDocumentService } from '@/services/business-documents.service';
+import { businessDocumentService } from '@/services/documents.service';
 import { DocumentCategory, IDocument } from '@/shared-generated';
 import { useCallback, useEffect, useState } from 'react';
 
