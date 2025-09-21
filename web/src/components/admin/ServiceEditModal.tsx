@@ -1,7 +1,7 @@
 import { IServiceItem } from '@/shared-generated'
 import { useEffect, useState } from 'react'
 import { FiFolder, FiX } from 'react-icons/fi'
-import FileManagerModal from './FileManagerModal'
+import UploadManagerModal from './UploadManagerModal'
 
 interface ServiceEditModalProps {
   isOpen: boolean
@@ -247,7 +247,7 @@ export default function ServiceEditModal({
         </form>
       </div>
 
-      <FileManagerModal
+      <UploadManagerModal
         isOpen={fileManagerOpen}
         onClose={() => setFileManagerOpen(false)}
         onSelectFile={fileUrl => {

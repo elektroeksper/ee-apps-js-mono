@@ -13,7 +13,7 @@ import {
   FiX,
 } from 'react-icons/fi'
 
-interface FileManagerModalProps {
+interface UploadManagerModalProps {
   isOpen: boolean
   onClose: () => void
   onSelectFile?: (fileUrl: string) => void
@@ -27,7 +27,7 @@ export default function FileManagerModal({
   onSelectFile,
   category = 'general',
   allowSelection = false,
-}: FileManagerModalProps) {
+}: UploadManagerModalProps) {
   const { fireUser } = useAuth() as any
   const [files, setFiles] = useState<IUploadItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -81,7 +81,7 @@ export default function FileManagerModal({
     fetchFiles()
   }, [fetchFiles])
 
-  const handleFileUpload = async (uploadFiles: FileList) => {
+  const handleUpload = async (uploadFiles: FileList) => {
     if (!uploadFiles.length) return
 
     setUploading(true)
@@ -114,7 +114,7 @@ export default function FileManagerModal({
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      handleFileUpload(e.target.files)
+      handleUpload(e.target.files)
     }
   }
 
@@ -123,7 +123,7 @@ export default function FileManagerModal({
     setDragOver(false)
 
     if (e.dataTransfer.files) {
-      handleFileUpload(e.dataTransfer.files)
+      handleUpload(e.dataTransfer.files)
     }
   }
 

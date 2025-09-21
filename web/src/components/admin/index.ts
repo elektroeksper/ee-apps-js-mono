@@ -10,5 +10,6 @@ export { default as ContentEditModal } from './ContentEditModal'
 export { default as RejectReasonModal } from './RejectReasonModal'
 export { default as ServiceEditModal } from './ServiceEditModal'
 export { default as SliderEditModal } from './SliderEditModal'
+export { default as UploadManagerModal } from './UploadManagerModal'
 export { default as UserDetailModal } from './UserDetailModal'
 

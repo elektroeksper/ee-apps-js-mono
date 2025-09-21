@@ -1,7 +1,7 @@
 import { ISliderItem } from '@/shared-generated'
 import { useEffect, useState } from 'react'
 import { FiFolder, FiX } from 'react-icons/fi'
-import FileManagerModal from './FileManagerModal'
+import UploadManagerModal from './UploadManagerModal'
 
 interface SliderEditModalProps {
   isOpen: boolean
@@ -248,7 +248,7 @@ export default function SliderEditModal({
         </form>
       </div>
 
-      <FileManagerModal
+      <UploadManagerModal
         isOpen={fileManagerOpen}
         onClose={() => setFileManagerOpen(false)}
         onSelectFile={fileUrl => {

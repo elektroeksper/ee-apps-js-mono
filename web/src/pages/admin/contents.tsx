@@ -2,9 +2,9 @@
 
 import AdminLayout from '@/components/admin/AdminLayout'
 import ContentEditModal from '@/components/admin/ContentEditModal'
-import FileManagerModal from '@/components/admin/FileManagerModal'
 import ServiceEditModal from '@/components/admin/ServiceEditModal'
 import SliderEditModal from '@/components/admin/SliderEditModal'
+import UploadManagerModal from '@/components/admin/UploadManagerModal'
 import { AuthGuard } from '@/components/auth'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -762,7 +762,7 @@ function AdminContentsPageContent() {
             />
           )}
 
-        <FileManagerModal
+        <UploadManagerModal
           isOpen={fileManagerOpen}
           onClose={() => setFileManagerOpen(false)}
         />

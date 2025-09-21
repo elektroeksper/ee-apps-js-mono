@@ -1,7 +1,7 @@
 import MarkdownEditor from '@/components/admin/MarkdownEditor'
 import { useEffect, useState } from 'react'
 import { FiFolder, FiX } from 'react-icons/fi'
-import FileManagerModal from './FileManagerModal'
+import UploadManagerModal from './UploadManagerModal'
 
 type ContentType = 'contact' | 'about' | 'branding'
 
@@ -447,7 +447,7 @@ export default function ContentEditModal({
         </form>
       </div>
 
-      <FileManagerModal
+      <UploadManagerModal
         isOpen={fileManagerOpen}
         onClose={() => setFileManagerOpen(false)}
         onSelectFile={fileUrl => {
