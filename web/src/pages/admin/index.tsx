@@ -180,7 +180,7 @@ function AdminDashboardContent() {
     {
       title: 'İçerik Yönetimi',
       description: 'Web sitesi içeriğini düzenle ve güncelle',
-      href: '/admin/content',
+      href: '/admin/contents',
       icon: FiEdit,
       color: 'indigo',
     },

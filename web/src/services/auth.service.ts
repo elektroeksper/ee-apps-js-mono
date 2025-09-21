@@ -22,6 +22,7 @@ import {
   EmailAuthProvider,
   User as FirebaseUser,
   getIdToken,
+  getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
   reauthenticateWithCredential,
@@ -29,6 +30,7 @@ import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   updatePassword,
   updateProfile,
@@ -220,7 +222,29 @@ export class AuthService implements IAuthService {
       provider.addScope('email');
       provider.addScope('profile');
 
-      const userCredential = await signInWithPopup(auth, provider);
+      let userCredential;
+
+      try {
+        // Try popup first
+        userCredential = await signInWithPopup(auth, provider);
+      } catch (popupError: any) {
+        // If popup is blocked, fall back to redirect
+        if (popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/popup-closed-by-user') {
+          console.log('Popup blocked, falling back to redirect...');
+          await signInWithRedirect(auth, provider);
+          // signInWithRedirect doesn't return a result directly
+          // The user will be redirected and we'll handle the result in getRedirectResult
+          return {
+            success: true,
+            data: null as any, // Will be handled by redirect result
+            code: 200,
+          };
+        } else {
+          // Re-throw other errors
+          throw popupError;
+        }
+      }
 
       // Create session cookie via API route for server-side authentication
       try {
@@ -261,7 +285,29 @@ export class AuthService implements IAuthService {
       provider.addScope('email');
       provider.addScope('profile');
 
-      const userCredential = await signInWithPopup(auth, provider);
+      let userCredential;
+
+      try {
+        // Try popup first
+        userCredential = await signInWithPopup(auth, provider);
+      } catch (popupError: any) {
+        // If popup is blocked, fall back to redirect
+        if (popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/popup-closed-by-user') {
+          console.log('Popup blocked, falling back to redirect...');
+          await signInWithRedirect(auth, provider);
+          // signInWithRedirect doesn't return a result directly
+          // The user will be redirected and we'll handle the result in getRedirectResult
+          return {
+            success: true,
+            data: null as any, // Will be handled by redirect result
+            code: 201,
+          };
+        } else {
+          // Re-throw other errors
+          throw popupError;
+        }
+      }
 
       return {
         success: true,
@@ -287,6 +333,56 @@ export class AuthService implements IAuthService {
         success: true,
         code: 200,
       };
+    } catch (error: any) {
+      return this.handleAuthError(error);
+    }
+  }
+
+  /**
+   * Handle redirect result from Google authentication
+   * This should be called on app load to handle redirect results
+   */
+  async handleRedirectResult(): Promise<IOperationResult<IFirebaseUser | null>> {
+    try {
+      const result = await getRedirectResult(auth);
+
+      if (result) {
+        // User signed in via redirect
+        const user = result.user;
+
+        // Create session cookie via API route for server-side authentication
+        try {
+          const idToken = await user.getIdToken();
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`,
+            },
+          });
+
+          if (!response.ok) {
+            console.error('Failed to create session cookie:', response.statusText);
+            // Continue anyway - client-side auth still works
+          }
+        } catch (sessionError) {
+          console.error('Error creating session cookie:', sessionError);
+          // Continue anyway - client-side auth still works
+        }
+
+        return {
+          success: true,
+          data: this.mapFirebaseUser(user),
+          code: 200,
+        };
+      } else {
+        // No redirect result (normal app load)
+        return {
+          success: true,
+          data: null,
+          code: 200,
+        };
+      }
     } catch (error: any) {
       return this.handleAuthError(error);
     }

@@ -58,6 +58,20 @@ export function useFirebaseAuth(): FirebaseAuthState {
       try {
         const { auth } = await import('@/lib/firebase-auth-config');
 
+        // Check for redirect result first (for popup-blocked fallback)
+        try {
+          console.log('🔄 useFirebaseAuth: Checking for redirect result...');
+          const { authService } = await import('@/services/auth.service');
+          const redirectResult = await authService.handleRedirectResult();
+          if (redirectResult.success && redirectResult.data) {
+            console.log('🔄 useFirebaseAuth: Redirect result found:', redirectResult.data.email);
+            // The onAuthStateChanged will handle the user update
+          }
+        } catch (redirectError) {
+          console.warn('🚨 useFirebaseAuth: Error handling redirect result:', redirectError);
+          // Don't fail the whole initialization for redirect errors
+        }
+
         // Check immediate auth state
         const currentUser = auth.currentUser;
         console.log('🔄 useFirebaseAuth: Current user on init:', currentUser?.email || 'null');

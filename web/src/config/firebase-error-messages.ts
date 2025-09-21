@@ -101,8 +101,8 @@ export const authErrorMessages: Record<string, FirebaseErrorMessage> = {
     tr: 'Giriş penceresi kapatıldı'
   },
   'auth/popup-blocked': {
-    en: 'Popup was blocked. Please check your browser settings',
-    tr: 'Popup engellendi. Tarayıcı ayarlarınızı kontrol edin'
+    en: 'Popup was blocked. Redirecting for authentication...',
+    tr: 'Popup engellendi. Kimlik doğrulama için yönlendiriliyor...'
   },
   'auth/cancelled-popup-request': {
     en: 'Sign-in process was cancelled',
