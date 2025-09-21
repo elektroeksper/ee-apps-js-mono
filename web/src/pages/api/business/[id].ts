@@ -3,7 +3,7 @@
  * Handles GET, PUT, DELETE operations for individual business entities
  */
 
-import { adminDb, verifyIdToken } from '@/lib/firebase-admin';
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { IBusiness } from '@/shared-generated';
 import { Timestamp } from 'firebase-admin/firestore';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -42,21 +42,22 @@ async function handleGetBusiness(
   businessId: string
 ) {
   try {
+    console.log('🏢 Business API GET: Requesting business ID:', businessId);
     // Verify authentication via session cookie
     const sessionCookie = req.cookies.session;
+    console.log('🔑 Business API: Session cookie present:', !!sessionCookie);
 
     if (!sessionCookie) {
       return res.status(401).json({ error: 'No session found' });
     }
 
-    const decodedResult = await verifyIdToken(sessionCookie);
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
+    const userId = decodedToken.uid;
+    console.log('🔑 Business API: Session verified for user:', userId);
 
-    if (!decodedResult.success || !decodedResult.user) {
-      return res.status(401).json({ error: 'Invalid session' });
-    }
-
-    const userId = decodedResult.user.uid;
-    const userClaims = decodedResult.user.customClaims || {};
+    // Get user record for custom claims
+    const userRecord = await adminAuth.getUser(userId);
+    const userClaims = userRecord.customClaims || {};
     const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
 
     // Get business document
@@ -101,13 +102,8 @@ async function handleUpdateBusiness(
       return res.status(401).json({ error: 'No session found' });
     }
 
-    const decodedResult = await verifyIdToken(sessionCookie);
-
-    if (!decodedResult.success || !decodedResult.user) {
-      return res.status(401).json({ error: 'Invalid session' });
-    }
-
-    const userId = decodedResult.user.uid;
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
+    const userId = decodedToken.uid;
     const updateData = req.body;
 
     // Get business document
@@ -190,14 +186,12 @@ async function handleDeleteBusiness(
       return res.status(401).json({ error: 'No session found' });
     }
 
-    const decodedResult = await verifyIdToken(sessionCookie);
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
+    const userId = decodedToken.uid;
 
-    if (!decodedResult.success || !decodedResult.user) {
-      return res.status(401).json({ error: 'Invalid session' });
-    }
-
-    const userId = decodedResult.user.uid;
-    const userClaims = decodedResult.user.customClaims || {};
+    // Get user record for custom claims
+    const userRecord = await adminAuth.getUser(userId);
+    const userClaims = userRecord.customClaims || {};
     const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
 
     // Get business document

@@ -91,7 +91,20 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
     // Check if business has required information
     const hasBasicInfo = businessData.businessName && businessData.phone
 
+    console.log('🔍 Business setup check:', {
+      hasDocuments,
+      hasBasicInfo,
+      documentsCount: businessData.documents?.length || 0,
+      businessName: businessData.businessName,
+      phone: businessData.phone,
+    })
+
     return hasDocuments && hasBasicInfo
+  }
+
+  // Check if there are already uploaded documents
+  const hasUploadedDocuments = () => {
+    return businessData?.documents && businessData.documents.length > 0
   }
 
   // If business setup is already complete, redirect to pending approval
@@ -158,6 +171,25 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
 
     setPlacePhotos(validFiles)
     setError('')
+  }
+
+  // Handle "I Updated Documents" button click
+  const handleDocumentsUpdated = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      // Refresh user data to get updated profile information
+      console.log('🔄 User clicked "Belgeleri Güncelledim", refreshing data...')
+      await refreshUser()
+
+      // Redirect to verification page
+      console.log('🚀 Redirecting to verification page...')
+      router.replace('/verification')
+    } catch (err: any) {
+      setError('Sayfa yenilenirken bir hata oluştu')
+      setLoading(false)
+    }
   }
 
   // Handle form submission
@@ -726,27 +758,122 @@ const BusinessSetup: React.FC<BusinessSetupProps> = ({ videos = [] }) => {
                         </p>
                       </div>
                     </div>
+
+                    {/* Add Documents Button - Only shown when documents already exist */}
+                    {hasUploadedDocuments() && (
+                      <div className="mt-4">
+                        <div className="flex justify-center">
+                          <Button
+                            type="submit"
+                            disabled={
+                              loading ||
+                              (!taxCertificate && placePhotos.length === 0)
+                            }
+                            className="px-8 py-3 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:transform-none disabled:shadow-lg"
+                          >
+                            {loading ? (
+                              <div className="flex items-center">
+                                <LoadingSpinner size="small" />
+                                <span className="ml-2">Yükleniyor...</span>
+                              </div>
+                            ) : (
+                              'Yeni Belgeler Ekle'
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-center pt-8 border-t border-gray-200">
-                  <Button
-                    type="submit"
-                    disabled={
-                      loading || (!taxCertificate && placePhotos.length === 0)
-                    }
-                    className="px-12 py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:transform-none disabled:shadow-lg"
-                  >
-                    {loading ? (
-                      <div className="flex items-center">
-                        <LoadingSpinner size="small" />
-                        <span className="ml-2">Yükleniyor...</span>
+                <div className="pt-8 border-t border-gray-200">
+                  {hasUploadedDocuments() && (
+                    <div className="mb-6 p-6 bg-green-50 border border-green-200 rounded-xl">
+                      <div className="flex items-start space-x-4">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="w-6 h-6 text-green-600"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-green-800 font-semibold text-lg mb-2">
+                            Belgeleriniz Daha Önce Yüklenmiş
+                          </h4>
+                          <p className="text-green-700 mb-4 leading-relaxed">
+                            İşletmeniz için{' '}
+                            {businessData?.documents?.length || 0} adet belge
+                            bulunuyor. Belgelerinizi güncellediyseniz, aşağıdaki
+                            butona tıklayarak onay sürecine devam edebilirsiniz.
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <Button
+                              type="button"
+                              onClick={handleDocumentsUpdated}
+                              disabled={loading}
+                              className="px-6 py-3 text-base font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                            >
+                              {loading ? (
+                                <div className="flex items-center">
+                                  <LoadingSpinner size="small" />
+                                  <span className="ml-2">Yükleniyor...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center">
+                                  <svg
+                                    className="w-5 h-5 mr-2"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  Belgeleri Güncelledim
+                                </div>
+                              )}
+                            </Button>
+                            <p className="text-green-600 text-sm italic self-center">
+                              Bu butona tıklayarak onay sürecine devam
+                              edebilirsiniz
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    ) : (
-                      'Belgeleri Yükle ve Devam Et'
-                    )}
-                  </Button>
+                    </div>
+                  )}
+
+                  {!hasUploadedDocuments() && (
+                    <div className="flex justify-center">
+                      <Button
+                        type="submit"
+                        disabled={
+                          loading ||
+                          (!taxCertificate && placePhotos.length === 0)
+                        }
+                        className="px-12 py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:transform-none disabled:shadow-lg"
+                      >
+                        {loading ? (
+                          <div className="flex items-center">
+                            <LoadingSpinner size="small" />
+                            <span className="ml-2">Yükleniyor...</span>
+                          </div>
+                        ) : (
+                          'Belgeleri Yükle ve Devam Et'
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </form>
             </div>

@@ -31,8 +31,14 @@ export default async function handler(
   res: NextApiResponse<DocumentsResponse>
 ) {
   try {
+    // Debug: Log all cookies received
+    console.log('🍪 All cookies received:', req.cookies);
+    console.log('🍪 Headers:', req.headers.cookie);
+
     // Verify authentication
     const sessionCookie = req.cookies.session;
+    console.log('🔑 Session cookie:', sessionCookie ? 'Present' : 'Missing');
+
     if (!sessionCookie) {
       return res.status(401).json({
         success: false,
@@ -44,10 +50,12 @@ export default async function handler(
     // Verify session cookie
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
+    console.log('🔑 Session verified for user:', userId);
 
     // Check if user is a business user
     const userDoc = await adminDb.collection('users').doc(userId).get();
     if (!userDoc.exists) {
+      console.log('❌ User document not found for:', userId);
       return res.status(404).json({
         success: false,
         error: 'User not found',
@@ -56,7 +64,14 @@ export default async function handler(
     }
 
     const userData = userDoc.data();
+    console.log('👤 User data:', {
+      uid: userId,
+      accountType: userData?.accountType,
+      email: userData?.email
+    });
+
     if (userData?.accountType !== 'business') {
+      console.log('❌ Account type mismatch. Expected: business, Got:', userData?.accountType);
       return res.status(403).json({
         success: false,
         error: 'Business account required',

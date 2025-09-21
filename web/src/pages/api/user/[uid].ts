@@ -91,9 +91,12 @@ async function handleUpdate(
       console.log('❌ User mismatch:', { sessionUid: decodedResult.user.uid, requestUid: uid });
 
       // Clear invalid session cookies to force re-authentication
+      const isProduction = process.env.NODE_ENV === 'production';
+      const secureFlag = isProduction ? '; Secure' : '';
+
       res.setHeader('Set-Cookie', [
-        `session=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/`,
-        `user-id=; Max-Age=0; Secure; SameSite=Lax; Path=/`
+        `session=; Max-Age=0; HttpOnly${secureFlag}; SameSite=Lax; Path=/`,
+        `user-id=; Max-Age=0${secureFlag}; SameSite=Lax; Path=/`
       ]);
 
       return res.status(403).json({

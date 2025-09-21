@@ -196,10 +196,13 @@ export default async function handler(
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days in milliseconds
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
 
-    // Set secure HTTP-only cookie
+    // Set HTTP-only cookie (Secure flag only in production for HTTPS)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const secureFlag = isProduction ? '; Secure' : '';
+
     res.setHeader('Set-Cookie', [
-      `session=${sessionCookie}; Max-Age=${expiresIn / 1000}; HttpOnly; Secure; SameSite=Lax; Path=/`,
-      `user-id=${userId}; Max-Age=${expiresIn / 1000}; Secure; SameSite=Lax; Path=/`
+      `session=${sessionCookie}; Max-Age=${expiresIn / 1000}; HttpOnly${secureFlag}; SameSite=Lax; Path=/`,
+      `user-id=${userId}; Max-Age=${expiresIn / 1000}${secureFlag}; SameSite=Lax; Path=/`
     ]);
 
     return res.status(201).json({

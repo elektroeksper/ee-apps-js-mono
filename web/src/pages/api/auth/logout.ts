@@ -21,10 +21,13 @@ export default async function handler(
     });
   }
 
-  // Clear authentication cookies
+  // Clear authentication cookies (Secure flag only in production for HTTPS)
+  const isProduction = process.env.NODE_ENV === 'production';
+  const secureFlag = isProduction ? '; Secure' : '';
+
   res.setHeader('Set-Cookie', [
-    'session=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/',
-    'user-id=; Max-Age=0; Secure; SameSite=Lax; Path=/'
+    `session=; Max-Age=0; HttpOnly${secureFlag}; SameSite=Lax; Path=/`,
+    `user-id=; Max-Age=0${secureFlag}; SameSite=Lax; Path=/`
   ]);
 
   return res.status(200).json({
