@@ -4,8 +4,9 @@
  */
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { IBusiness } from '@/shared-generated';
+import { DocumentCategory, DocumentFileType, IBusiness, IDocument, StorageDocumentStatus, StorageDocumentType } from '@/shared-generated';
 import { Timestamp } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -43,22 +44,51 @@ async function handleGetBusiness(
 ) {
   try {
     console.log('🏢 Business API GET: Requesting business ID:', businessId);
-    // Verify authentication via session cookie
+
+    let decodedToken;
+    let userId;
+
+    // Try session cookie first
     const sessionCookie = req.cookies.session;
     console.log('🔑 Business API: Session cookie present:', !!sessionCookie);
 
-    if (!sessionCookie) {
-      return res.status(401).json({ error: 'No session found' });
+    if (sessionCookie) {
+      try {
+        // Verify session cookie
+        decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
+        userId = decodedToken.uid;
+        console.log('🔑 Business API: Session verified for user:', userId);
+      } catch (sessionError) {
+        console.log('🔑 Business API: Session cookie verification failed:', sessionError instanceof Error ? sessionError.message : 'Unknown error');
+      }
     }
 
-    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
-    const userId = decodedToken.uid;
-    console.log('🔑 Business API: Session verified for user:', userId);
+    // If session cookie failed, try ID token
+    if (!decodedToken) {
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        const idToken = authHeader.split('Bearer ')[1];
+        try {
+          decodedToken = await adminAuth.verifyIdToken(idToken);
+          userId = decodedToken.uid;
+          console.log('🔑 Business API: ID token verified for user:', userId);
+        } catch (tokenError) {
+          console.log('🔑 Business API: ID token verification failed:', tokenError instanceof Error ? tokenError.message : 'Unknown error');
+        }
+      }
+    }
+
+    // If both failed, return 401
+    if (!decodedToken || !userId) {
+      console.log('❌ Business API: Authentication failed - no valid session or ID token');
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     // Get user record for custom claims
     const userRecord = await adminAuth.getUser(userId);
     const userClaims = userRecord.customClaims || {};
     const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
+    console.log('👤 Business API: User permissions - isAdmin:', isAdmin);
 
     // Get business document
     const businessDoc = await adminDb.collection('businesses').doc(businessId).get();
@@ -78,6 +108,23 @@ async function handleGetBusiness(
       id: businessDoc.id,
       ...businessData
     };
+
+    // Fetch documents from Firebase Storage if user is accessing their own business or admin
+    if (isAdmin || businessData.ownerId === userId || businessData.users?.[userId]) {
+      try {
+        console.log('📄 Fetching documents for ownerId:', businessData.ownerId);
+        const documents = await fetchBusinessDocuments(businessData.ownerId);
+        business.documents = documents;
+        console.log('📄 Fetched', documents.length, 'documents for business');
+        console.log('📄 Document details:', documents.map(d => ({ name: d.name, category: d.category, type: d.type })));
+      } catch (docError) {
+        console.warn('⚠️ Could not fetch documents:', docError);
+        // Don't fail the request if documents can't be fetched
+        business.documents = [];
+      }
+    } else {
+      console.log('❌ No permission to fetch documents. isAdmin:', isAdmin, 'ownerId:', businessData.ownerId, 'userId:', userId);
+    }
 
     return res.status(200).json({
       success: true,
@@ -243,4 +290,106 @@ async function handleDeleteBusiness(
     console.error('Error deleting business:', error);
     return res.status(500).json({ error: 'Failed to delete business' });
   }
+}
+
+// Helper function to fetch business documents from Firebase Storage
+async function fetchBusinessDocuments(ownerId: string): Promise<IDocument[]> {
+  try {
+    const storage = getStorage();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'elektro-ekspert-apps.firebasestorage.app';
+    const bucket = storage.bucket(bucketName);
+
+    // Get files from storage that belong to this user
+    const prefixes = ['business-documents/', 'tax-certificates/', 'place-photos/', 'identity-documents/'];
+    const documents: IDocument[] = [];
+
+    for (const prefix of prefixes) {
+      const userPrefix = `${prefix}${ownerId}/`;
+      const [files] = await bucket.getFiles({ prefix: userPrefix });
+
+      for (const file of files) {
+        try {
+          const [metadata] = await file.getMetadata();
+          const [signedUrl] = await file.getSignedUrl({
+            action: 'read',
+            expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+          });
+
+          const document: IDocument = {
+            type: getDocumentTypeFromCategory(getDocumentCategoryFromPath(file.name)),
+            name: (metadata.metadata?.originalName as string) || file.name.split('/').pop() || '',
+            url: signedUrl,
+            uploadedAt: metadata.timeCreated || new Date().toISOString(),
+            uploadedBy: (metadata.metadata?.uploadedBy as string) || ownerId,
+            status: (metadata.metadata?.status as StorageDocumentStatus) || StorageDocumentStatus.PENDING,
+            fullPath: file.name,
+            fileType: getFileTypeFromContentType(metadata.contentType || ''),
+            category: getDocumentCategoryFromPath(file.name),
+            metadata: {
+              originalName: (metadata.metadata?.originalName as string) || file.name.split('/').pop() || '',
+              uploadedBy: (metadata.metadata?.uploadedBy as string) || ownerId,
+              size: typeof metadata.size === 'string' ? parseInt(metadata.size) : metadata.size || 0,
+              ...metadata.metadata
+            }
+          };
+
+          documents.push(document);
+        } catch (error) {
+          console.warn('Error processing file:', file.name, error);
+          // Continue with other files
+        }
+      }
+    }
+
+    // Sort by upload date (newest first)
+    documents.sort((a, b) => {
+      const getDateValue = (date: any): number => {
+        if (!date) return 0;
+        if (typeof date === 'string') return new Date(date).getTime();
+        if (date instanceof Date) return date.getTime();
+        if (date.toDate && typeof date.toDate === 'function') return date.toDate().getTime(); // Timestamp
+        return 0;
+      };
+
+      const aTime = getDateValue(a.uploadedAt);
+      const bTime = getDateValue(b.uploadedAt);
+      return bTime - aTime;
+    });
+
+    return documents;
+  } catch (error) {
+    console.error('Error fetching business documents:', error);
+    return [];
+  }
+}
+
+// Helper functions for document processing
+function getDocumentCategoryFromPath(filePath: string): DocumentCategory {
+  if (filePath.startsWith('business-documents/')) return 'business-documents';
+  if (filePath.startsWith('tax-certificates/')) return 'tax-certificates';
+  if (filePath.startsWith('place-photos/')) return 'place-photos';
+  if (filePath.startsWith('identity-documents/')) return 'identity-documents';
+  if (filePath.startsWith('content-uploads/')) return 'content-uploads';
+  return 'other';
+}
+
+function getDocumentTypeFromCategory(category: DocumentCategory): StorageDocumentType {
+  switch (category) {
+    case 'business-documents':
+      return StorageDocumentType.BUSINESS_LICENSE;
+    case 'tax-certificates':
+      return StorageDocumentType.TAX_CERTIFICATE;
+    case 'identity-documents':
+      return StorageDocumentType.ARTICLES_OF_INCORPORATION; // Map to closest available type
+    case 'place-photos':
+      return StorageDocumentType.OTHER; // Photos don't have specific document type
+    default:
+      return StorageDocumentType.OTHER;
+  }
+}
+
+function getFileTypeFromContentType(contentType: string): DocumentFileType {
+  if (contentType.startsWith('image/')) return 'image';
+  if (contentType === 'application/pdf') return 'pdf';
+  return 'other';
 }

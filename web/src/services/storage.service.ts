@@ -4,6 +4,7 @@
  */
 
 import { DocumentCategory, DocumentFileType, IDocument, IStorageService } from '@/shared-generated/types'
+import { authService } from './auth.service'
 
 /**
  * Client storage service implementation using API routes
@@ -15,11 +16,20 @@ export class StorageClientService implements IStorageService {
    */
   async getUserDocuments(userId: string): Promise<IDocument[]> {
     try {
+      // Get ID token for authentication
+      const idToken = await authService.getIdToken(true)
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+
+      if (idToken) {
+        headers.Authorization = `Bearer ${idToken}`
+      }
+
       const response = await fetch('/api/business/documents', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include', // Include session cookies
       })
 
@@ -49,11 +59,20 @@ export class StorageClientService implements IStorageService {
       // Convert file to base64 for transmission
       const fileData = await this.fileToBase64(file)
 
+      // Get ID token for authentication
+      const idToken = await authService.getIdToken(true) // Force refresh
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+
+      if (idToken) {
+        headers.Authorization = `Bearer ${idToken}`
+      }
+
       const response = await fetch('/api/business/documents', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include', // Include session cookies
         body: JSON.stringify({
           fileName: file.name,
@@ -90,15 +109,20 @@ export class StorageClientService implements IStorageService {
    */
   async deleteUserDocument(userId: string, documentPath: string): Promise<boolean> {
     try {
-      // Extract document ID from path or use the documentPath as ID
-      const documentId = documentPath.includes('/') ?
-        documentPath.split('/').pop() : documentPath
+      // Get ID token for authentication
+      const idToken = await authService.getIdToken(true)
 
-      const response = await fetch(`/api/business/documents?documentId=${documentId}`, {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+
+      if (idToken) {
+        headers.Authorization = `Bearer ${idToken}`
+      }
+
+      const response = await fetch(`/api/business/documents?documentPath=${encodeURIComponent(documentPath)}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include', // Include session cookies
       })
 
@@ -243,9 +267,9 @@ export class StorageClientService implements IStorageService {
   }
 
   /**
-   * Helper: Convert File to base64
+   * Convert file to base64 string for API uploads
    */
-  private fileToBase64(file: File): Promise<string> {
+  async fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       if (typeof window !== 'undefined' && typeof window.FileReader !== 'undefined') {
         const reader = new window.FileReader()
@@ -256,6 +280,20 @@ export class StorageClientService implements IStorageService {
         reject(new Error('FileReader is not available in this environment'))
       }
     })
+  }
+
+  // Interface compliance methods (aliases for existing methods)
+  async getDocuments(userId?: string): Promise<IDocument[]> {
+    if (!userId) return []
+    return this.getUserDocuments(userId)
+  }
+
+  async uploadDocument(userId: string, file: File, category: DocumentCategory): Promise<IDocument> {
+    return this.uploadUserDocument(userId, file, category)
+  }
+
+  async deleteDocument(userId: string, documentId: string): Promise<boolean> {
+    return this.deleteUserDocument(userId, documentId)
   }
 }
 

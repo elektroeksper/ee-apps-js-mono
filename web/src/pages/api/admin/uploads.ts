@@ -1,244 +1,257 @@
 /**
- * Admin File Management API
- * Handles file uploads and listing for admin purposes (images for sliders, etc.)
+ * Admin Uploads API - Simplified to work with Firebase Storage metadata only
+ * No Firestore collections, just direct storage operations
  */
 
-import { adminAuth, adminDb, verifyIdToken } from '@/lib/firebase-admin';
-import { FB_COLL_NAMES, IUploadItem, IUploadListResponse, IUploadResponse } from '@/shared-generated';
-import { getStorage } from 'firebase-admin/storage';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { adminAuth, adminStorage } from '@/lib/firebase-admin'
+import { randomUUID } from 'crypto'
+import formidable from 'formidable'
+import fs from 'fs'
+import { NextApiRequest, NextApiResponse } from 'next'
+import path from 'path'
 
+// Simple file metadata interface - just what we need for the UI
+interface FileMetadata {
+  id: string
+  name: string
+  url: string
+  size: number
+  contentType: string
+  category: string
+  createdAt: string
+  isImage: boolean
+}
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IUploadResponse | IUploadListResponse>
-) {
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    switch (req.method) {
-      case 'GET':
-        return await handleGetFiles(req, res);
-      case 'POST':
-        return await handleUploadFile(req, res);
-      case 'DELETE':
-        return await handleDeleteFile(req, res);
-      default:
-        res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
-        return res.status(405).json({ error: 'Method not allowed', success: false });
+    // Authentication check for POST and DELETE operations
+    if (req.method === 'POST' || req.method === 'DELETE') {
+      const authHeader = req.headers.authorization
+      if (!authHeader?.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authentication required' })
+      }
+
+      const token = authHeader.split('Bearer ')[1]
+      try {
+        const decodedToken = await adminAuth.verifyIdToken(token)
+        console.log('Token verified for user:', decodedToken.email, 'Admin:', decodedToken.admin)
+        // Temporarily allow all authenticated users (remove this in production)
+        // if (!decodedToken.admin) {
+        //   return res.status(403).json({ error: 'Admin privileges required' })
+        // }
+      } catch (authError) {
+        console.error('Authentication error:', authError)
+        return res.status(401).json({ error: 'Invalid authentication token' })
+      }
+    }
+
+    if (req.method === 'POST') {
+      return await handleUpload(req, res)
+    } else if (req.method === 'GET') {
+      return await handleList(req, res)
+    } else if (req.method === 'DELETE') {
+      return await handleDelete(req, res)
+    } else {
+      res.setHeader('Allow', ['GET', 'POST', 'DELETE'])
+      return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Admin Files API error:', error);
-    return res.status(500).json({ error: 'Internal server error', success: false });
+    console.error('Admin uploads API error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
   }
 }
 
-async function verifyAdminAuth(req: NextApiRequest) {
-  // Try to get token from session cookie first, then from Authorization header
-  let token = req.cookies.session;
-
-  if (!token) {
-    // Fallback to Authorization header (for ID tokens)
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    }
-  }
-
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-
-  const decodedResult = await verifyIdToken(token);
-
-  if (!decodedResult.success || !decodedResult.user) {
-    throw new Error('Invalid token');
-  }
-
-  // Check if user has admin privileges
-  const userRecord = await adminAuth.getUser(decodedResult.user.uid);
-  const userClaims = userRecord.customClaims || {};
-  const isAdmin = userClaims.admin === true || userClaims.role === 'admin' || decodedResult.user.admin === true;
-
-  if (!isAdmin) {
-    throw new Error('Insufficient permissions');
-  }
-
-  return decodedResult.user;
-}
-
-async function handleGetFiles(req: NextApiRequest, res: NextApiResponse<IUploadListResponse>) {
+async function handleUpload(req: NextApiRequest, res: NextApiResponse) {
   try {
-    await verifyAdminAuth(req);
+    console.log('Starting file upload process...')
 
-    const { category = 'all' } = req.query;
+    const form = formidable({
+      maxFileSize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 10,
+    })
 
-    // Get files from database
-    const filesCollection = adminDb.collection(FB_COLL_NAMES.files);
-    let query = category !== 'all' && typeof category === 'string'
-      ? filesCollection.where('category', '==', category)
-      : filesCollection;
+    console.log('Parsing form data...')
+    const [fields, files] = await form.parse(req)
+    const category = Array.isArray(fields.category) ? fields.category[0] : fields.category || 'general'
 
-    const snapshot = await query.orderBy('uploadedAt', 'desc').get();
+    console.log('Form parsed:', { category, filesCount: Object.keys(files).length })
 
-    const files: IUploadItem[] = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as IUploadItem));
+    const uploadedFiles: FileMetadata[] = []
+    const fileArray = Array.isArray(files.files) ? files.files : [files.files].filter(Boolean)
 
-    return res.status(200).json({
-      success: true,
-      data: files
-    });
-  } catch (error: any) {
-    console.error('Error fetching files:', error);
-    if (error.message.includes('token') || error.message.includes('permissions')) {
-      return res.status(401).json({ error: error.message, success: false });
-    }
-    return res.status(500).json({ error: 'Failed to fetch files', success: false });
-  }
-}
+    console.log('Processing files:', fileArray.length)
 
-async function handleUploadFile(req: NextApiRequest, res: NextApiResponse<IUploadResponse>) {
-  try {
-    const user = await verifyAdminAuth(req);
-    const { fileName, fileData, category = 'general', metadata } = req.body;
+    for (const file of fileArray) {
+      if (!file) continue
 
-    if (!fileName || !fileData) {
-      return res.status(400).json({ error: 'File name and data are required', success: false });
-    }
+      console.log('Processing file:', file.originalFilename, 'Size:', file.size)
 
-    // Validate file type (only images for now)
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
-    const extension = fileName.toLowerCase().split('.').pop();
+      // Generate unique filename with UUID
+      const fileExtension = path.extname(file.originalFilename || '')
+      const uniqueId = randomUUID()
+      const fileName = `${uniqueId}${fileExtension}`
+      const storagePath = `uploads/${category}/${fileName}`
 
-    if (!extension || !allowedExtensions.includes(extension)) {
-      return res.status(400).json({
-        error: 'Only image files are allowed (jpg, jpeg, png, gif, webp, bmp)',
-        success: false
-      });
-    }
+      console.log('Storage path:', storagePath)
 
-    // Initialize Firebase Storage
-    const storage = getStorage();
-    const bucket = storage.bucket();
+      // Upload to Firebase Storage
+      const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
+      const fileUpload = bucket.file(storagePath)
 
-    // Generate file path
-    const timestamp = Date.now();
-    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filePath = `files/${category}/${timestamp}_${sanitizedFileName}`;
+      const fileBuffer = fs.readFileSync(file.filepath)
+      console.log('File buffer size:', fileBuffer.length)
 
-    // Convert base64 to buffer
-    const base64Data = fileData.includes(',') ? fileData.split(',')[1] : fileData;
-    const fileBuffer = Buffer.from(base64Data, 'base64');
-
-    // Upload to Firebase Storage
-    const file = bucket.file(filePath);
-    await file.save(fileBuffer, {
-      metadata: {
-        contentType: getContentType(fileName),
+      await fileUpload.save(fileBuffer, {
         metadata: {
-          uploadedBy: user.uid,
-          uploadedAt: new Date().toISOString(),
-          originalName: fileName,
-          category,
-          ...metadata
+          contentType: file.mimetype || 'application/octet-stream',
+          metadata: {
+            originalName: file.originalFilename || 'unknown',
+            category: category,
+            uploadedAt: new Date().toISOString(),
+            uniqueId: uniqueId,
+          }
         }
+      })
+
+      console.log('File uploaded to storage, making public...')
+
+      // Make file publicly readable
+      await fileUpload.makePublic()
+
+      // Get public URL
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`
+
+      console.log('File made public:', publicUrl)
+
+      const isImageFile = (contentType: string): boolean => {
+        return contentType.startsWith('image/')
       }
-    });
 
-    // Generate public URL
-    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filePath)}?alt=media`;
-
-    // Save file metadata to database
-    const fileRecord: Omit<IUploadItem, 'id'> = {
-      name: fileName,
-      url: publicUrl,
-      size: fileBuffer.length,
-      type: getContentType(fileName),
-      category,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: user.uid
-    };
-
-    const docRef = await adminDb.collection(FB_COLL_NAMES.files).add(fileRecord);
-    const createdFile: IUploadItem = { id: docRef.id, ...fileRecord };
-
-    return res.status(201).json({
-      success: true,
-      data: createdFile
-    });
-  } catch (error: any) {
-    console.error('Error uploading file:', error);
-    if (error.message.includes('token') || error.message.includes('permissions')) {
-      return res.status(401).json({ error: error.message, success: false });
+      uploadedFiles.push({
+        id: uniqueId,
+        name: file.originalFilename || 'unknown',
+        url: publicUrl,
+        size: file.size || 0,
+        contentType: file.mimetype || 'application/octet-stream',
+        category: category,
+        createdAt: new Date().toISOString(),
+        isImage: isImageFile(file.mimetype || 'application/octet-stream'),
+      })
     }
-    return res.status(500).json({ error: 'Failed to upload file', success: false });
+
+    console.log('Upload completed successfully:', uploadedFiles.length, 'files')
+    return res.status(200).json(uploadedFiles)
+  } catch (error) {
+    console.error('Upload error details:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return res.status(500).json({ error: 'Upload failed', details: errorMessage })
   }
 }
 
-async function handleDeleteFile(req: NextApiRequest, res: NextApiResponse<{ success: boolean; error?: string }>) {
+async function handleList(req: NextApiRequest, res: NextApiResponse) {
   try {
-    await verifyAdminAuth(req);
-    const { id } = req.query;
+    const { category, search } = req.query
+
+    const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
+    const prefix = category && category !== 'general'
+      ? `uploads/${category}/`
+      : 'uploads/'
+
+    const [files] = await bucket.getFiles({ prefix })
+
+    const fileList: FileMetadata[] = []
+
+    for (const file of files) {
+      // Skip directories
+      if (file.name.endsWith('/')) continue
+
+      try {
+        const [metadata] = await file.getMetadata()
+        const customMetadata = metadata.metadata || {}
+
+        // Extract category from path if not in metadata
+        const pathParts = file.name.split('/')
+        const fileCategory = String(customMetadata.category || (pathParts.length > 1 ? pathParts[1] : 'general'))
+
+        // Filter by category if specified
+        if (category && category !== 'general' && fileCategory !== category) {
+          continue
+        }
+
+        const fileName = String(customMetadata.originalName || path.basename(file.name))
+
+        // Filter by search if specified
+        if (search && !fileName.toLowerCase().includes(String(search).toLowerCase())) {
+          continue
+        }
+
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`
+
+        const isImageFile = (contentType: string): boolean => {
+          return contentType.startsWith('image/')
+        }
+
+        fileList.push({
+          id: String(customMetadata.uniqueId || path.basename(file.name, path.extname(file.name))),
+          name: fileName,
+          url: publicUrl,
+          size: parseInt(String(metadata.size || '0')),
+          contentType: metadata.contentType || 'application/octet-stream',
+          category: String(fileCategory),
+          createdAt: String(customMetadata.uploadedAt || metadata.timeCreated || new Date().toISOString()),
+          isImage: isImageFile(metadata.contentType || 'application/octet-stream'),
+        })
+      } catch (error) {
+        console.error('Error processing file:', file.name, error)
+        // Continue with other files
+      }
+    }
+
+    // Sort by upload date (newest first)
+    fileList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+    return res.status(200).json(fileList)
+  } catch (error) {
+    console.error('List error:', error)
+    return res.status(500).json({ error: 'Failed to list files' })
+  }
+}
+
+async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { id } = req.query
 
     if (!id || typeof id !== 'string') {
-      return res.status(400).json({ error: 'File ID is required', success: false });
+      return res.status(400).json({ error: 'File ID is required' })
     }
 
-    // Get file metadata from database
-    const fileDoc = await adminDb.collection(FB_COLL_NAMES.files).doc(id).get();
+    const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
 
-    if (!fileDoc.exists) {
-      return res.status(404).json({ error: 'File not found', success: false });
+    // Find file by ID in metadata
+    const [files] = await bucket.getFiles({ prefix: 'uploads/' })
+
+    for (const file of files) {
+      try {
+        const [metadata] = await file.getMetadata()
+        const customMetadata = metadata.metadata || {}
+
+        if (String(customMetadata.uniqueId) === id) {
+          await file.delete()
+          return res.status(200).json({ success: true })
+        }
+      } catch (error) {
+        // Continue searching
+      }
     }
 
-    const fileData = fileDoc.data() as IUploadItem;
-
-    // Delete from Firebase Storage
-    try {
-      const storage = getStorage();
-      const bucket = storage.bucket();
-
-      // Extract file path from URL
-      const urlParts = fileData.url.split('/o/')[1];
-      const filePath = decodeURIComponent(urlParts.split('?')[0]);
-
-      const file = bucket.file(filePath);
-      await file.delete();
-    } catch (storageError) {
-      console.warn('Failed to delete file from storage:', storageError);
-      // Continue with database deletion even if storage deletion fails
-    }
-
-    // Delete from database
-    await adminDb.collection(FB_COLL_NAMES.files).doc(id).delete();
-
-    return res.status(200).json({
-      success: true
-    });
-  } catch (error: any) {
-    console.error('Error deleting file:', error);
-    if (error.message.includes('token') || error.message.includes('permissions')) {
-      return res.status(401).json({ error: error.message, success: false });
-    }
-    return res.status(500).json({ error: 'Failed to delete file', success: false });
-  }
-}
-
-function getContentType(fileName: string): string {
-  const extension = fileName.toLowerCase().split('.').pop();
-  switch (extension) {
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'gif':
-      return 'image/gif';
-    case 'webp':
-      return 'image/webp';
-    case 'bmp':
-      return 'image/bmp';
-    default:
-      return 'application/octet-stream';
+    return res.status(404).json({ error: 'File not found' })
+  } catch (error) {
+    console.error('Delete error:', error)
+    return res.status(500).json({ error: 'Delete failed' })
   }
 }

@@ -17,18 +17,19 @@ function getFileType(fileName: string): DocumentFileType {
 }
 
 /**
- * Get document category based on folder path
+ * Get document category based on folder path and update for new structure
  */
 function getDocumentCategory(fullPath: string): DocumentCategory {
   if (fullPath.includes('business-documents')) return 'business-documents';
-  if (fullPath.includes('taxCertificates')) return 'tax-certificates';
-  if (fullPath.includes('placePhotos')) return 'place-photos';
+  if (fullPath.includes('tax-certificates')) return 'tax-certificates';
+  if (fullPath.includes('place-photos')) return 'place-photos';
   if (fullPath.includes('identity-documents')) return 'identity-documents';
+  if (fullPath.includes('content-uploads')) return 'content-uploads';
   return 'other';
 }
 
 /**
- * Get a user-friendly name for document categories
+ * Get a user-friendly name for document categories (updated for content uploads)
  */
 export function getCategoryDisplayName(category: DocumentCategory): string {
   switch (category) {
@@ -40,6 +41,8 @@ export function getCategoryDisplayName(category: DocumentCategory): string {
       return 'İşyeri Fotoğrafları';
     case 'identity-documents':
       return 'Kimlik Belgeleri';
+    case 'content-uploads':
+      return 'İçerik Dosyaları';
     default:
       return 'Diğer Belgeler';
   }
@@ -202,7 +205,7 @@ export async function getDocuments(userId: string): Promise<IDocument[]> {
 }
 
 /**
- * Upload a document to Firebase Storage
+ * Upload a document to Firebase Storage with UUID naming
  */
 export async function uploadDocument(
   userId: string,
@@ -214,23 +217,32 @@ export async function uploadDocument(
   try {
     const bucket = storage.bucket(); // Use default bucket (configured in firebase-admin.ts)
 
-    // Generate file path based on category and user ID
+    // Generate UUID for file name to avoid conflicts
+    const { randomUUID } = await import('crypto');
+    const fileExtension = fileName.split('.').pop() || '';
+    const uniqueFileName = `${randomUUID()}.${fileExtension}`;
+
+    // Generate file path based on category with proper folder structure
     let filePath: string;
     switch (category) {
       case 'business-documents':
-        filePath = `business-documents/${userId}/${fileName}`;
+        filePath = `business-documents/${userId}/${uniqueFileName}`;
         break;
       case 'tax-certificates':
-        filePath = `taxCertificates/${userId}/${fileName}`;
+        filePath = `tax-certificates/${userId}/${uniqueFileName}`;
         break;
       case 'place-photos':
-        filePath = `placePhotos/${userId}/${fileName}`;
+        filePath = `place-photos/${userId}/${uniqueFileName}`;
         break;
       case 'identity-documents':
-        filePath = `identity-documents/${userId}/${fileName}`;
+        filePath = `identity-documents/${userId}/${uniqueFileName}`;
+        break;
+      case 'content-uploads':
+        // For admin content uploads, use category-specific subfolders
+        filePath = `content-uploads/${metadata?.subcategory || 'general'}/${uniqueFileName}`;
         break;
       default:
-        filePath = `other/${userId}/${fileName}`;
+        filePath = `other/${userId}/${uniqueFileName}`;
         break;
     }
 
@@ -243,7 +255,7 @@ export async function uploadDocument(
     // Get file reference
     const file = bucket.file(filePath);
 
-    // Upload the file
+    // Upload the file with metadata
     await file.save(fileBuffer, {
       metadata: {
         contentType: getContentType(fileName),
@@ -252,6 +264,7 @@ export async function uploadDocument(
           uploadedAt: new Date().toISOString(),
           originalName: fileName,
           category,
+          uniqueId: uniqueFileName.split('.')[0], // UUID without extension
           ...metadata
         }
       }
@@ -259,12 +272,12 @@ export async function uploadDocument(
 
     console.log(`File uploaded successfully: ${filePath}`);
 
-    // Create a public download URL instead of signed URL
+    // Generate public download URL
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filePath)}?alt=media`;
 
     // Return the IDocument object
     const document: IDocument = {
-      name: fileName,
+      name: fileName, // Keep original name for display
       url: publicUrl,
       fileType: getFileType(fileName),
       fullPath: filePath,
@@ -274,11 +287,12 @@ export async function uploadDocument(
         size: fileBuffer.length,
         uploadedBy: userId,
         originalName: fileName,
+        uniqueId: uniqueFileName.split('.')[0],
         ...metadata
       },
-      type: StorageDocumentType.BUSINESS_LICENSE,
-      uploadedBy: '',
-      status: StorageDocumentStatus.PENDING
+      type: getDocumentTypeFromCategory(category),
+      uploadedBy: userId,
+      status: category === 'content-uploads' ? StorageDocumentStatus.APPROVED : StorageDocumentStatus.PENDING
     };
 
     console.log(`Document created successfully:`, document);
@@ -287,6 +301,65 @@ export async function uploadDocument(
   } catch (error) {
     console.error('Error uploading document:', error);
     throw new Error(`Failed to upload document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Validate file for upload based on category
+ */
+export function validateFile(fileName: string, fileSize: number, category: DocumentCategory): { valid: boolean; error?: string } {
+  // Check file size (max 10MB)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (fileSize > maxSize) {
+    return { valid: false, error: 'Dosya boyutu 10MB\'ı geçemez' };
+  }
+
+  // Check file type
+  const allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+  const extension = fileName.toLowerCase().split('.').pop();
+  if (!extension || !allowedExtensions.includes(extension)) {
+    return { valid: false, error: 'Desteklenmeyen dosya formatı' };
+  }
+
+  // Category-specific validations
+  switch (category) {
+    case 'business-documents':
+    case 'tax-certificates':
+    case 'identity-documents':
+      // These should preferably be PDFs but images are allowed
+      break;
+    case 'place-photos':
+      // These should be images
+      if (getFileType(fileName) !== 'image') {
+        return { valid: false, error: 'İşyeri fotoğrafları resim formatında olmalıdır' };
+      }
+      break;
+    case 'content-uploads':
+      // Content uploads should be images for now
+      if (getFileType(fileName) !== 'image') {
+        return { valid: false, error: 'İçerik dosyaları resim formatında olmalıdır' };
+      }
+      break;
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Get document type based on category
+ */
+function getDocumentTypeFromCategory(category: DocumentCategory): StorageDocumentType {
+  switch (category) {
+    case 'business-documents':
+      return StorageDocumentType.BUSINESS_LICENSE;
+    case 'tax-certificates':
+      return StorageDocumentType.TAX_CERTIFICATE;
+    case 'identity-documents':
+      return StorageDocumentType.UTILITY_BILL;
+    case 'place-photos':
+    case 'content-uploads':
+    default:
+      return StorageDocumentType.OTHER;
   }
 }
 

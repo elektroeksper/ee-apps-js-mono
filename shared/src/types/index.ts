@@ -5,6 +5,5 @@ export * from './content-types';
 export * from './map-types';
 export * from './order-types';
 export * from './storage-types';
-export * from './uploads-types';
 export * from './user-types';
 

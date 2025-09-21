@@ -189,6 +189,7 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
       'tax-certificates': 'Vergi Levhaları',
       'place-photos': 'İşyeri Fotoğrafları',
       'identity-documents': 'Kimlik Belgeleri',
+      'content-uploads': 'İçerik Yüklemeleri',
       'other': 'Diğer Belgeler'
     };
 

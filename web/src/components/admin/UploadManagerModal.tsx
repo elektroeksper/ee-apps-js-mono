@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext'
 import adminUploadsService from '@/services/uploads.service'
-import { IUploadItem, UploadCategory } from '@/shared-generated'
+import { FileMetadata } from '@/shared-generated/types'
 import { useCallback, useEffect, useState } from 'react'
 import {
   FiCheck,
@@ -12,6 +12,15 @@ import {
   FiUpload,
   FiX,
 } from 'react-icons/fi'
+
+type UploadCategory =
+  | 'general'
+  | 'sliders'
+  | 'services'
+  | 'branding'
+  | 'content'
+  | 'logos'
+  | 'banners'
 
 interface UploadManagerModalProps {
   isOpen: boolean
@@ -29,7 +38,7 @@ export default function FileManagerModal({
   allowSelection = false,
 }: UploadManagerModalProps) {
   const { fireUser } = useAuth() as any
-  const [files, setFiles] = useState<IUploadItem[]>([])
+  const [files, setFiles] = useState<FileMetadata[]>([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,6 +53,8 @@ export default function FileManagerModal({
     'services',
     'branding',
     'content',
+    'logos',
+    'banners',
   ]
 
   const getAuthToken = async () => {
@@ -63,13 +74,8 @@ export default function FileManagerModal({
     try {
       const filter =
         selectedCategory === 'general' ? {} : { category: selectedCategory }
-      const result = await adminUploadsService.getAll(filter)
-
-      if (result.success && result.data) {
-        setFiles(result.data)
-      } else {
-        setError(result.error || 'Failed to fetch files')
-      }
+      const files = await adminUploadsService.getAll(filter)
+      setFiles(files)
     } catch (err: any) {
       setError(err.message || 'Failed to fetch files')
     } finally {
@@ -89,20 +95,8 @@ export default function FileManagerModal({
 
     try {
       const authToken = await getAuthToken()
-
-      for (const file of Array.from(uploadFiles)) {
-        const result = await adminUploadsService.upload(
-          file,
-          selectedCategory,
-          authToken
-        )
-
-        if (!result.success) {
-          setError(result.error || 'Failed to upload file')
-          break
-        }
-      }
-
+      const filesArray = Array.from(uploadFiles)
+      await adminUploadsService.upload(filesArray, selectedCategory, authToken)
       // Refresh file list
       await fetchFiles()
     } catch (err: any) {
@@ -142,13 +136,8 @@ export default function FileManagerModal({
 
     try {
       const authToken = await getAuthToken()
-      const result = await adminUploadsService.delete(fileId, authToken)
-
-      if (result.success) {
-        await fetchFiles()
-      } else {
-        setError(result.error || 'Failed to delete file')
-      }
+      await adminUploadsService.delete(fileId, authToken)
+      await fetchFiles() // Refresh the list
     } catch (err: any) {
       setError(err.message || 'Failed to delete file')
     }
@@ -278,9 +267,9 @@ export default function FileManagerModal({
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {files.map(file => (
+                  {files.map((file, index) => (
                     <div
-                      key={file.id}
+                      key={file.id || index}
                       className="group relative bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                     >
                       {/* Image */}
@@ -288,7 +277,7 @@ export default function FileManagerModal({
                         {adminUploadsService.isImageFile(file) ? (
                           <img
                             src={file.url}
-                            alt={file.name}
+                            alt={file.name || 'Uploaded file'}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -322,7 +311,7 @@ export default function FileManagerModal({
                             </button>
                             <a
                               href={file.url}
-                              download={file.name}
+                              download={file.name || 'download'}
                               className="p-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors"
                               title="İndir"
                             >
@@ -343,12 +332,14 @@ export default function FileManagerModal({
                       <div className="p-3">
                         <p
                           className="text-sm font-medium text-slate-900 truncate"
-                          title={file.name}
+                          title={file.name || 'Uploaded file'}
                         >
-                          {file.name}
+                          {file.name || 'Uploaded file'}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {adminUploadsService.formatFileSize(file.size)}
+                          {file.size
+                            ? adminUploadsService.formatFileSize(file.size)
+                            : 'Unknown size'}
                         </p>
                       </div>
                     </div>

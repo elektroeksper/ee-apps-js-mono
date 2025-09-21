@@ -1,221 +1,117 @@
-/**
- * Admin Upload Management Service
- * Handles file uploads and management for admin purposes
- */
+import { FileMetadata } from '@/shared-generated/types';
 
-import { IUploadItem, IUploadListResponse, IUploadResponse, IUploadService, IUploadsFilter, UploadCategory } from '@/shared-generated';
+type UploadCategory = 'general' | 'sliders' | 'services' | 'branding' | 'content' | 'logos' | 'banners';
 
+interface UploadFilter {
+  category?: UploadCategory;
+  search?: string;
+}
 
-export class UploadsService implements IUploadService {
-  async delete(id: string, authToken?: string): Promise<IUploadResponse> {
-    try {
-      const response = await fetch(`/api/admin/uploads?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        },
-        credentials: 'include',
-      });
+export class UploadsService {
+  private readonly apiUrl = '/api/admin/uploads';
 
-      const result = await response.json();
+  async upload(files: File[], category: string, authToken?: string): Promise<FileMetadata[]> {
+    const formData = new FormData()
 
-      if (!response.ok) {
-        return {
-          success: false,
-          error: result.error || `HTTP ${response.status}: Failed to delete file`
-        };
-      }
+    files.forEach((file) => {
+      formData.append('files', file)
+    })
+    formData.append('category', category)
 
-      return result;
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to delete file'
-      };
+    const headers: HeadersInit = {}
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`
     }
+
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers,
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`)
+    }
+
+    return response.json()
   }
-  /**
-   * Get list of uploaded files
-   */
-  async getAll(filter: IUploadsFilter): Promise<IUploadListResponse> {
-    try {
-      const queryParams = new URLSearchParams();
 
-      if (filter.category) {
-        queryParams.append('category', filter.category);
-      }
-      if (filter.uploadedBy) {
-        queryParams.append('uploadedBy', filter.uploadedBy);
-      }
-      if (filter.dateFrom) {
-        queryParams.append('dateFrom', filter.dateFrom);
-      }
-      if (filter.dateTo) {
-        queryParams.append('dateTo', filter.dateTo);
-      }
+  async getAll(filter?: UploadFilter): Promise<FileMetadata[]> {
+    const params = new URLSearchParams()
+    if (filter?.category) {
+      params.append('category', filter.category)
+    }
+    if (filter?.search) {
+      params.append('search', filter.search)
+    }
 
-      const response = await fetch(`/api/admin/uploads?${queryParams.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+    const response = await fetch(`${this.apiUrl}?${params}`)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch files: ${response.statusText}`)
+    }
 
-      const result = await response.json();
+    return response.json()
+  }
 
-      if (!response.ok) {
-        return {
-          success: false,
-          error: result.error || `HTTP ${response.status}: Failed to fetch files`
-        };
-      }
+  async delete(fileId: string, authToken?: string): Promise<void> {
+    const headers: HeadersInit = {}
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`
+    }
 
-      return result;
-    } catch (error) {
-      console.error('Error fetching files:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch files'
-      };
+    const response = await fetch(`${this.apiUrl}?id=${encodeURIComponent(fileId)}`, {
+      method: 'DELETE',
+      headers,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete file: ${response.statusText}`)
     }
   }
 
-  /**
-   * Upload a new file
-   */
-  async upload(
-    file: File,
-    category: UploadCategory = 'general',
-    authToken?: string
-  ): Promise<IUploadResponse> {
-    try {
-      // Validate file
-      const validation = this.validate(file);
-      if (!validation.valid) {
-        return {
-          success: false,
-          error: validation.error
-        };
-      }
-
-      // Convert file to base64
-      const fileData = await this.fileToBase64(file);
-
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-      }
-
-      const response = await fetch('/api/admin/uploads', {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({
-          fileName: file.name,
-          fileData,
-          category,
-          metadata: {
-            originalName: file.name,
-            size: file.size,
-            type: file.type
-          }
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: result.error || `HTTP ${response.status}: Failed to upload file`
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to upload file'
-      };
-    }
-  }
-  /**
-   * Validate file for upload
-   */
-  validate(file: File): { valid: boolean; error?: string } {
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      return { valid: false, error: 'Dosya boyutu 10MB\'ı geçemez' };
-    }
-
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
-    if (!allowedTypes.includes(file.type)) {
-      return { valid: false, error: 'Sadece resim dosyaları yüklenebilir (JPG, PNG, GIF, WebP, BMP)' };
-    }
-
-    return { valid: true };
-  }
-
-  /**
-   * Format file size for display
-   */
-  formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  /**
-   * Get display name for file category
-   */
   getCategoryDisplayName(category: UploadCategory): string {
-    const categoryNames: Record<UploadCategory, string> = {
-      general: 'Genel',
-      sliders: 'Slider Görselleri',
-      services: 'Hizmet Görselleri',
-      branding: 'Marka Görselleri',
-      content: 'İçerik Görselleri'
-    };
-    return categoryNames[category] || 'Bilinmeyen';
+    const displayNames: Record<UploadCategory, string> = {
+      general: 'General',
+      sliders: 'Sliders',
+      services: 'Services',
+      branding: 'Branding',
+      content: 'Content',
+      logos: 'Logos',
+      banners: 'Banners',
+    }
+    return displayNames[category] || category
   }
 
-  /**
-   * Check if file is an image
-   */
-  isImageFile(file: IUploadItem): boolean {
-    return file.type.startsWith('image/');
+  isImageFile(file: FileMetadata): boolean {
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+    return imageTypes.includes(file.contentType)
   }
 
-  /**
-   * Get file extension
-   */
-  getExtension(fileName: string): string {
-    return fileName.split('.').pop()?.toLowerCase() || '';
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  /**
-   * Convert File to base64
-   */
-  public fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
+  async listUploads(category?: UploadCategory): Promise<{ success: boolean; data?: FileMetadata[]; error?: string }> {
+    try {
+      const files = await this.getAll({ category });
+      return { success: true, data: files };
+    } catch (error) {
+      return { success: false, error: 'Failed to fetch uploads' };
+    }
+  }
+
+  async deleteUpload(fileId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.delete(fileId);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Delete failed' };
+    }
   }
 }
 
-export const adminUploadsService = new UploadsService();
-export default adminUploadsService;
+export default new UploadsService();

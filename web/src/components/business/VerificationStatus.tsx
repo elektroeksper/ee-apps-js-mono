@@ -37,6 +37,10 @@ const VerificationStatus: React.FC = () => {
       }
 
       try {
+        console.log(
+          '🔍 VerificationStatus: Fetching business data for ID:',
+          appUser.businessInfo.businessId
+        )
         const response = await fetch(
           `/api/business/${appUser.businessInfo.businessId}`,
           {
@@ -45,11 +49,22 @@ const VerificationStatus: React.FC = () => {
           }
         )
 
+        console.log('🔍 VerificationStatus: Response status:', response.status)
         if (response.ok) {
           const result = await response.json()
+          console.log('🔍 VerificationStatus: API result:', result)
           if (result.success && result.data) {
             setBusinessData(result.data)
+            console.log('🔍 VerificationStatus: Business data set:', {
+              documentsCount: result.data.documents?.length || 0,
+              verificationStatus: result.data.verification?.status,
+            })
           }
+        } else {
+          console.error(
+            '🔍 VerificationStatus: API call failed with status:',
+            response.status
+          )
         }
       } catch (error) {
         console.error('Error fetching business data:', error)

@@ -1,12 +1,21 @@
 /**
  * Business Documents API Route - Handles business document operations
  * Upload, retrieve, and manage business verification documents
+ * Updated to use unified storage system with Firebase Storage
  */
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { BusinessVerificationStatus, DocumentCategory, FB_COLL_NAMES, IDocument, StorageDocumentStatus, StorageDocumentType } from '@/shared-generated';
+import {
+  BusinessVerificationStatus,
+  DocumentCategory,
+  DocumentFileType,
+  IDocument,
+  StorageDocumentStatus,
+  StorageDocumentType
+} from '@/shared-generated';
 import { randomUUID } from 'crypto';
 import { Timestamp } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 interface DocumentsResponse {
@@ -31,26 +40,53 @@ export default async function handler(
   res: NextApiResponse<DocumentsResponse>
 ) {
   try {
-    // Debug: Log all cookies received
+    // Debug: Log incoming request
+    console.log('📥 Business documents API called:', req.method);
     console.log('🍪 All cookies received:', req.cookies);
     console.log('🍪 Headers:', req.headers.cookie);
+    console.log('🔑 Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
 
-    // Verify authentication
+    let decodedToken;
+    let userId;
+
+    // Try session cookie first
     const sessionCookie = req.cookies.session;
     console.log('🔑 Session cookie:', sessionCookie ? 'Present' : 'Missing');
 
-    if (!sessionCookie) {
+    if (sessionCookie) {
+      try {
+        // Verify session cookie
+        decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
+        userId = decodedToken.uid;
+        console.log('🔑 Session verified for user:', userId);
+      } catch (sessionError) {
+        console.log('🔑 Session cookie verification failed:', sessionError instanceof Error ? sessionError.message : 'Unknown error');
+      }
+    }
+
+    // If session cookie failed, try ID token
+    if (!decodedToken) {
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        const idToken = authHeader.split('Bearer ')[1];
+        try {
+          decodedToken = await adminAuth.verifyIdToken(idToken);
+          userId = decodedToken.uid;
+          console.log('🔑 ID token verified for user:', userId);
+        } catch (tokenError) {
+          console.log('🔑 ID token verification failed:', tokenError instanceof Error ? tokenError.message : 'Unknown error');
+        }
+      }
+    }
+
+    // If both failed, return 401
+    if (!decodedToken || !userId) {
       return res.status(401).json({
         success: false,
         error: 'Authentication required',
         code: 401
       });
     }
-
-    // Verify session cookie
-    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
-    const userId = decodedToken.uid;
-    console.log('🔑 Session verified for user:', userId);
 
     // Check if user is a business user
     const userDoc = await adminDb.collection('users').doc(userId).get();
@@ -118,39 +154,66 @@ async function getDocuments(
   userId: string
 ) {
   try {
-    const documentsCollection = adminDb.collection(FB_COLL_NAMES.documents);
-    const query = documentsCollection.where('userId', '==', userId);
-    const snapshot = await query.get();
+    const storage = getStorage();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'elektro-ekspert-apps.firebasestorage.app';
+    const bucket = storage.bucket(bucketName);
 
+    // Get files from storage that belong to this user
+    const prefixes = ['business-documents/', 'tax-certificates/', 'place-photos/', 'identity-documents/'];
     const documents: IDocument[] = [];
-    snapshot.forEach(doc => {
-      const docData = doc.data();
-      documents.push({
-        name: docData.originalName || docData.fileName,
-        url: docData.downloadUrl || docData.fileUrl,
-        type: docData.fileType || getFileTypeFromName(docData.fileName),
-        fullPath: docData.filePath,
-        category: docData.category,
-        uploadedAt: docData.uploadedAt,
-        metadata: {
-          ...docData.metadata,
-          size: docData.size || 0,
-          documentId: doc.id,
-          userId: docData.userId,
-          status: docData.status || StorageDocumentStatus.PENDING
-        },
-        uploadedBy: '',
-        status: StorageDocumentStatus.PENDING,
-        fileType: 'pdf'
-      });
-    });
+
+    for (const prefix of prefixes) {
+      const userPrefix = `${prefix}${userId}/`;
+      const [files] = await bucket.getFiles({ prefix: userPrefix });
+
+      for (const file of files) {
+        try {
+          const [metadata] = await file.getMetadata();
+          const [signedUrl] = await file.getSignedUrl({
+            action: 'read',
+            expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+          });
+
+          const document: IDocument = {
+            type: getDocumentTypeFromCategory(getDocumentCategoryFromPath(file.name)),
+            name: (metadata.metadata?.originalName as string) || file.name.split('/').pop() || '',
+            url: signedUrl,
+            uploadedAt: metadata.timeCreated || new Date().toISOString(),
+            uploadedBy: (metadata.metadata?.uploadedBy as string) || userId,
+            status: (metadata.metadata?.status as StorageDocumentStatus) || StorageDocumentStatus.PENDING,
+            fullPath: file.name,
+            fileType: getFileTypeFromContentType(metadata.contentType || ''),
+            category: getDocumentCategoryFromPath(file.name),
+            metadata: {
+              originalName: (metadata.metadata?.originalName as string) || file.name.split('/').pop() || '',
+              uploadedBy: (metadata.metadata?.uploadedBy as string) || userId,
+              size: typeof metadata.size === 'string' ? parseInt(metadata.size) : metadata.size || 0,
+              ...metadata.metadata
+            }
+          };
+
+          documents.push(document);
+        } catch (error) {
+          console.warn('Error processing file:', file.name, error);
+          // Continue with other files
+        }
+      }
+    }
 
     // Sort by upload date (newest first)
-    // documents.sort((a, b) => {
-    //   const aDate = new Date(a.uploadedAt || 0);
-    //   const bDate = new Date(b.uploadedAt || 0);
-    //   return bDate.getTime() - aDate.getTime();
-    // });
+    documents.sort((a, b) => {
+      const getDateValue = (date: any): number => {
+        if (!date) return 0;
+        if (typeof date === 'string') return new Date(date).getTime();
+        if (date instanceof Date) return date.getTime();
+        if (date.toDate && typeof date.toDate === 'function') return date.toDate().getTime(); // Timestamp
+        return 0;
+      };
+
+      const aTime = getDateValue(a.uploadedAt);
+      const bTime = getDateValue(b.uploadedAt);
+      return bTime - aTime;
+    });
 
     return res.status(200).json({
       success: true,
@@ -171,9 +234,12 @@ async function uploadDocument(
   userId: string
 ) {
   try {
+    console.log('📤 Upload document called for user:', userId);
     const { fileName, category, fileData, metadata }: UploadDocumentRequest = req.body;
+    console.log('📤 Upload request:', { fileName, category, fileDataLength: fileData?.length });
 
     if (!fileName || !category || !fileData) {
+      console.log('❌ Missing required fields:', { fileName: !!fileName, category: !!category, fileData: !!fileData });
       return res.status(400).json({
         success: false,
         error: 'File name, category, and file data are required',
@@ -200,11 +266,21 @@ async function uploadDocument(
 
     // Decode base64 file data to get file size
     let fileSize = 0;
+    let fileBuffer: Buffer;
     try {
-      const base64Data = fileData.split(',')[1] || fileData;
-      fileSize = (base64Data.length * 3) / 4; // Approximate size from base64
+      console.log('🔄 Processing file data...');
+      const base64Data = fileData.includes(',') ? fileData.split(',')[1] : fileData;
+      console.log('🔄 Base64 data length:', base64Data.length);
+      fileBuffer = Buffer.from(base64Data, 'base64');
+      fileSize = fileBuffer.length;
+      console.log('✅ File processed successfully. Size:', fileSize);
     } catch (error) {
-      console.warn('Could not calculate file size:', error);
+      console.error('❌ Error processing file data:', error);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid file data format',
+        code: 400
+      });
     }
 
     // Check file size limit (10MB)
@@ -217,57 +293,64 @@ async function uploadDocument(
       });
     }
 
-    // Generate unique file path
+    // Generate unique file path with UUID naming
     const fileExtension = fileName.split('.').pop() || '';
     const uniqueFileName = `${randomUUID()}.${fileExtension}`;
-    const filePath = `business-documents/${userId}/${category}/${uniqueFileName}`;
+    const storagePath = `${category}/${userId}/${uniqueFileName}`;
 
-    // Create document record in Firestore
-    const documentData = {
-      userId,
-      fileName: uniqueFileName,
-      originalName: fileName,
-      filePath,
-      downloadUrl: `gs://your-bucket/${filePath}`, // Placeholder URL
-      category,
-      fileType: getFileTypeFromName(fileName),
-      size: fileSize,
-      status: StorageDocumentStatus.PENDING,
-      uploadedAt: new Date().toISOString(),
-      metadata: metadata || {},
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    // Upload to Firebase Storage
+    const storage = getStorage();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'elektro-ekspert-apps.firebasestorage.app';
+    const bucket = storage.bucket(bucketName);
+    console.log('🪣 Using storage bucket:', bucketName);
+    const file = bucket.file(storagePath);
 
-    const docRef = await adminDb.collection(FB_COLL_NAMES.documents).add(documentData);
+    const contentType = getContentTypeFromFileName(fileName);
+    await file.save(fileBuffer, {
+      metadata: {
+        contentType,
+        metadata: {
+          uploadedBy: userId,
+          uploadedAt: new Date().toISOString(),
+          originalName: fileName,
+          category: category,
+          source: 'business-upload',
+          ...metadata
+        }
+      }
+    });
+
+    // Generate signed URL
+    const [signedUrl] = await file.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     // Update business verification status when documents are uploaded
     await updateBusinessVerificationStatus(userId);
 
-    const createdDocument: IDocument = {
-      name: documentData.originalName,
-      url: documentData.downloadUrl,
-      fileType: documentData.fileType,
-      fullPath: documentData.filePath,
-      category: documentData.category,
-      uploadedAt: documentData.uploadedAt,
+    const document: IDocument = {
+      type: getDocumentTypeFromCategory(category),
+      name: fileName,
+      url: signedUrl,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: userId,
+      status: StorageDocumentStatus.PENDING,
+      fullPath: storagePath,
+      fileType: getFileTypeFromContentType(contentType),
+      category: category,
       metadata: {
-        size: documentData.size,
-        ...documentData.metadata,
-        documentId: docRef.id,
-        userId: documentData.userId,
-        status: documentData.status,
-        originalName: documentData.originalName,
-        uploadedBy: ""
-      },
-      type: StorageDocumentType.BUSINESS_LICENSE,
-      uploadedBy: '',
-      status: StorageDocumentStatus.PENDING
+        originalName: fileName,
+        uploadedBy: userId,
+        size: fileSize,
+        source: 'business-upload',
+        ...metadata
+      }
     };
 
     return res.status(201).json({
       success: true,
-      data: createdDocument,
+      data: document,
       code: 201
     });
 
@@ -286,30 +369,18 @@ async function deleteDocument(
   userId: string
 ) {
   try {
-    const { documentId } = req.query;
+    const { documentPath } = req.query;
 
-    if (!documentId || typeof documentId !== 'string') {
+    if (!documentPath || typeof documentPath !== 'string') {
       return res.status(400).json({
         success: false,
-        error: 'Document ID is required',
+        error: 'Document path is required',
         code: 400
       });
     }
 
-    // Check if document exists and belongs to user
-    const docRef = adminDb.collection(FB_COLL_NAMES.documents).doc(documentId);
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({
-        success: false,
-        error: 'Document not found',
-        code: 404
-      });
-    }
-
-    const docData = doc.data();
-    if (docData?.userId !== userId) {
+    // Verify the document belongs to the user (check if path contains user ID)
+    if (!documentPath.includes(`/${userId}/`)) {
       return res.status(403).json({
         success: false,
         error: 'Unauthorized to delete this document',
@@ -317,12 +388,24 @@ async function deleteDocument(
       });
     }
 
-    // Delete document from Firestore
-    await docRef.delete();
+    // Delete from Firebase Storage
+    const storage = getStorage();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'elektro-ekspert-apps.firebasestorage.app';
+    const bucket = storage.bucket(bucketName);
+    const file = bucket.file(documentPath);
 
-    // TODO: Also delete from Firebase Storage
-    // const storage = getStorage();
-    // await deleteObject(ref(storage, docData.filePath));
+    try {
+      await file.delete();
+    } catch (storageError: any) {
+      if (storageError.code === 404) {
+        return res.status(404).json({
+          success: false,
+          error: 'Document not found',
+          code: 404
+        });
+      }
+      throw storageError;
+    }
 
     return res.status(200).json({
       success: true
@@ -337,8 +420,60 @@ async function deleteDocument(
   }
 }
 
-// Helper function to determine file type from file name
-function getFileTypeFromName(fileName: string): 'pdf' | 'image' | 'other' {
+// Helper functions
+function getDocumentCategoryFromPath(filePath: string): DocumentCategory {
+  if (filePath.startsWith('business-documents/')) return 'business-documents';
+  if (filePath.startsWith('tax-certificates/')) return 'tax-certificates';
+  if (filePath.startsWith('place-photos/')) return 'place-photos';
+  if (filePath.startsWith('identity-documents/')) return 'identity-documents';
+  if (filePath.startsWith('content-uploads/')) return 'content-uploads';
+  return 'other';
+}
+
+function getDocumentTypeFromCategory(category: DocumentCategory): StorageDocumentType {
+  switch (category) {
+    case 'business-documents':
+      return StorageDocumentType.BUSINESS_LICENSE;
+    case 'tax-certificates':
+      return StorageDocumentType.TAX_CERTIFICATE;
+    case 'identity-documents':
+      return StorageDocumentType.ARTICLES_OF_INCORPORATION; // Map to closest available type
+    case 'place-photos':
+      return StorageDocumentType.OTHER; // Photos don't have specific document type
+    default:
+      return StorageDocumentType.OTHER;
+  }
+}
+
+function getFileTypeFromContentType(contentType: string): DocumentFileType {
+  if (contentType.startsWith('image/')) return 'image';
+  if (contentType === 'application/pdf') return 'pdf';
+  return 'other';
+}
+
+function getContentTypeFromFileName(fileName: string): string {
+  const extension = fileName.toLowerCase().split('.').pop();
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    case 'webp':
+      return 'image/webp';
+    case 'bmp':
+      return 'image/bmp';
+    case 'pdf':
+      return 'application/pdf';
+    default:
+      return 'application/octet-stream';
+  }
+}
+
+// Helper function to determine file type from file name (legacy support)
+function getFileTypeFromName(fileName: string): DocumentFileType {
   const extension = fileName.split('.').pop()?.toLowerCase() || '';
 
   if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension)) {
@@ -355,6 +490,7 @@ function getFileTypeFromName(fileName: string): 'pdf' | 'image' | 'other' {
 // Helper function to update business verification status when documents are uploaded
 async function updateBusinessVerificationStatus(userId: string) {
   try {
+    console.log('🔄 Updating business verification status for user:', userId);
     // Find the user's business
     const userDoc = await adminDb.collection('users').doc(userId).get();
     if (!userDoc.exists) {
@@ -364,6 +500,7 @@ async function updateBusinessVerificationStatus(userId: string) {
 
     const userData = userDoc.data();
     const businessId = userData?.businessInfo?.businessId;
+    console.log('🏢 Found business ID:', businessId);
 
     if (!businessId) {
       console.error('No business ID found for user:', userId);
@@ -379,6 +516,7 @@ async function updateBusinessVerificationStatus(userId: string) {
 
     const businessData = businessDoc.data();
     const currentStatus = businessData?.verification?.status;
+    console.log('🔍 Current verification status:', currentStatus);
 
     // Only update if status is UNVERIFIED or undefined (new business)
     if (!currentStatus || currentStatus === BusinessVerificationStatus.UNVERIFIED) {
@@ -401,7 +539,9 @@ async function updateBusinessVerificationStatus(userId: string) {
 
       await adminDb.collection('businesses').doc(businessId).update(verificationUpdate);
 
-      console.log(`Business verification status updated to PENDING for business: ${businessId}`);
+      console.log(`✅ Business verification status updated to PENDING for business: ${businessId}`);
+    } else {
+      console.log(`ℹ️ Business verification status not updated. Current status: ${currentStatus}`);
     }
   } catch (error) {
     console.error('Error updating business verification status:', error);

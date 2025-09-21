@@ -20,13 +20,15 @@ export { BusinessVerificationStatus, StorageDocumentStatus, StorageDocumentType 
 export type DocumentFileType = 'pdf' | 'image' | 'other'
 
 /**
- * Categories for organizing user documents
+ * Categories for organizing documents and files
+ * Updated to include content uploads for admin files
  */
 export type DocumentCategory =
   | 'business-documents'
   | 'tax-certificates'
   | 'place-photos'
   | 'identity-documents'
+  | 'content-uploads'
   | 'other'
 
 /**
@@ -45,12 +47,13 @@ export interface DocumentMetadata {
 
 /**
  * Storage service interface - defines what storage operations should be available
+ * Updated to support both user documents and admin content uploads
  */
 export interface IStorageService {
-  // User document operations
-  getUserDocuments(userId: string): Promise<IDocument[]>
-  uploadUserDocument(userId: string, file: File, category: DocumentCategory): Promise<IDocument>
-  deleteUserDocument(userId: string, documentPath: string): Promise<boolean>
+  // Document operations (supports both user docs and admin content)
+  getDocuments(userId?: string): Promise<IDocument[]>
+  uploadDocument(userId: string, file: File, category: DocumentCategory): Promise<IDocument>
+  deleteDocument(userId: string, documentId: string): Promise<boolean>
 
   // Document display helpers
   getCategoryDisplayName(category: DocumentCategory): string
@@ -58,6 +61,10 @@ export interface IStorageService {
 
   // Document verification operations (admin only)
   verifyDocument?(documentPath: string, status: StorageDocumentStatus, notes?: string): Promise<boolean>
+
+  // Validation helpers
+  validateFile(file: File, category: DocumentCategory): { valid: boolean; error?: string }
+  fileToBase64(file: File): Promise<string>
 }
 
 
@@ -124,4 +131,19 @@ export interface DocumentOperation {
   documentPath?: string
   category?: DocumentCategory
   metadata?: DocumentMetadata
+}
+
+/**
+ * Simplified file metadata interface for Firebase Storage operations
+ * Used by upload manager and content management
+ */
+export interface FileMetadata {
+  id: string           // File path or unique identifier
+  name: string         // Display name
+  url: string          // Public download URL
+  size: number         // File size in bytes
+  contentType: string  // MIME type
+  category: string     // Storage category (folder)
+  createdAt: string    // ISO date string
+  isImage: boolean     // True if it's an image file
 }
