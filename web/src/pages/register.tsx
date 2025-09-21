@@ -50,8 +50,14 @@ const RegisterPage: React.FC = () => {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
         </div>
 
-        <div className="relative z-10 max-w-2xl w-full space-y-8">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+        <div className="relative z-10 w-full max-w-2xl mx-auto space-y-8">
+          <div
+            className={`bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20 mx-auto ${
+              accountType === 'business'
+                ? 'w-full max-w-4xl'
+                : 'w-full max-w-md'
+            }`}
+          >
             {accountType === 'business' && <BusinessRegisterForm />}
             {accountType === 'individual' && <IndividualRegisterForm />}
           </div>

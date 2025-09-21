@@ -58,6 +58,7 @@ interface IBusinessService {
 }
 
 interface IBusinessUserInfo {
+  businessStatus?: BusinessVerificationStatus; // Optional business status for quick reference
   businessId: string; // Reference to the business this user is associated with
   userId: string; // Redundant but useful for iteration
   businessTitle: string; // e.g., Owner, Manager
@@ -131,9 +132,6 @@ export interface BusinessDocumentReview {
   reviewedAt?: string
   notes?: string
 }
-
-
-
 
 export type {
   IBusiness,

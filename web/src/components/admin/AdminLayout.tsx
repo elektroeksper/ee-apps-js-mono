@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactNode, useState } from 'react'
@@ -10,7 +11,6 @@ import {
   FiMenu,
   FiSettings,
   FiUsers,
-  FiX,
 } from 'react-icons/fi'
 
 interface IAdminLayoutProps {
@@ -28,6 +28,7 @@ interface INavItem {
 export default function AdminLayout({ children, title }: IAdminLayoutProps) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { logout } = useAuth()
 
   const navItems: INavItem[] = [
     {
@@ -64,7 +65,7 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="flex h-auto bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -72,33 +73,15 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`absolute top-0 left-0 z-50 w-64 bg-white shadow-xl transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ height: 'auto', maxHeight: '100vh' }}
       >
-        {/* Sidebar header */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200">
-          <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">A</span>
-            </div>
-            <span className="text-lg font-semibold text-slate-900">
-              Admin Panel
-            </span>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1 rounded-md text-slate-400 hover:text-slate-500"
-          >
-            <FiX className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        {/* Navigation - starting from top */}
+        <nav className="h-auto px-4 pt-6 pb-6 space-y-2 overflow-y-auto">
           {navItems.map(item => {
             const IconComponent = item.icon
             const isActive = isActivePath(item.href)
@@ -130,17 +113,22 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
           })}
         </nav>
 
+        {/* Spacer before sidebar footer */}
+        <div className="flex-1" />
+
         {/* Sidebar footer */}
         <div className="border-t border-slate-200 p-4">
-          <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          <button
+            onClick={() => logout()}
+            className="flex items-center w-full px-3 py-2 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
             <FiLogOut className="h-5 w-5 mr-3" />
             Çıkış Yap
           </button>
         </div>
       </div>
-
-      {/* Main content */}
-      <div className="lg:pl-64">
+      {/* Main content */}logout pu
+      <div className="flex-1 lg:flex lg:flex-col">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-slate-200">
           <button
@@ -156,7 +144,7 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pt-6 pl-6">{children}</main>
       </div>
     </div>
   )

@@ -3,7 +3,7 @@
  * Handles GET (list with filters) and POST (create) operations using Firebase Admin SDK
  */
 
-import { adminDb, verifyIdToken } from '@/lib/firebase-admin';
+import { adminAuth, adminDb, verifyIdToken } from '@/lib/firebase-admin';
 import { AccountType, IAppUser, IUserFilter } from '@/shared-generated';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -32,22 +32,32 @@ async function handleGetUsers(
   res: NextApiResponse
 ) {
   try {
-    // Verify authentication via session cookie
-    const sessionCookie = req.cookies.session;
+    // Try to get token from session cookie first, then from Authorization header
+    let token = req.cookies.session;
 
-    if (!sessionCookie) {
-      return res.status(401).json({ error: 'No session found' });
+    if (!token) {
+      // Fallback to Authorization header (for ID tokens)
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
     }
 
-    const decodedResult = await verifyIdToken(sessionCookie);
+    if (!token) {
+      return res.status(401).json({ error: 'No authentication token found' });
+    }
+
+    const decodedResult = await verifyIdToken(token);
 
     if (!decodedResult.success || !decodedResult.user) {
-      return res.status(401).json({ error: 'Invalid session' });
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
-    // Check if user has admin privileges (you can customize this logic)
-    const userClaims = decodedResult.user.customClaims || {};
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
+    // Check if user has admin privileges using the uid from the token
+    // This fetches the latest custom claims from Firebase directly
+    const userRecord = await adminAuth.getUser(decodedResult.user.uid);
+    const userClaims = userRecord.customClaims || {};
+    const isAdmin = userClaims.admin === true || userClaims.role === 'admin' || decodedResult.user.admin === true;
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Insufficient permissions' });
@@ -143,22 +153,32 @@ async function handleCreateUser(
   res: NextApiResponse
 ) {
   try {
-    // Verify authentication via session cookie
-    const sessionCookie = req.cookies.session;
+    // Try to get token from session cookie first, then from Authorization header
+    let token = req.cookies.session;
 
-    if (!sessionCookie) {
-      return res.status(401).json({ error: 'No session found' });
+    if (!token) {
+      // Fallback to Authorization header (for ID tokens)
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
     }
 
-    const decodedResult = await verifyIdToken(sessionCookie);
+    if (!token) {
+      return res.status(401).json({ error: 'No authentication token found' });
+    }
+
+    const decodedResult = await verifyIdToken(token);
 
     if (!decodedResult.success || !decodedResult.user) {
-      return res.status(401).json({ error: 'Invalid session' });
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
-    // Check if user has admin privileges (you can customize this logic)
-    const userClaims = decodedResult.user.customClaims || {};
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
+    // Check if user has admin privileges using the uid from the token
+    // This fetches the latest custom claims from Firebase directly
+    const userRecord = await adminAuth.getUser(decodedResult.user.uid);
+    const userClaims = userRecord.customClaims || {};
+    const isAdmin = userClaims.admin === true || userClaims.role === 'admin' || decodedResult.user.admin === true;
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Insufficient permissions' });

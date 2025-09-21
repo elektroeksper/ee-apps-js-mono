@@ -95,7 +95,7 @@ export const IndividualRegisterForm: React.FC = () => {
   }
 
   return (
-    <div className="bg-white max-w-md mx-auto">
+    <div className="max-w-md mx-auto">
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           Bireysel Hesap Oluştur
