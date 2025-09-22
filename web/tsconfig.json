@@ -20,6 +20,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "@/shared-generated": ["./src/shared-generated"],
+      "@/shared-generated/*": ["./src/shared-generated/*"],
       "@/components/*": ["./src/components/*"],
       "@/pages/*": ["./src/pages/*"],
       "@/styles/*": ["./src/styles/*"],
