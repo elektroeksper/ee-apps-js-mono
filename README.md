@@ -203,6 +203,41 @@ electro-expert/
 
 This project is private and proprietary.
 
+## 🚀 Deployment
+
+### Firebase App Hosting
+
+The web application is configured for deployment to Firebase App Hosting with proper monorepo support.
+
+**Quick Deploy:**
+
+```bash
+# Deploy to test environment
+./deploy-apphosting.sh
+# Select option 1 for test environment
+
+# Deploy to production
+./deploy-apphosting.sh
+# Select option 2 for production
+```
+
+**Documentation:**
+
+- 📖 [Complete Deployment Guide](./docs/DEPLOYMENT_GUIDE.md) - Step-by-step deployment instructions
+- 🔧 [Troubleshooting Guide](./docs/DEPLOYMENT_TROUBLESHOOTING.md) - Common issues and solutions
+
+**Deployment Requirements:**
+
+- Standalone `web/pnpm-lock.yaml` (auto-generated)
+- Built shared types copied to web directory
+- Firebase Auth client-side only configuration
+- Dual authentication system for API routes
+
+**Live Environments:**
+
+- **Test**: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app
+- **Production**: https://electro-expert-next--elektro-ekspert-apps.europe-west4.hosted.app
+
 ## 🆘 Troubleshooting
 
 ### Common Issues
