@@ -1,7 +1,7 @@
-# Settings for Backend (on Cloud Run).
+# Settings for Backend (on Cloud Run) - LIVE Environment
 # See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
-  minInstances: 0
+  minInstances: 1
   maxInstances: 100
   concurrency: 80
   cpu: 2
@@ -13,14 +13,14 @@ build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Install dependencies with NO frozen lockfile to allow updates
-    - pnpm install --no-frozen-lockfile
+    # Install dependencies with frozen lockfile for consistency
+    - pnpm install --frozen-lockfile
     # Verify shared types are present (should be copied before deployment)
     - node scripts/verify-shared-types.js
     # Build the Next.js application
     - pnpm run build
 
-# Environment variables and secrets.
+# Environment variables and secrets - LIVE ENVIRONMENT
 env:
   # Configure environment variables.
   # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment

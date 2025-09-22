@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Firebase App Hosting Deployment Script
-# This script helps deploy the web app to Firebase App Hosting with target selection
+# This script deploys the web app to Firebase App Hosting using Firebase targets
 
 set -e
 
@@ -12,9 +12,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Change to project root directory
 cd "$SCRIPT_DIR"
 
-# Define backend targets
-LIVE_BACKEND="ee-next-live"
+# Define deployment targets and URLs
+TEST_TARGET="test"
+LIVE_TARGET="live"
 TEST_BACKEND="ee-next-test"
+LIVE_BACKEND="ee-next-live"
 LIVE_URL="https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app"
 TEST_URL="https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app"
 
@@ -30,12 +32,14 @@ select_target() {
         read -p "🎯 Select deployment target (1 for test, 2 for live): " choice
         case $choice in
             1)
+                SELECTED_TARGET=$TEST_TARGET
                 SELECTED_BACKEND=$TEST_BACKEND
                 SELECTED_URL=$TEST_URL
                 SELECTED_ENV="TEST"
                 break
                 ;;
             2)
+                SELECTED_TARGET=$LIVE_TARGET
                 SELECTED_BACKEND=$LIVE_BACKEND
                 SELECTED_URL=$LIVE_URL
                 SELECTED_ENV="LIVE"
@@ -58,11 +62,13 @@ select_target() {
 
 # Check if target is provided as argument
 if [ "$1" == "test" ]; then
+    SELECTED_TARGET=$TEST_TARGET
     SELECTED_BACKEND=$TEST_BACKEND
     SELECTED_URL=$TEST_URL
     SELECTED_ENV="TEST"
     echo "🎯 Using TEST environment (provided as argument)"
 elif [ "$1" == "live" ]; then
+    SELECTED_TARGET=$LIVE_TARGET
     SELECTED_BACKEND=$LIVE_BACKEND
     SELECTED_URL=$LIVE_URL
     SELECTED_ENV="LIVE"
@@ -81,9 +87,9 @@ echo "🎯 Selected target: ${SELECTED_ENV} (${SELECTED_BACKEND})"
 echo "🌐 URL: ${SELECTED_URL}"
 
 # Check if we're in the right directory
-if [ ! -f "web/apphosting.yaml" ]; then
-    echo "❌ Error: apphosting.yaml not found in web/ directory"
-    echo "Please run this script from the project root directory"
+if [ ! -f "web/apphosting.${SELECTED_TARGET}.yaml" ]; then
+    echo "❌ Error: apphosting.${SELECTED_TARGET}.yaml not found in web/ directory"
+    echo "Please ensure the configuration files are properly set up"
     exit 1
 fi
 
@@ -128,54 +134,14 @@ fi
 cp -r shared/dist web/src/shared-generated
 echo "✅ Shared types copied to web directory"
 
-# Update apphosting.yaml for the selected environment
-echo "🔧 Configuring apphosting.yaml for ${SELECTED_ENV} environment..."
-cd web
-
-# Create backup of original files
-cp apphosting.yaml apphosting.yaml.backup
-cp firebase.json firebase.json.backup
-
-# Update environment URLs and Firebase app config in apphosting.yaml based on target
-if [ "$SELECTED_ENV" == "LIVE" ]; then
-    echo "📝 Updating apphosting.yaml for LIVE environment..."
-    # Update URLs for live environment
-    sed -i 's|value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api|value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/api|g' apphosting.yaml
-    sed -i 's|value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/|value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/|g' apphosting.yaml
-    # Update firebase.json to use live backend
-    sed -i 's|"backendId": "ee-next-test"|"backendId": "ee-next-live"|g' firebase.json
-    echo "✅ Configured for LIVE backend: ee-next-live"
-else
-    echo "📝 Using apphosting.yaml for TEST environment (default)..."
-    # For test environment, ensure URLs are correct (should already be set)
-    sed -i 's|value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/api|value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api|g' apphosting.yaml
-    sed -i 's|value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/|value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/|g' apphosting.yaml
-    # Ensure firebase.json uses test backend
-    sed -i 's|"backendId": "ee-next-live"|"backendId": "ee-next-test"|g' firebase.json
-    echo "✅ Configured for TEST backend: ee-next-test"
-fi
-
-echo "✅ apphosting.yaml configured for ${SELECTED_ENV} environment"
-
-# Note: Firebase predeploy will build shared types automatically before upload
-# Note: We don't run the full web:build here since App Hosting will build the app
-# in the cloud using the apphosting.yaml configuration
-
-# Deploy to App Hosting using local source
+# Deploy to App Hosting using Firebase targets
 echo ""
-echo "🚀 Deploying to Firebase App Hosting backend: ${SELECTED_BACKEND}..."
+echo "� Deploying to Firebase App Hosting target: ${SELECTED_TARGET}..."
+echo "📦 Backend: ${SELECTED_BACKEND}"
+echo "📝 Config: apphosting.${SELECTED_TARGET}.yaml"
 
-# Deploy using firebase deploy command
-echo "📦 Deploying to backend: ${SELECTED_BACKEND}..."
-firebase deploy --only apphosting --project elektro-ekspert-apps
-
-# Restore original configuration files
-echo "🔄 Restoring original configuration files..."
-mv apphosting.yaml.backup apphosting.yaml
-mv firebase.json.backup firebase.json
-echo "✅ Original configuration files restored"
-
-cd ..
+# Deploy using firebase deploy command with target
+firebase deploy --only apphosting:${SELECTED_TARGET} --project elektro-ekspert-apps
 
 echo ""
 echo "🎉 Deployment completed successfully!"
@@ -184,6 +150,8 @@ echo "📊 Monitor deployment at: https://console.firebase.google.com/project/el
 echo ""
 echo "📝 Deployment Summary:"
 echo "   Environment: ${SELECTED_ENV}"
+echo "   Target: ${SELECTED_TARGET}"
 echo "   Backend: ${SELECTED_BACKEND}"
+echo "   Config: web/apphosting.${SELECTED_TARGET}.yaml"
 echo "   Source: Local"
 echo "   URL: ${SELECTED_URL}"

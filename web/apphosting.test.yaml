@@ -1,26 +1,26 @@
-# Settings for Backend (on Cloud Run).
+# Settings for Backend (on Cloud Run) - TEST Environment
 # See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
   minInstances: 0
-  maxInstances: 100
+  maxInstances: 10
   concurrency: 80
-  cpu: 2
-  memoryMiB: 1024
+  cpu: 1
+  memoryMiB: 512
 
 # Build configuration for monorepo setup
-# Build commands will run from repository root
+# Build commands will run from web directory
 build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Install dependencies for the entire monorepo from root (single lockfile)
-    - pnpm install --frozen-lockfile
-    # Build shared types and copy to web directory
-    - node scripts/build-shared-types.js web
-    # Build the Next.js application from root using workspace commands
-    - pnpm run web:build
+    # Install dependencies with NO frozen lockfile to allow updates
+    - pnpm install --no-frozen-lockfile
+    # Verify shared types are present (should be copied before deployment)
+    - node scripts/verify-shared-types.js
+    # Build the Next.js application
+    - pnpm run build
 
-# Environment variables and secrets.
+# Environment variables and secrets - TEST ENVIRONMENT
 env:
   # Configure environment variables.
   # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
@@ -87,6 +87,23 @@ env:
       - RUNTIME
   - variable: NEXT_PUBLIC_API_BASE_URL
     value: https://europe-west1-elektro-ekspert-apps.cloudfunctions.net
+    availability:
+      - BUILD
+      - RUNTIME
+  # Google Maps API Key
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    value: AIzaSyC06eYgOwcqm-CodnC_-jkilscQ7cLDQoQ
+    availability:
+      - BUILD
+      - RUNTIME
+  # Default map center coordinates (Istanbul)
+  - variable: NEXT_PUBLIC_DEFAULT_MAP_CENTER_LAT
+    value: "41.0082"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_DEFAULT_MAP_CENTER_LNG
+    value: "28.9784"
     availability:
       - BUILD
       - RUNTIME
