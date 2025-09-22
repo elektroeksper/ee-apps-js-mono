@@ -13,8 +13,8 @@ build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Install dependencies with frozen lockfile (standalone web lockfile)
-    - pnpm install --frozen-lockfile
+    # Install dependencies with NO frozen lockfile to allow updates
+    - pnpm install --no-frozen-lockfile
     # Verify shared types are present (should be copied before deployment)
     - node scripts/verify-shared-types.js
     # Build the Next.js application

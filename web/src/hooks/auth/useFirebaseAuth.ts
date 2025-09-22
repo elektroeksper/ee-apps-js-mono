@@ -58,6 +58,12 @@ export function useFirebaseAuth(): FirebaseAuthState {
       try {
         const { auth } = await import('@/lib/firebase-auth-config');
 
+        if (!auth) {
+          console.warn('🚨 useFirebaseAuth: Firebase Auth not available (likely SSR)');
+          setIsAuthLoading(false);
+          return;
+        }
+
         // Check for redirect result first (for popup-blocked fallback)
         try {
           console.log('🔄 useFirebaseAuth: Checking for redirect result...');

@@ -59,12 +59,29 @@ export class AuthService implements IAuthService {
   }
 
   /**
+   * Get Firebase Auth instance with safety check
+   */
+  private getAuth() {
+    if (!auth) {
+      throw new Error('Firebase Auth not available. This operation should only be performed on the client side.');
+    }
+    return auth;
+  }
+
+  /**
+   * Check if we're in a client-side environment
+   */
+  private isClientSide(): boolean {
+    return typeof window !== 'undefined' && auth !== null;
+  }
+
+  /**
    * Sign in user with email and password
    */
   async login(data: ILoginData): Promise<IOperationResult<IFirebaseUser>> {
     try {
       const userCredential = await signInWithEmailAndPassword(
-        auth,
+        this.getAuth(),
         data.email,
         data.password
       );
@@ -110,7 +127,7 @@ export class AuthService implements IAuthService {
     try {
       // Step 1: Create Firebase Auth user
       userCredential = await createUserWithEmailAndPassword(
-        auth,
+        this.getAuth(),
         data.email,
         data.password
       );
@@ -203,7 +220,7 @@ export class AuthService implements IAuthService {
         // Continue anyway - client-side logout still works
       }
 
-      await signOut(auth);
+      await signOut(this.getAuth());
       return {
         success: true,
         code: 200,
@@ -226,13 +243,13 @@ export class AuthService implements IAuthService {
 
       try {
         // Try popup first
-        userCredential = await signInWithPopup(auth, provider);
+        userCredential = await signInWithPopup(this.getAuth(), provider);
       } catch (popupError: any) {
         // If popup is blocked, fall back to redirect
         if (popupError.code === 'auth/popup-blocked' ||
           popupError.code === 'auth/popup-closed-by-user') {
           console.log('Popup blocked, falling back to redirect...');
-          await signInWithRedirect(auth, provider);
+          await signInWithRedirect(this.getAuth(), provider);
           // signInWithRedirect doesn't return a result directly
           // The user will be redirected and we'll handle the result in getRedirectResult
           return {
@@ -289,13 +306,13 @@ export class AuthService implements IAuthService {
 
       try {
         // Try popup first
-        userCredential = await signInWithPopup(auth, provider);
+        userCredential = await signInWithPopup(this.getAuth(), provider);
       } catch (popupError: any) {
         // If popup is blocked, fall back to redirect
         if (popupError.code === 'auth/popup-blocked' ||
           popupError.code === 'auth/popup-closed-by-user') {
           console.log('Popup blocked, falling back to redirect...');
-          await signInWithRedirect(auth, provider);
+          await signInWithRedirect(this.getAuth(), provider);
           // signInWithRedirect doesn't return a result directly
           // The user will be redirected and we'll handle the result in getRedirectResult
           return {
@@ -324,7 +341,7 @@ export class AuthService implements IAuthService {
    */
   async resetPassword(email: string, continueUrl: string): Promise<IOperationResult<void>> {
     try {
-      await sendPasswordResetEmail(auth, email, {
+      await sendPasswordResetEmail(this.getAuth(), email, {
         url: continueUrl,
         handleCodeInApp: false,
       });
@@ -344,7 +361,7 @@ export class AuthService implements IAuthService {
    */
   async handleRedirectResult(): Promise<IOperationResult<IFirebaseUser | null>> {
     try {
-      const result = await getRedirectResult(auth);
+      const result = await getRedirectResult(this.getAuth());
 
       if (result) {
         // User signed in via redirect
@@ -393,7 +410,7 @@ export class AuthService implements IAuthService {
    */
   async changePassword(data: IPasswordChangeData): Promise<IOperationResult<void>> {
     try {
-      const user = auth.currentUser;
+      const user = this.getAuth().currentUser;
       if (!user || !user.email) {
         return {
           success: false,
@@ -423,7 +440,7 @@ export class AuthService implements IAuthService {
    */
   async sendEmailVerification(url?: string): Promise<IOperationResult<void>> {
     try {
-      const user = auth.currentUser;
+      const user = this.getAuth().currentUser;
       if (!user) {
         return {
           success: false,
@@ -451,7 +468,7 @@ export class AuthService implements IAuthService {
    */
   async deleteAccount(): Promise<IOperationResult<void>> {
     try {
-      const user = auth.currentUser;
+      const user = this.getAuth().currentUser;
       if (!user) {
         return {
           success: false,
@@ -475,7 +492,7 @@ export class AuthService implements IAuthService {
    * Listen to authentication state changes
    */
   onAuthStateChanged(callback: (user: IFirebaseUser | null) => void): () => void {
-    return onAuthStateChanged(auth, (user) => {
+    return onAuthStateChanged(this.getAuth(), (user) => {
       callback(user ? this.mapFirebaseUser(user) : null);
     });
   }
@@ -484,7 +501,10 @@ export class AuthService implements IAuthService {
    * Get current authenticated user
    */
   getCurrentUser(): IFirebaseUser | null {
-    const user = auth.currentUser;
+    if (!this.isClientSide()) {
+      return null;
+    }
+    const user = this.getAuth().currentUser;
     return user ? this.mapFirebaseUser(user) : null;
   }
 
@@ -493,7 +513,7 @@ export class AuthService implements IAuthService {
    */
   async getIdToken(forceRefresh: boolean = false): Promise<string | null> {
     try {
-      const user = auth.currentUser;
+      const user = this.getAuth().currentUser;
       if (!user) return null;
 
       // Optionally reload user to ensure latest token/claims
@@ -517,7 +537,10 @@ export class AuthService implements IAuthService {
    * Check if user email is verified
    */
   isEmailVerified(): boolean {
-    return auth.currentUser?.emailVerified ?? false;
+    if (!this.isClientSide()) {
+      return false;
+    }
+    return this.getAuth().currentUser?.emailVerified ?? false;
   }
 
   /**
@@ -525,7 +548,7 @@ export class AuthService implements IAuthService {
    */
   async getUserClaims(): Promise<any> {
     try {
-      const user = auth.currentUser;
+      const user = this.getAuth().currentUser;
       if (!user) return {};
 
       const idTokenResult = await user.getIdTokenResult();

@@ -29,6 +29,9 @@ const EmailVerificationHandler = ({
 
         // Import auth dynamically to avoid build-time issues
         const { auth } = await import('@/lib/firebase-auth-config')
+        if (!auth) {
+          throw new Error('Firebase Auth not available')
+        }
         await applyActionCode(auth, oobCode)
 
         // After successful email verification, we need to update the user document

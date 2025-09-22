@@ -7,6 +7,9 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 
+// Build-time safety check
+const isClientSide = typeof window !== 'undefined';
+
 // Firebase config (safe to use client-side)
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -18,15 +21,25 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase app (client-side only)
-let app;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
-}
+let app: any = null;
+
+const getFirebaseApp = () => {
+  if (!isClientSide) {
+    return null;
+  }
+
+  if (!app) {
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApp();
+    }
+  }
+  return app;
+};
 
 // Initialize Firebase Auth (client-side only)
-export const auth = getAuth(app);
+export const auth = isClientSide ? getAuth(getFirebaseApp()!) : null;
 
 // Connect to Auth Emulator in development (disabled for testing)
 // Uncomment below if you want to use Firebase emulators
@@ -40,4 +53,4 @@ if (process.env.NODE_ENV === 'development') {
 }
 */
 
-export default app;
+export default getFirebaseApp;
