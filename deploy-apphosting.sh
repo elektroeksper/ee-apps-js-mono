@@ -13,9 +13,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Define backend targets
-LIVE_BACKEND="electro-expert-next"
+LIVE_BACKEND="ee-next-live"
 TEST_BACKEND="ee-next-test"
-LIVE_URL="https://electro-expert-next--elektro-ekspert-apps.europe-west4.hosted.app"
+LIVE_URL="https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app"
 TEST_URL="https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app"
 
 # Function to select target
@@ -128,6 +128,35 @@ fi
 cp -r shared/dist web/src/shared-generated
 echo "✅ Shared types copied to web directory"
 
+# Update apphosting.yaml for the selected environment
+echo "🔧 Configuring apphosting.yaml for ${SELECTED_ENV} environment..."
+cd web
+
+# Create backup of original files
+cp apphosting.yaml apphosting.yaml.backup
+cp firebase.json firebase.json.backup
+
+# Update environment URLs and Firebase app config in apphosting.yaml based on target
+if [ "$SELECTED_ENV" == "LIVE" ]; then
+    echo "📝 Updating apphosting.yaml for LIVE environment..."
+    # Update URLs for live environment
+    sed -i 's|value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api|value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/api|g' apphosting.yaml
+    sed -i 's|value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/|value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/|g' apphosting.yaml
+    # Update firebase.json to use live backend
+    sed -i 's|"backendId": "ee-next-test"|"backendId": "ee-next-live"|g' firebase.json
+    echo "✅ Configured for LIVE backend: ee-next-live"
+else
+    echo "📝 Using apphosting.yaml for TEST environment (default)..."
+    # For test environment, ensure URLs are correct (should already be set)
+    sed -i 's|value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/api|value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api|g' apphosting.yaml
+    sed -i 's|value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/|value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/|g' apphosting.yaml
+    # Ensure firebase.json uses test backend
+    sed -i 's|"backendId": "ee-next-live"|"backendId": "ee-next-test"|g' firebase.json
+    echo "✅ Configured for TEST backend: ee-next-test"
+fi
+
+echo "✅ apphosting.yaml configured for ${SELECTED_ENV} environment"
+
 # Note: Firebase predeploy will build shared types automatically before upload
 # Note: We don't run the full web:build here since App Hosting will build the app
 # in the cloud using the apphosting.yaml configuration
@@ -136,10 +165,16 @@ echo "✅ Shared types copied to web directory"
 echo ""
 echo "🚀 Deploying to Firebase App Hosting backend: ${SELECTED_BACKEND}..."
 
-# Deploy using firebase deploy command from web directory
-echo "📦 Deploying from web directory..."
-cd web
+# Deploy using firebase deploy command
+echo "📦 Deploying to backend: ${SELECTED_BACKEND}..."
 firebase deploy --only apphosting --project elektro-ekspert-apps
+
+# Restore original configuration files
+echo "🔄 Restoring original configuration files..."
+mv apphosting.yaml.backup apphosting.yaml
+mv firebase.json.backup firebase.json
+echo "✅ Original configuration files restored"
+
 cd ..
 
 echo ""

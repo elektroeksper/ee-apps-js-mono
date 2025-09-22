@@ -35,12 +35,12 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_REST_API_ENDPOINT
-    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api
+    value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/api
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/
+    value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/
     availability:
       - BUILD
       - RUNTIME

@@ -1,6 +1,6 @@
 {
   "apphosting": {
-    "backendId": "ee-next-test",
+    "backendId": "ee-next-live",
     "rootDir": ".",
     "ignore": [
       "node_modules",
