@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Firebase App Hosting Deployment Script
-# This script deploys the web app to Firebase App Hosting using Firebase targets
+# This script helps deploy the web app to Firebase App Hosting with target selection
 
 set -e
 
@@ -12,11 +12,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Change to project root directory
 cd "$SCRIPT_DIR"
 
-# Define deployment targets and URLs
-TEST_TARGET="test"
-LIVE_TARGET="live"
-TEST_BACKEND="ee-next-test"
+# Define backend targets
 LIVE_BACKEND="ee-next-live"
+TEST_BACKEND="ee-next-test"
 LIVE_URL="https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app"
 TEST_URL="https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app"
 
@@ -32,14 +30,12 @@ select_target() {
         read -p "🎯 Select deployment target (1 for test, 2 for live): " choice
         case $choice in
             1)
-                SELECTED_TARGET=$TEST_TARGET
                 SELECTED_BACKEND=$TEST_BACKEND
                 SELECTED_URL=$TEST_URL
                 SELECTED_ENV="TEST"
                 break
                 ;;
             2)
-                SELECTED_TARGET=$LIVE_TARGET
                 SELECTED_BACKEND=$LIVE_BACKEND
                 SELECTED_URL=$LIVE_URL
                 SELECTED_ENV="LIVE"
@@ -62,13 +58,11 @@ select_target() {
 
 # Check if target is provided as argument
 if [ "$1" == "test" ]; then
-    SELECTED_TARGET=$TEST_TARGET
     SELECTED_BACKEND=$TEST_BACKEND
     SELECTED_URL=$TEST_URL
     SELECTED_ENV="TEST"
     echo "🎯 Using TEST environment (provided as argument)"
 elif [ "$1" == "live" ]; then
-    SELECTED_TARGET=$LIVE_TARGET
     SELECTED_BACKEND=$LIVE_BACKEND
     SELECTED_URL=$LIVE_URL
     SELECTED_ENV="LIVE"
@@ -87,9 +81,9 @@ echo "🎯 Selected target: ${SELECTED_ENV} (${SELECTED_BACKEND})"
 echo "🌐 URL: ${SELECTED_URL}"
 
 # Check if we're in the right directory
-if [ ! -f "web/apphosting.${SELECTED_TARGET}.yaml" ]; then
-    echo "❌ Error: apphosting.${SELECTED_TARGET}.yaml not found in web/ directory"
-    echo "Please ensure the configuration files are properly set up"
+if [ ! -f "web/apphosting.test.yaml" ] || [ ! -f "web/apphosting.live.yaml" ]; then
+    echo "❌ Error: apphosting configuration files not found in web/ directory"
+    echo "Please ensure apphosting.test.yaml and apphosting.live.yaml are properly set up"
     exit 1
 fi
 
@@ -134,14 +128,44 @@ fi
 cp -r shared/dist web/src/shared-generated
 echo "✅ Shared types copied to web directory"
 
-# Deploy to App Hosting using Firebase targets
-echo ""
-echo "� Deploying to Firebase App Hosting target: ${SELECTED_TARGET}..."
-echo "📦 Backend: ${SELECTED_BACKEND}"
-echo "📝 Config: apphosting.${SELECTED_TARGET}.yaml"
+# Configure firebase.json and apphosting.yaml for the selected environment
+echo "🔧 Configuring deployment files for ${SELECTED_ENV} environment..."
 
-# Deploy using firebase deploy command with target
-firebase deploy --only apphosting:${SELECTED_TARGET} --project elektro-ekspert-apps
+# Create backup of original files
+cp firebase.json firebase.json.backup
+cp web/apphosting.yaml web/apphosting.yaml.backup
+
+# Update firebase.json to point to the correct backend
+sed -i "s/\"backendId\": \"[^\"]*\"/\"backendId\": \"$SELECTED_BACKEND\"/" firebase.json
+
+# Copy the appropriate apphosting config to the web directory (required for remote build)
+if [ "$SELECTED_ENV" == "LIVE" ]; then
+    cp "web/apphosting.live.yaml" "web/apphosting.yaml"
+    echo "✅ Using LIVE configuration: web/apphosting.live.yaml → web/apphosting.yaml"
+else
+    cp "web/apphosting.test.yaml" "web/apphosting.yaml"
+    echo "✅ Using TEST configuration: web/apphosting.test.yaml → web/apphosting.yaml"
+fi
+
+echo "✅ Configuration files ready for ${SELECTED_ENV} environment"
+echo "📝 Backend ID in firebase.json: ${SELECTED_BACKEND}"
+echo "📝 App Hosting config: web/apphosting.yaml (uploaded for remote build)"
+
+# Deploy to App Hosting using standard Firebase deploy
+echo ""
+echo "🚀 Deploying to Firebase App Hosting backend: ${SELECTED_BACKEND}..."
+echo "📝 Using configuration: web/apphosting.yaml"
+
+# Deploy using standard firebase deploy command
+# The backend is determined by the backendId in firebase.json
+# The apphosting.yaml is uploaded with source code for remote build configuration
+firebase deploy --only apphosting --project elektro-ekspert-apps
+
+# Restore original configuration files
+echo "🔄 Restoring original configuration files..."
+mv firebase.json.backup firebase.json
+mv web/apphosting.yaml.backup web/apphosting.yaml
+echo "✅ Original configuration files restored"
 
 echo ""
 echo "🎉 Deployment completed successfully!"
@@ -150,8 +174,7 @@ echo "📊 Monitor deployment at: https://console.firebase.google.com/project/el
 echo ""
 echo "📝 Deployment Summary:"
 echo "   Environment: ${SELECTED_ENV}"
-echo "   Target: ${SELECTED_TARGET}"
 echo "   Backend: ${SELECTED_BACKEND}"
-echo "   Config: web/apphosting.${SELECTED_TARGET}.yaml"
+echo "   Config: web/apphosting.$([ "$SELECTED_ENV" == "LIVE" ] && echo "live" || echo "test").yaml"
 echo "   Source: Local"
 echo "   URL: ${SELECTED_URL}"

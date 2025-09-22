@@ -23,62 +23,28 @@
   "storage": {
     "rules": "storage.rules"
   },
-  "targets": {
-    "apphosting": {
-      "test": ["ee-next-test"],
-      "live": ["ee-next-live"]
-    }
+  "apphosting": {
+    "backendId": "ee-next-test",
+    "rootDir": "web",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "scripts",
+      ".next",
+      "out",
+      ".vercel",
+      ".env*",
+      "dist",
+      "build",
+      "*.log",
+      ".DS_Store",
+      "coverage",
+      ".nyc_output",
+      ".cache"
+    ]
   },
-  "apphosting": [
-    {
-      "target": "test",
-      "backendId": "ee-next-test",
-      "rootDir": "web",
-      "appHostingConfig": "apphosting.test.yaml",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "scripts",
-        ".next",
-        "out",
-        ".vercel",
-        ".env*",
-        "dist",
-        "build",
-        "*.log",
-        ".DS_Store",
-        "coverage",
-        ".nyc_output",
-        ".cache"
-      ]
-    },
-    {
-      "target": "live",
-      "backendId": "ee-next-live",
-      "rootDir": "web",
-      "appHostingConfig": "apphosting.live.yaml",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "scripts",
-        ".next",
-        "out",
-        ".vercel",
-        ".env*",
-        "dist",
-        "build",
-        "*.log",
-        ".DS_Store",
-        "coverage",
-        ".nyc_output",
-        ".cache"
-      ]
-    }
-  ],
   "emulators": {
     "functions": {
       "port": 5001
