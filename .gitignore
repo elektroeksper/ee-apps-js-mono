@@ -138,6 +138,9 @@ functions/admin-service-account.json
 # Temporary Firebase config files created during deployment
 web/firebase.json
 
+# Temporary YAML backup files
+*.yaml.backup
+
 # Shared generated files
 shared-generated/
 */shared-generated/

@@ -1,11 +1,11 @@
-# Settings for Backend (on Cloud Run) - TEST Environment
+# Settings for Backend (on Cloud Run) - LIVE Environment
 # See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
-  minInstances: 0
-  maxInstances: 10
+  minInstances: 1
+  maxInstances: 100
   concurrency: 80
-  cpu: 1
-  memoryMiB: 512
+  cpu: 2
+  memoryMiB: 1024
 
 # Build configuration for standalone web deployment
 # Build commands will run from web directory
@@ -14,14 +14,12 @@ build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Install dependencies with frozen lockfile (standalone web lockfile)
+    # Install dependencies with frozen lockfile for consistency
     - pnpm install --frozen-lockfile
-    # Verify shared types are present (should be copied before deployment)
-    - node scripts/verify-shared-types.js
     # Build the Next.js application
     - pnpm run build
 
-# Environment variables and secrets - TEST ENVIRONMENT
+# Environment variables and secrets - LIVE ENVIRONMENT
 env:
   # Configure environment variables.
   # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
@@ -36,12 +34,12 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_REST_API_ENDPOINT
-    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api
+    value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/api
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/
+    value: https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app/
     availability:
       - BUILD
       - RUNTIME
