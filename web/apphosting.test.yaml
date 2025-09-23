@@ -7,19 +7,15 @@ runConfig:
   cpu: 1
   memoryMiB: 512
 
-# Build configuration for monorepo setup
+# Build configuration for standalone web deployment
 # Build commands will run from web directory
+# Shared types are copied before deployment by the deployment script
 build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Go to root directory and install dependencies for monorepo
-    - cd ..
-    - pnpm install --no-frozen-lockfile
-    # Build shared types from root directory
-    - node scripts/build-shared-types.js web
-    # Go back to web directory
-    - cd web
+    # Install dependencies with frozen lockfile (standalone web lockfile)
+    - pnpm install --frozen-lockfile
     # Verify shared types are present (should be copied before deployment)
     - node scripts/verify-shared-types.js
     # Build the Next.js application

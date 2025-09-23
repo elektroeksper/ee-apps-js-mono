@@ -12,21 +12,30 @@ const SHARED_GENERATED_DIR = path.join(__dirname, '../src/shared-generated');
 
 function main() {
   console.log('🔍 Verifying shared types are present...');
-  
+
   if (!fs.existsSync(SHARED_GENERATED_DIR)) {
     console.error('❌ Shared types not found!');
-    console.error('   Run "pnpm build:shared:web" from the root directory first.');
+    console.error('   Run "node scripts/build-shared-types.js web" from the root directory first.');
     process.exit(1);
   }
-  
-  const requiredFiles = ['index.d.ts', 'shared.d.ts'];
-  for (const file of requiredFiles) {
-    if (!fs.existsSync(path.join(SHARED_GENERATED_DIR, file))) {
-      console.error(`❌ Required file missing: ${file}`);
+
+  // Check for essential directories and files
+  const requiredItems = [
+    'index.d.ts',
+    'enums/index.d.ts',
+    'types/index.d.ts',
+    'configs/index.d.ts'
+  ];
+
+  for (const item of requiredItems) {
+    const itemPath = path.join(SHARED_GENERATED_DIR, item);
+    if (!fs.existsSync(itemPath)) {
+      console.error(`❌ Required file missing: ${item}`);
+      console.error('   Run "node scripts/build-shared-types.js web" from the root directory first.');
       process.exit(1);
     }
   }
-  
+
   console.log('✅ Shared types verified successfully!');
 }
 

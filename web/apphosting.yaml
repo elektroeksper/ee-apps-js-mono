@@ -7,14 +7,15 @@ runConfig:
   cpu: 1
   memoryMiB: 512
 
-# Build configuration for monorepo setup
+# Build configuration for standalone web deployment
 # Build commands will run from web directory
+# Shared types are copied before deployment by the deployment script
 build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Install dependencies with NO frozen lockfile to allow updates
-    - pnpm install --no-frozen-lockfile
+    # Install dependencies with frozen lockfile (standalone web lockfile)
+    - pnpm install --frozen-lockfile
     # Verify shared types are present (should be copied before deployment)
     - node scripts/verify-shared-types.js
     # Build the Next.js application
@@ -35,23 +36,12 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_REST_API_ENDPOINT
-    value: /api
+    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
     value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/
-    availability:
-      - BUILD
-      - RUNTIME
-  # API Configuration
-  - variable: NEXT_PUBLIC_API_BASE_URL
-    value: /api
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FUNCTIONS_URL
-    value: https://europe-west1-elektro-ekspert-apps.cloudfunctions.net
     availability:
       - BUILD
       - RUNTIME
@@ -93,6 +83,11 @@ env:
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_REGION
     value: europe-west1
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    value: https://europe-west1-elektro-ekspert-apps.cloudfunctions.net
     availability:
       - BUILD
       - RUNTIME

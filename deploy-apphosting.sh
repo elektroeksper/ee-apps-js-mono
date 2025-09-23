@@ -12,6 +12,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Change to project root directory
 cd "$SCRIPT_DIR"
 
+# Cleanup function to ensure temporary files are removed
+cleanup() {
+    echo "🧹 Running cleanup..."
+    # Always restore apphosting.yaml since we always create a backup
+    if [ -f "web/apphosting.yaml.backup" ]; then
+        mv web/apphosting.yaml.backup web/apphosting.yaml
+        echo "✅ Restored original apphosting.yaml"
+    fi
+    if [ -f "web/firebase.json" ]; then
+        rm web/firebase.json
+        echo "✅ Removed temporary firebase.json"
+    fi
+}
+
+# Set trap to run cleanup on script exit (success, error, or interruption)
+trap cleanup EXIT
+
 # Define backend targets
 LIVE_BACKEND="ee-next-live"
 TEST_BACKEND="ee-next-test"
@@ -113,58 +130,99 @@ else
     echo "✅ Standalone lock file already exists"
 fi
 
-# Ensure shared types are built and available
-echo "🔨 Building shared types..."
-cd shared
-pnpm run build
+# Build and copy shared types using centralized script
+echo "🔨 Building and copying shared types..."
+node scripts/build-shared-types.js
+echo "✅ Shared types built and copied to all packages"
+
+# Verify shared types are available for deployment
+echo "� Verifying shared types for deployment..."
+cd web
+node scripts/verify-shared-types.js
 cd ..
-echo "✅ Shared types built"
+echo "✅ Shared types verified"
 
-# Copy shared types to web directory for standalone deployment
-echo "📂 Copying shared types to web directory..."
-if [ -d "web/src/shared-generated" ]; then
-    rm -rf web/src/shared-generated
-fi
-cp -r shared/dist web/src/shared-generated
-echo "✅ Shared types copied to web directory"
-
-# Configure firebase.json and apphosting.yaml for the selected environment
+# Configure deployment files for the selected environment
 echo "🔧 Configuring deployment files for ${SELECTED_ENV} environment..."
 
-# Create backup of original files
-cp firebase.json firebase.json.backup
-cp web/apphosting.yaml web/apphosting.yaml.backup
+# Create web/firebase.json on-the-fly with the correct backend ID and ignore patterns
+echo "📝 Creating firebase.json for backend: ${SELECTED_BACKEND}"
+cat > web/firebase.json << EOF
+{
+  "apphosting": {
+    "backendId": "${SELECTED_BACKEND}",
+    "rootDir": ".",
+    "ignore": [
+      "node_modules/**",
+      ".git/**",
+      ".next/**",
+      "dist/**",
+      "build/**",
+      "coverage/**",
+      "*.log",
+      "*.local",
+      ".env*",
+      ".DS_Store",
+      "*.swp",
+      "*.swo",
+      "*~",
+      "README.md",
+      "CHANGELOG.md",
+      "LICENSE",
+      "docs/**",
+      "scripts/**",
+      "*.md",
+      "apphosting.*.yaml",
+      "firebase.json.backup",
+      "apphosting.yaml.backup"
+    ]
+  }
+}
+EOF
 
-# Update firebase.json to point to the correct backend
-sed -i "s/\"backendId\": \"[^\"]*\"/\"backendId\": \"$SELECTED_BACKEND\"/" firebase.json
-
-# Copy the appropriate apphosting config to the web directory (required for remote build)
+# Determine which apphosting config to use for deployment
 if [ "$SELECTED_ENV" == "LIVE" ]; then
-    cp "web/apphosting.live.yaml" "web/apphosting.yaml"
-    echo "✅ Using LIVE configuration: web/apphosting.live.yaml → web/apphosting.yaml"
+    APPHOSTING_CONFIG="apphosting.live.yaml"
+    echo "✅ Using LIVE configuration: ${APPHOSTING_CONFIG}"
 else
-    cp "web/apphosting.test.yaml" "web/apphosting.yaml"
-    echo "✅ Using TEST configuration: web/apphosting.test.yaml → web/apphosting.yaml"
+    APPHOSTING_CONFIG="apphosting.test.yaml"
+    echo "✅ Using TEST configuration: ${APPHOSTING_CONFIG}"
 fi
 
 echo "✅ Configuration files ready for ${SELECTED_ENV} environment"
-echo "📝 Backend ID in firebase.json: ${SELECTED_BACKEND}"
-echo "📝 App Hosting config: web/apphosting.yaml (uploaded for remote build)"
+echo "📝 Backend ID in web/firebase.json: ${SELECTED_BACKEND}"
+echo "📝 App Hosting config: web/${APPHOSTING_CONFIG}"
 
 # Deploy to App Hosting using standard Firebase deploy
 echo ""
 echo "🚀 Deploying to Firebase App Hosting backend: ${SELECTED_BACKEND}..."
-echo "📝 Using configuration: web/apphosting.yaml"
+echo "📝 Using configuration: web/${APPHOSTING_CONFIG}"
+echo "📁 Deploying from web/ directory to upload only web folder content"
 
-# Deploy using standard firebase deploy command
-# The backend is determined by the backendId in firebase.json
-# The apphosting.yaml is uploaded with source code for remote build configuration
+# Change to web directory for deployment
+cd web
+
+# Copy the appropriate apphosting config to use for deployment
+# Create backup of current apphosting.yaml
+cp apphosting.yaml apphosting.yaml.backup
+# Copy environment-specific config
+cp "${APPHOSTING_CONFIG}" apphosting.yaml
+echo "✅ Using ${APPHOSTING_CONFIG} as apphosting.yaml"
+
+# Deploy using standard firebase deploy command from web directory
+# This ensures only the web directory content is uploaded
 firebase deploy --only apphosting --project elektro-ekspert-apps
 
-# Restore original configuration files
-echo "🔄 Restoring original configuration files..."
-mv firebase.json.backup firebase.json
-mv web/apphosting.yaml.backup web/apphosting.yaml
+# Return to root directory
+cd ..
+
+# Return to root directory
+cd ..
+
+echo ""
+echo "🎉 Deployment completed successfully!"
+fi
+
 echo "✅ Original configuration files restored"
 
 echo ""
