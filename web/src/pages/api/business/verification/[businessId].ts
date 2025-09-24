@@ -37,17 +37,25 @@ async function handleUpdateVerificationStatus(
   businessId: string
 ) {
   try {
-    // Verify authentication via session cookie
-    const sessionCookie = req.cookies.session;
+    // Try to get token from session cookie first, then from Authorization header
+    let token = req.cookies.session;
 
-    if (!sessionCookie) {
-      return res.status(401).json({ error: 'No session found' });
+    if (!token) {
+      // Fallback to Authorization header (for ID tokens)
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
     }
 
-    const decodedResult = await verifyIdToken(sessionCookie);
+    if (!token) {
+      return res.status(401).json({ error: 'No authentication token found' });
+    }
+
+    const decodedResult = await verifyIdToken(token);
 
     if (!decodedResult.success || !decodedResult.user) {
-      return res.status(401).json({ error: 'Invalid session' });
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
     const { action, reason } = req.body;

@@ -4,10 +4,47 @@
  * Focuses on business document management, not user-business relationships
  */
 
+import { auth } from '@/lib/firebase-auth-config';
 import { IBusiness, IBusinessFilter, IOperationResult } from '@/shared-generated';
 
 export class BusinessService {
   private baseUrl = '/api/business';
+
+  /**
+   * Get current user's ID token for authentication
+   * @private
+   */
+  private async getIdToken(): Promise<string | null> {
+    try {
+      if (!auth?.currentUser) {
+        console.warn('No authenticated user found');
+        return null;
+      }
+
+      const token = await auth.currentUser.getIdToken(true); // Force refresh
+      return token;
+    } catch (error) {
+      console.error('Error getting ID token:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get request headers with authentication
+   * @private
+   */
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    const token = await this.getIdToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
+  }
 
   /**
    * Get all businesses with optional filtering
@@ -20,18 +57,23 @@ export class BusinessService {
       if (filter?.status) {
         params.append('verificationStatus', filter.status);
       }
+
       if (filter?.ownerId) {
         params.append('ownerId', filter.ownerId);
       }
 
-      const url = params.toString() ? `${this.baseUrl}?${params}` : this.baseUrl;
+      if (filter?.userIds && filter.userIds.length > 0) {
+        params.append('userIds', filter.userIds.join(','));
+      }
 
+      const queryString = params.toString();
+      const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
+
+      const headers = await this.getAuthHeaders();
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include session cookies
+        headers,
+        credentials: 'include', // Include session cookies as fallback
       });
 
       if (!response.ok) {
@@ -232,12 +274,11 @@ export class BusinessService {
    */
   async verifyBusiness(id: string, approve: boolean, adminId: string, reason?: string): Promise<IOperationResult<void>> {
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/verification/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include session cookies
+        headers,
+        credentials: 'include', // Include session cookies as fallback
         body: JSON.stringify({
           action: approve ? 'approve' : 'reject',
           adminId,
@@ -280,12 +321,11 @@ export class BusinessService {
    */
   async approveBusiness(businessId: string): Promise<IOperationResult<IBusiness>> {
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/verification/${businessId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include session cookies
+        headers,
+        credentials: 'include', // Include session cookies as fallback
         body: JSON.stringify({
           action: 'approve'
         }),
@@ -330,12 +370,11 @@ export class BusinessService {
         return { success: false, error: 'Rejection reason is required' };
       }
 
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/verification/${businessId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include session cookies
+        headers,
+        credentials: 'include', // Include session cookies as fallback
         body: JSON.stringify({
           action: 'reject',
           reason: reason.trim()
@@ -377,12 +416,11 @@ export class BusinessService {
    */
   async clearBusinessRejection(businessId: string): Promise<IOperationResult<IBusiness>> {
     try {
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/verification/${businessId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include session cookies
+        headers,
+        credentials: 'include', // Include session cookies as fallback
         body: JSON.stringify({
           action: 'clear-rejection'
         }),
