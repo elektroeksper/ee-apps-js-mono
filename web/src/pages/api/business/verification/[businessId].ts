@@ -3,7 +3,7 @@
  * Handles business verification status management using Firebase Admin SDK
  */
 
-import { adminDb, verifyIdToken } from '@/lib/firebase-admin';
+import { adminAuth, adminDb, verifyIdToken } from '@/lib/firebase-admin';
 import { BusinessVerificationStatus } from '@/shared-generated';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -69,8 +69,9 @@ async function handleUpdateVerificationStatus(
       return res.status(400).json({ error: 'Rejection reason is required' });
     }
 
-    // Check if user has admin privileges - ONLY check custom claims admin field
-    const userClaims = decodedResult.user.customClaims || {};
+    // Check if user has admin privileges - fetch latest claims from Firebase Auth
+    const userRecord = await adminAuth.getUser(decodedResult.user.uid);
+    const userClaims = userRecord.customClaims || {};
     const isAdmin = userClaims.admin === true;
 
     // Debug logging for claims
@@ -81,6 +82,7 @@ async function handleUpdateVerificationStatus(
       adminClaim: userClaims.admin,
       adminClaimType: typeof userClaims.admin,
       isAdmin,
+      source: 'fresh_firebase_auth_lookup',
       timestamp: new Date().toISOString()
     });
 
@@ -90,7 +92,8 @@ async function handleUpdateVerificationStatus(
         email: decodedResult.user.email,
         customClaims: userClaims,
         adminClaim: userClaims.admin,
-        adminClaimType: typeof userClaims.admin
+        adminClaimType: typeof userClaims.admin,
+        source: 'fresh_firebase_auth_lookup'
       });
       return res.status(403).json({ error: 'Insufficient permissions - admin access required' });
     }

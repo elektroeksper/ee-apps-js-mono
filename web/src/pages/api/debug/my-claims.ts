@@ -2,7 +2,7 @@
  * Debug endpoint to check current user's claims
  */
 
-import { verifyIdToken } from '@/lib/firebase-admin';
+import { adminAuth, verifyIdToken } from '@/lib/firebase-admin';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -35,14 +35,17 @@ export default async function handler(
     const decodedResult = await verifyIdToken(token);
 
     if (!decodedResult.success || !decodedResult.user) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: 'Invalid token',
-        details: decodedResult.error 
+        details: decodedResult.error
       });
     }
 
     const user = decodedResult.user;
-    const userClaims = user.customClaims || {};
+
+    // Get fresh custom claims from Firebase Auth
+    const userRecord = await adminAuth.getUser(user.uid);
+    const userClaims = userRecord.customClaims || {};
 
     // Check admin status using ONLY custom claims admin field
     const isAdmin = userClaims.admin === true;
@@ -54,14 +57,20 @@ export default async function handler(
         uid: user.uid,
         email: user.email,
         emailVerified: user.email_verified,
-        customClaims: userClaims,
+        tokenClaims: user.customClaims || {},
+        freshClaims: userClaims,
         directAdmin: user.admin,
         directRole: user.role,
         adminCheck: {
           isAdmin,
           adminClaimValue: userClaims.admin,
           adminClaimType: typeof userClaims.admin,
-          note: 'Only checking customClaims.admin === true for admin permissions'
+          note: 'Using fresh Firebase Auth custom claims lookup'
+        },
+        claimsComparison: {
+          tokenAdminClaim: (user.customClaims || {}).admin,
+          freshAdminClaim: userClaims.admin,
+          areEqual: (user.customClaims || {}).admin === userClaims.admin
         },
         allUserProperties: Object.keys(user),
         timestamp: new Date().toISOString()
@@ -69,7 +78,7 @@ export default async function handler(
     });
   } catch (error) {
     console.error('Error in debug claims endpoint:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     });

@@ -3,7 +3,7 @@
  * Shows current user's Firebase claims for debugging admin access
  */
 
-import { verifyIdToken } from '@/lib/firebase-admin';
+import { adminAuth, verifyIdToken } from '@/lib/firebase-admin';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -16,16 +16,22 @@ export default async function handler(
   }
 
   try {
-    // Verify authentication via Authorization header
-    const authHeader = req.headers.authorization;
+    // Try to get token from session cookie first, then from Authorization header
+    let token = req.cookies.session;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'No authorization token provided' });
+    if (!token) {
+      // Fallback to Authorization header (for ID tokens)
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
     }
 
-    const idToken = authHeader.substring(7); // Remove 'Bearer ' prefix
+    if (!token) {
+      return res.status(401).json({ error: 'No authentication token found' });
+    }
 
-    const decodedResult = await verifyIdToken(idToken);
+    const decodedResult = await verifyIdToken(token);
 
     if (!decodedResult.success || !decodedResult.user) {
       return res.status(401).json({
@@ -35,7 +41,10 @@ export default async function handler(
     }
 
     const user = decodedResult.user;
-    const userClaims = user.customClaims || {};
+
+    // Get fresh custom claims from Firebase Auth
+    const userRecord = await adminAuth.getUser(user.uid);
+    const userClaims = userRecord.customClaims || {};
 
     // Return debug information
     return res.status(200).json({

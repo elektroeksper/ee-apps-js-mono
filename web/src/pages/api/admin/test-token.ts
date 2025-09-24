@@ -2,7 +2,7 @@
  * Simple test endpoint to debug token verification
  */
 
-import { verifyIdToken } from '@/lib/firebase-admin';
+import { adminAuth, verifyIdToken } from '@/lib/firebase-admin';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(
@@ -18,19 +18,25 @@ export default async function handler(
     console.log('=== TOKEN TEST ENDPOINT ===');
     console.log('Headers:', JSON.stringify(req.headers, null, 2));
 
-    // Check for Authorization header
-    const authHeader = req.headers.authorization;
-    console.log('Auth Header:', authHeader);
+    // Try to get token from session cookie first, then from Authorization header
+    let token = req.cookies.session;
+    console.log('Session Cookie:', token ? 'present' : 'not found');
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ No authorization token provided');
-      return res.status(401).json({
-        error: 'No authorization token provided',
-        authHeader: authHeader
-      });
+    if (!token) {
+      // Fallback to Authorization header (for ID tokens)
+      const authHeader = req.headers.authorization;
+      console.log('Auth Header:', authHeader);
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
     }
 
-    const idToken = authHeader.substring(7);
+    if (!token) {
+      console.log('❌ No authentication token found');
+      return res.status(401).json({ error: 'No authentication token found' });
+    }
+
+    const idToken = token;
     console.log('Token (first 50 chars):', idToken.substring(0, 50) + '...');
 
     // Verify token
@@ -51,14 +57,19 @@ export default async function handler(
     console.log('User UID:', user.uid);
     console.log('Custom Claims:', JSON.stringify(user.customClaims, null, 2));
 
-    // Check admin status
-    const userClaims = user.customClaims || {};
-    const isAdmin = userClaims.admin === true;
+    // Get fresh custom claims from Firebase Auth
+    const userRecord = await adminAuth.getUser(user.uid);
+    const freshClaims = userRecord.customClaims || {};
+    const tokenClaims = user.customClaims || {};
+    const isAdmin = freshClaims.admin === true;
 
     console.log('Admin Check Results:', {
-      hasCustomClaims: !!user.customClaims,
-      adminClaim: userClaims.admin,
-      roleClaim: userClaims.role,
+      hasTokenClaims: !!user.customClaims,
+      hasFreshClaims: !!freshClaims,
+      tokenAdminClaim: tokenClaims.admin,
+      freshAdminClaim: freshClaims.admin,
+      tokenRoleClaim: tokenClaims.role,
+      freshRoleClaim: freshClaims.role,
       isAdmin: isAdmin
     });
 
@@ -68,10 +79,16 @@ export default async function handler(
       data: {
         uid: user.uid,
         email: user.email,
-        customClaims: userClaims,
+        tokenClaims: tokenClaims,
+        freshClaims: freshClaims,
         isAdmin: isAdmin,
-        adminClaimValue: userClaims.admin,
-        roleClaimValue: userClaims.role,
+        adminClaimValue: freshClaims.admin,
+        roleClaimValue: freshClaims.role,
+        claimsComparison: {
+          tokenAdmin: tokenClaims.admin,
+          freshAdmin: freshClaims.admin,
+          areEqual: tokenClaims.admin === freshClaims.admin
+        },
         tokenIssuedAt: new Date(user.iat * 1000).toISOString(),
         tokenExpiresAt: new Date(user.exp * 1000).toISOString()
       }

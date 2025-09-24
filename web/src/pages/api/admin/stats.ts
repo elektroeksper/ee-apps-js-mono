@@ -3,7 +3,7 @@
  * Provides aggregated user statistics and metrics
  */
 
-import { adminDb, verifyIdToken } from '@/lib/firebase-admin';
+import { adminAuth, adminDb, verifyIdToken } from '@/lib/firebase-admin';
 import { AccountType, BusinessVerificationStatus } from '@/shared-generated';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -35,63 +35,53 @@ export default async function handler(
   }
 
   try {
-    // Verify authentication via Authorization header
-    const authHeader = req.headers.authorization;
+    // Try to get token from session cookie first, then from Authorization header
+    let token = req.cookies.session;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'No authorization token provided' });
+    if (!token) {
+      // Fallback to Authorization header (for ID tokens)
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
     }
 
-    const idToken = authHeader.substring(7); // Remove 'Bearer ' prefix
+    if (!token) {
+      return res.status(401).json({ error: 'No authentication token found' });
+    }
 
-    const decodedResult = await verifyIdToken(idToken);
+    const decodedResult = await verifyIdToken(token);
 
     if (!decodedResult.success || !decodedResult.user) {
       console.error('Token verification failed:', decodedResult.error);
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    // Debug logging for claims
-    const userClaims = decodedResult.user.customClaims || {};
-
-    // Also check if claims are in different locations
-    const allPossibleClaims = {
-      customClaims: decodedResult.user.customClaims,
-      admin: decodedResult.user.admin,
-      role: decodedResult.user.role,
-      // Check all properties of the decoded token
-      allProperties: Object.keys(decodedResult.user)
-    };
-
-    console.log('DEBUG - All Token Properties:', allPossibleClaims);
-    console.log('DEBUG - Full Decoded User:', JSON.stringify(decodedResult.user, null, 2));
-
-    console.log('DEBUG - User Claims:', {
-      uid: decodedResult.user.uid,
-      email: decodedResult.user.email,
-      claims: userClaims,
-      adminClaim: userClaims.admin,
-      roleClaim: userClaims.role,
-      directAdmin: decodedResult.user.admin,
-      directRole: decodedResult.user.role,
-      timestamp: new Date().toISOString()
-    });
-
-    // Check if user has admin privileges - ONLY check custom claims admin field
+    // Check if user has admin privileges - fetch latest claims from Firebase Auth
+    const userRecord = await adminAuth.getUser(decodedResult.user.uid);
+    const userClaims = userRecord.customClaims || {};
     const isAdmin = userClaims.admin === true;
 
-    console.log('DEBUG - Admin Check:', {
-      isAdmin,
-      adminClaimValue: userClaims.admin,
+    // Debug logging for claims
+    console.log('DEBUG - Admin Stats Claims:', {
+      uid: decodedResult.user.uid,
+      email: decodedResult.user.email,
+      customClaims: userClaims,
+      adminClaim: userClaims.admin,
       adminClaimType: typeof userClaims.admin,
-      note: 'Only checking customClaims.admin === true for admin permissions'
+      isAdmin,
+      source: 'fresh_firebase_auth_lookup',
+      timestamp: new Date().toISOString()
     });
 
     if (!isAdmin) {
       console.error('Access denied - user is not admin:', {
         uid: decodedResult.user.uid,
         email: decodedResult.user.email,
-        claims: userClaims
+        customClaims: userClaims,
+        adminClaim: userClaims.admin,
+        adminClaimType: typeof userClaims.admin,
+        source: 'fresh_firebase_auth_lookup'
       });
       return res.status(403).json({ error: 'Insufficient permissions - admin access required' });
     }
