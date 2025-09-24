@@ -249,8 +249,8 @@ export const BusinessRegisterForm: React.FC = () => {
   const isFormValid = React.useMemo(() => {
     const hasRequiredBusinessInfo = !!(
       businessName &&
-      ((taxNumberType === 'tax' && taxNumber) ||
-        (taxNumberType === 'identity' && identityNumber)) &&
+      ((taxNumberType === TaxNumberType.TAX && taxNumber) ||
+        (taxNumberType === TaxNumberType.IDENTITY && identityNumber)) &&
       taxOffice &&
       userTitle &&
       mainCategoryId
@@ -375,34 +375,47 @@ export const BusinessRegisterForm: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-1 h-5">
                 <label className="text-sm font-medium text-gray-700">
-                  {watch('taxNumberType') === 'tax'
+                  {watch('taxNumberType') === TaxNumberType.TAX
                     ? 'Vergi Numarası'
                     : 'TC Kimlik Numarası'}
                 </label>
                 <div className="inline">
-                  <span className="mr-1 text-gray-700 text-sm-center">TC</span>
+                  <span className="mr-1 text-gray-700 text-sm">TC</span>
                   <button
                     type="button"
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      watch('taxNumberType') === 'identity'
+                      watch('taxNumberType') === TaxNumberType.IDENTITY
                         ? 'bg-indigo-600'
                         : 'bg-gray-300'
                     }`}
-                    onClick={() =>
-                      setValue('taxNumberType', TaxNumberType.IDENTITY)
-                    }
+                    onClick={() => {
+                      const currentType = watch('taxNumberType')
+                      const newType =
+                        currentType === TaxNumberType.TAX
+                          ? TaxNumberType.IDENTITY
+                          : TaxNumberType.TAX
+                      setValue('taxNumberType', newType)
+
+                      // Clear the opposite field when switching
+                      if (newType === TaxNumberType.TAX) {
+                        setValue('identityNumber', '')
+                      } else {
+                        setValue('taxNumber', '')
+                      }
+                    }}
                   >
                     <span
                       className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
-                        watch('taxNumberType') === 'identity'
+                        watch('taxNumberType') === TaxNumberType.IDENTITY
                           ? 'translate-x-4'
                           : 'translate-x-0.5'
                       }`}
                     />
                   </button>
+                  <span className="ml-1 text-gray-700 text-sm">Vergi</span>
                 </div>
               </div>
-              {watch('taxNumberType') === 'tax' ? (
+              {watch('taxNumberType') === TaxNumberType.TAX ? (
                 <Input
                   {...register('taxNumber')}
                   error={errors.taxNumber?.message}
