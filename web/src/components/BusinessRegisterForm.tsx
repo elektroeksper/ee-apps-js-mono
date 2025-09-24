@@ -379,9 +379,9 @@ export const BusinessRegisterForm: React.FC = () => {
                     ? 'Vergi Numarası'
                     : 'TC Kimlik Numarası'}
                 </label>
-                <div className="inline">
+                <div className="inline justify-center">
                   <span
-                    className={`mr-1 text-gray-700 text-sm ${
+                    className={`mr-2 text-gray-700 text-sm ${
                       watch('taxNumberType') === TaxNumberType.TAX
                         ? 'font-bold'
                         : ''
@@ -421,7 +421,7 @@ export const BusinessRegisterForm: React.FC = () => {
                     />
                   </button>
                   <span
-                    className={`ml-1 text-gray-700 text-sm ${
+                    className={`ml-2 text-gray-700 text-sm ${
                       watch('taxNumberType') === TaxNumberType.IDENTITY
                         ? 'font-bold'
                         : ''
