@@ -322,6 +322,13 @@ export class BusinessService {
   async approveBusiness(businessId: string): Promise<IOperationResult<IBusiness>> {
     try {
       const headers = await this.getAuthHeaders();
+      console.log('🔄 BusinessService.approveBusiness: Making request with headers:', {
+        hasAuthorizationHeader: !!headers.Authorization,
+        authHeaderPreview: headers.Authorization ? headers.Authorization.substring(0, 20) + '...' : 'none',
+        businessId,
+        timestamp: new Date().toISOString()
+      });
+
       const response = await fetch(`${this.baseUrl}/verification/${businessId}`, {
         method: 'PUT',
         headers,

@@ -69,11 +69,29 @@ async function handleUpdateVerificationStatus(
       return res.status(400).json({ error: 'Rejection reason is required' });
     }
 
-    // Check if user has admin privileges
+    // Check if user has admin privileges - ONLY check custom claims admin field
     const userClaims = decodedResult.user.customClaims || {};
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
+    const isAdmin = userClaims.admin === true;
+
+    // Debug logging for claims
+    console.log('DEBUG - Business Verification Claims:', {
+      uid: decodedResult.user.uid,
+      email: decodedResult.user.email,
+      customClaims: userClaims,
+      adminClaim: userClaims.admin,
+      adminClaimType: typeof userClaims.admin,
+      isAdmin,
+      timestamp: new Date().toISOString()
+    });
 
     if (!isAdmin) {
+      console.error('Access denied - user is not admin:', {
+        uid: decodedResult.user.uid,
+        email: decodedResult.user.email,
+        customClaims: userClaims,
+        adminClaim: userClaims.admin,
+        adminClaimType: typeof userClaims.admin
+      });
       return res.status(403).json({ error: 'Insufficient permissions - admin access required' });
     }
 

@@ -53,7 +53,7 @@ export default async function handler(
 
     // Check admin status
     const userClaims = user.customClaims || {};
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
+    const isAdmin = userClaims.admin === true;
 
     console.log('Admin Check Results:', {
       hasCustomClaims: !!user.customClaims,

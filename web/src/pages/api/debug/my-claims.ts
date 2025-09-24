@@ -1,0 +1,77 @@
+/**
+ * Debug endpoint to check current user's claims
+ */
+
+import { verifyIdToken } from '@/lib/firebase-admin';
+import { NextApiRequest, NextApiResponse } from 'next';
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', ['GET']);
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    console.log('=== DEBUG MY CLAIMS ENDPOINT ===');
+
+    // Try to get token from session cookie first, then from Authorization header
+    let token = req.cookies.session;
+
+    if (!token) {
+      // Fallback to Authorization header (for ID tokens)
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      return res.status(401).json({ error: 'No authentication token found' });
+    }
+
+    const decodedResult = await verifyIdToken(token);
+
+    if (!decodedResult.success || !decodedResult.user) {
+      return res.status(401).json({ 
+        error: 'Invalid token',
+        details: decodedResult.error 
+      });
+    }
+
+    const user = decodedResult.user;
+    const userClaims = user.customClaims || {};
+
+    // Check admin status using ONLY custom claims admin field
+    const isAdmin = userClaims.admin === true;
+
+    // Return debug information
+    return res.status(200).json({
+      success: true,
+      data: {
+        uid: user.uid,
+        email: user.email,
+        emailVerified: user.email_verified,
+        customClaims: userClaims,
+        directAdmin: user.admin,
+        directRole: user.role,
+        adminCheck: {
+          isAdmin,
+          adminClaimValue: userClaims.admin,
+          adminClaimType: typeof userClaims.admin,
+          note: 'Only checking customClaims.admin === true for admin permissions'
+        },
+        allUserProperties: Object.keys(user),
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error in debug claims endpoint:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}

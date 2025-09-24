@@ -87,7 +87,7 @@ async function handleGetBusiness(
     // Get user record for custom claims
     const userRecord = await adminAuth.getUser(userId);
     const userClaims = userRecord.customClaims || {};
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
+    const isAdmin = userClaims.admin === true;
     console.log('👤 Business API: User permissions - isAdmin:', isAdmin);
 
     // Get business document
@@ -239,7 +239,7 @@ async function handleDeleteBusiness(
     // Get user record for custom claims
     const userRecord = await adminAuth.getUser(userId);
     const userClaims = userRecord.customClaims || {};
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin';
+    const isAdmin = userClaims.admin === true;
 
     // Get business document
     const businessDoc = await adminDb.collection('businesses').doc(businessId).get();

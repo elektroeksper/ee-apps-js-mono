@@ -57,7 +57,7 @@ async function handleGetUsers(
     // This fetches the latest custom claims from Firebase directly
     const userRecord = await adminAuth.getUser(decodedResult.user.uid);
     const userClaims = userRecord.customClaims || {};
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin' || decodedResult.user.admin === true;
+    const isAdmin = userClaims.admin === true;
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Insufficient permissions' });
@@ -178,7 +178,7 @@ async function handleCreateUser(
     // This fetches the latest custom claims from Firebase directly
     const userRecord = await adminAuth.getUser(decodedResult.user.uid);
     const userClaims = userRecord.customClaims || {};
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin' || decodedResult.user.admin === true;
+    const isAdmin = userClaims.admin === true;
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Insufficient permissions' });
