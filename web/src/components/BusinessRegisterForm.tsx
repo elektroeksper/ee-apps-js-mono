@@ -380,7 +380,15 @@ export const BusinessRegisterForm: React.FC = () => {
                     : 'TC Kimlik Numarası'}
                 </label>
                 <div className="inline">
-                  <span className="mr-1 text-gray-700 text-sm">TC</span>
+                  <span
+                    className={`mr-1 text-gray-700 text-sm ${
+                      watch('taxNumberType') === TaxNumberType.TAX
+                        ? 'font-bold'
+                        : ''
+                    }`}
+                  >
+                    Vergi
+                  </span>
                   <button
                     type="button"
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
@@ -412,7 +420,15 @@ export const BusinessRegisterForm: React.FC = () => {
                       }`}
                     />
                   </button>
-                  <span className="ml-1 text-gray-700 text-sm">Vergi</span>
+                  <span
+                    className={`ml-1 text-gray-700 text-sm ${
+                      watch('taxNumberType') === TaxNumberType.IDENTITY
+                        ? 'font-bold'
+                        : ''
+                    }`}
+                  >
+                    TC
+                  </span>
                 </div>
               </div>
               {watch('taxNumberType') === TaxNumberType.TAX ? (
