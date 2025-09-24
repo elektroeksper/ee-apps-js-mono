@@ -1,4 +1,5 @@
 import { setGlobalOptions } from 'firebase-functions/v2';
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { HttpsError, HttpsOptions, onCall } from 'firebase-functions/v2/https';
 import { ADMIN_USERS } from './configs/constant';
 import { businessService } from './services/business.service';
@@ -8,7 +9,7 @@ import * as orderService from './services/order.service';
 import * as productService from './services/product.service';
 import * as storageService from './services/storage.service';
 import * as userService from './services/user.service';
-import { BusinessUserRole, GetUserDocumentsResponse, IAddress, IOperationResult, UploadDocumentResponse, VideoLocation } from './shared-generated';
+import { BusinessUserRole, GetUserDocumentsResponse, IAddress, IAppUser, IOperationResult, UploadDocumentResponse, VideoLocation } from './shared-generated';
 import { sendBusinessApprovalEmail, sendBusinessRejectionEmail } from './utils/email.service';
 import { auth, db } from './utils/firebase-admin';
 
@@ -1485,3 +1486,62 @@ export const createBusiness = onCall(functionOptions, async (request) => {
   }
 });
 
+export const onUserProfileUpdate = onDocumentUpdated('users/{userId}', async (event) => {
+  const beforeData: IAppUser = event.data?.before?.data() as IAppUser;
+  const afterData: IAppUser = event.data?.after?.data() as IAppUser;
+
+  // Check if businessInfo field has changed
+  if (JSON.stringify(beforeData?.businessInfo) === JSON.stringify(afterData?.businessInfo)) {
+    return; // No change in businessInfo, exit early
+  }
+
+  const userId = event.params.userId;
+  const businessInfo = afterData?.businessInfo;
+
+  if (!businessInfo || !businessInfo.businessId) {
+    return; // No business info to update
+  }
+
+  const businessId = businessInfo.businessId;
+
+  try {
+    // Fetch the business
+    const businessResult = await businessService.getById(businessId);
+    if (!businessResult.success || !businessResult.data) {
+      console.warn(`Business with ID ${businessId} not found for user ${userId}`);
+      return;
+    }
+
+    const business = businessResult.data;
+    // Get the user's last sign-in time from Firebase Auth
+    let lastActiveAt: Date | undefined;
+    try {
+      const userRecord = await auth.getUser(userId);
+      lastActiveAt = userRecord.metadata.lastSignInTime
+        ? new Date(userRecord.metadata.lastSignInTime)
+        : undefined
+    } catch (err) {
+      // Fallback to Firestore lastLogin or current date if Auth lookup fails
+      console.warn(`Failed to get Auth record for user ${userId}:`, err);
+    }
+
+    // Update the user's info in the business's users map
+    const currentUsers = { ...business.users };
+    if (currentUsers[userId]) {
+      currentUsers[userId] = {
+        ...currentUsers[userId],
+        displayName: afterData.displayName ?? currentUsers[userId].displayName,
+        email: afterData.email ?? currentUsers[userId].email,
+        lastActiveAt
+      };
+
+      // Save the updated business
+      await businessService.update(businessId, { users: currentUsers });
+      console.log(`Updated business info for user ${userId} in business ${businessId}`);
+    } else {
+      console.warn(`User ${userId} not found in business ${businessId} users list`);
+    }
+  } catch (error) {
+    console.error('Error updating business user info:', error);
+  }
+});

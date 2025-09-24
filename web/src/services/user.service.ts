@@ -3,9 +3,9 @@
  * Handles user profile operations using Next.js API routes
  */
 
-import { IAppUser, IOperationResult, IUserFilter } from '@/shared-generated';
+import { IAppUser, IOperationResult, IUserFilter, IUserService } from '@/shared-generated';
 
-export class UserService {
+export class UserService implements IUserService {
   private baseUrl = '/api/user';
 
   async getById(id: string): Promise<IOperationResult<IAppUser>> {
@@ -183,52 +183,6 @@ export class UserService {
     return {
       success: false,
       error: 'delete method not yet implemented with API routes'
-    };
-  }
-
-  // Business-related methods - these should operate on business documents, not user.businessInfo
-  // user.businessInfo is only for storing user-business relationship data (role, permissions)
-  async approveBusiness(userId: string): Promise<IOperationResult<IAppUser>> {
-    // TODO: Implement /api/admin/business/approve endpoint that updates the business document
-    // This should not modify user.businessInfo - only the business document verification status
-    return {
-      success: false,
-      error: 'approveBusiness should be implemented via business service - operates on business document, not user.businessInfo'
-    };
-  }
-
-  async rejectBusiness(userId: string, reason?: string): Promise<IOperationResult<IAppUser>> {
-    // TODO: Implement /api/admin/business/reject endpoint that updates the business document
-    // This should not modify user.businessInfo - only the business document verification status
-    return {
-      success: false,
-      error: 'rejectBusiness should be implemented via business service - operates on business document, not user.businessInfo'
-    };
-  }
-
-  async clearBusinessRejection(userId: string): Promise<IOperationResult<IAppUser>> {
-    // Business approval/rejection status should be managed in the business document, not user.businessInfo
-    // user.businessInfo should only contain user-business relationship data (role, permissions, etc.)
-    // TODO: Implement /api/business/clear-rejection endpoint that updates the business document
-    return {
-      success: false,
-      error: 'clearBusinessRejection should be implemented via business service - user.businessInfo is for user-business relationship data only'
-    };
-  }
-
-  async leaveBusiness(userId: string): Promise<IOperationResult<void>> {
-    // TODO: Implement /api/business/leave endpoint
-    return {
-      success: false,
-      error: 'leaveBusiness method not yet implemented with API routes'
-    };
-  }
-
-  async acceptBusinessInvitation(userId: string, invitationToken: string): Promise<IOperationResult<void>> {
-    // TODO: Implement /api/business/accept-invitation endpoint
-    return {
-      success: false,
-      error: 'acceptBusinessInvitation method not yet implemented with API routes'
     };
   }
 }

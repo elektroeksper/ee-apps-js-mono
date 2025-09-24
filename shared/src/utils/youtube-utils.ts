@@ -3,7 +3,7 @@
  * Helpers for working with YouTube videos in the admin panel
  */
 
-import { YouTubeVideoMetadata } from "../types"
+import { YouTubeVideoMetadata } from "../types/content-types"
 
 
 

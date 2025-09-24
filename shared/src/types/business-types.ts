@@ -58,7 +58,6 @@ interface IBusinessService {
 }
 
 interface IBusinessUserInfo {
-  businessStatus?: BusinessVerificationStatus; // Optional business status for quick reference
   businessId: string; // Reference to the business this user is associated with
   userId: string; // Redundant but useful for iteration
   businessTitle: string; // e.g., Owner, Manager
@@ -69,6 +68,7 @@ interface IBusinessUserInfo {
   isActive: boolean; // Whether user is active in this business
   addedAt?: Timestamp | Date; // When the user was added
   lastActiveAt?: Timestamp | Date; // Last activity timestamp
+  // Note: businessStatus removed - always fetch from actual business document to avoid data inconsistency
 }
 
 

@@ -4,7 +4,7 @@
  */
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { AccountType, BusinessVerificationStatus, IAppUser, IBusiness, IBusinessRegisterData, IRegisterData } from '@/shared-generated';
+import { AccountType, BusinessUserRole, BusinessVerificationStatus, IAppUser, IBusiness, IBusinessRegisterData, IRegisterData } from '@/shared-generated';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 interface RegisterRequest {
@@ -171,14 +171,9 @@ export default async function handler(
       // Add business info to user profile
       userProfileData.businessInfo = {
         businessId: businessId,
-        userId: userId,
-        businessTitle: businessData.userTitle,
-        displayName: `${businessData.firstName} ${businessData.lastName}`,
-        email: businessData.email,
-        role: 'owner' as any,
-        permissions: businessUserInfo.permissions,
+        role: BusinessUserRole.OWNER,
         isActive: true,
-        addedAt: new Date()
+        status: BusinessVerificationStatus.PENDING
       };
     }
 

@@ -327,6 +327,7 @@ async function uploadDocument(
     });
 
     // Update business verification status when documents are uploaded
+    console.log('📄 Document uploaded successfully, updating verification status...');
     await updateBusinessVerificationStatus(userId);
 
     const document: IDocument = {
@@ -518,9 +519,18 @@ async function updateBusinessVerificationStatus(userId: string) {
     const currentStatus = businessData?.verification?.status;
     console.log('🔍 Current verification status:', currentStatus);
 
-    // Only update if status is UNVERIFIED or undefined (new business)
-    if (!currentStatus || currentStatus === BusinessVerificationStatus.UNVERIFIED) {
+    // Update status to PENDING for all cases except when already PENDING
+    // This ensures any document upload (new, after rejection, re-verification) triggers review
+    if (currentStatus !== BusinessVerificationStatus.PENDING) {
       const now = Timestamp.now();
+
+      // Determine appropriate reason based on current status
+      let reason = 'Documents uploaded - pending admin review';
+      if (currentStatus === BusinessVerificationStatus.REJECTED) {
+        reason = 'New documents uploaded after rejection - pending admin review';
+      } else if (currentStatus === BusinessVerificationStatus.VERIFIED) {
+        reason = 'Additional documents uploaded - pending admin re-review';
+      }
 
       // Update verification status to PENDING with history entry
       const verificationUpdate = {
@@ -531,7 +541,8 @@ async function updateBusinessVerificationStatus(userId: string) {
             status: BusinessVerificationStatus.PENDING,
             changedAt: now,
             changedBy: userId,
-            reason: 'Documents uploaded - pending admin review'
+            reason: reason,
+            previousStatus: currentStatus
           }
         ],
         updatedAt: now
@@ -539,9 +550,9 @@ async function updateBusinessVerificationStatus(userId: string) {
 
       await adminDb.collection('businesses').doc(businessId).update(verificationUpdate);
 
-      console.log(`✅ Business verification status updated to PENDING for business: ${businessId}`);
+      console.log(`✅ Business verification status updated from ${currentStatus} to PENDING for business: ${businessId}`);
     } else {
-      console.log(`ℹ️ Business verification status not updated. Current status: ${currentStatus}`);
+      console.log(`ℹ️ Business verification status already PENDING for business: ${businessId}`);
     }
   } catch (error) {
     console.error('Error updating business verification status:', error);
