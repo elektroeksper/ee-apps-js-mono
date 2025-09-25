@@ -21,7 +21,6 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@electro-expert/shared": "workspace:*",
     "@googlemaps/google-maps-services-js": "^3.4.2",
     "@types/nodemailer": "^7.0.1",
     "firebase-admin": "^12.1.0",
