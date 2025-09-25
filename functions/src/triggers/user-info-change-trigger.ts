@@ -6,7 +6,10 @@ import { businessService } from '../services/business.service';
 import { auth } from '../utils/firebase-admin';
 
 
-export const onUserProfileUpdate = onDocumentUpdated('users/{userId}', async (event) => {
+export const onUserProfileUpdate = onDocumentUpdated({
+  document: 'users/{userId}',
+  database: 'native-db'  // Use the Native mode database
+}, async (event) => {
   const beforeData: IAppUser = event.data?.before?.data() as IAppUser;
   const afterData: IAppUser = event.data?.after?.data() as IAppUser;
   if (!beforeData || !afterData) {

@@ -24,14 +24,14 @@ if (!admin.apps.length) {
       const serviceAccount = require('./admin-service-account.json');
       app = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'elektro-ekspert-apps',
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ee-prod-apps',
       });
       console.log('✅ Firebase Admin initialized with service account file');
     } catch (fileError) {
       console.error('❌ Service account file not found:', fileError);
       // Fallback to default credentials
       app = admin.initializeApp({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'elektro-ekspert-apps',
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ee-prod-apps',
       });
       console.log('⚠️ Firebase Admin initialized with default credentials');
     }
@@ -42,8 +42,12 @@ if (!admin.apps.length) {
 
 // Export Firebase Admin services
 export const adminAuth = admin.auth(app);
-export const adminDb = admin.firestore(app);
 export const adminStorage = admin.storage(app);
+
+// Get reference to the native-db database using databaseId
+export const adminDb = admin.firestore(app);
+// Configure the database ID for native-db
+adminDb.settings({ databaseId: 'native-db' });
 // Note: Functions are not needed for admin operations
 
 // Utility function to verify Firebase ID tokens

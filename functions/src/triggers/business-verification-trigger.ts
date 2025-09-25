@@ -15,7 +15,10 @@ import { auth } from '../utils/firebase-admin';
  * Filters for verification.status changes only and sends appropriate emails
  */
 export const onBusinessVerificationStatusChange = onDocumentUpdated(
-  'businesses/{businessId}',
+  {
+    document: 'businesses/{businessId}',
+    database: 'native-db'  // Use the Native mode database
+  },
   async (event) => {
     const beforeData = event.data?.before?.data() as IBusiness | undefined;
     const afterData = event.data?.after?.data() as IBusiness | undefined;

@@ -9,7 +9,7 @@ const serviceAccount = require('./functions/admin-service-account.json');
 
 const app = initializeApp({
   credential: cert(serviceAccount),
-  projectId: 'elektro-ekspert-apps'
+  projectId: 'ee-prod-apps'
 });
 
 const auth = getAuth(app);

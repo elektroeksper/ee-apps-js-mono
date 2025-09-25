@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
       return [
         {
           source: '/api/:path*',
-          destination: 'http://localhost:5001/elektro-ekspert-apps/europe-west1/:path*',
+          destination: 'http://localhost:5001/ee-prod-apps/europe-west1/:path*',
         },
       ]
     }

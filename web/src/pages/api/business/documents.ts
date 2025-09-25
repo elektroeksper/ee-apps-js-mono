@@ -155,7 +155,7 @@ async function getDocuments(
 ) {
   try {
     const storage = getStorage();
-    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'elektro-ekspert-apps.firebasestorage.app';
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'ee-prod-apps.firebasestorage.app';
     const bucket = storage.bucket(bucketName);
 
     // Get files from storage that belong to this user
@@ -300,7 +300,7 @@ async function uploadDocument(
 
     // Upload to Firebase Storage
     const storage = getStorage();
-    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'elektro-ekspert-apps.firebasestorage.app';
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'ee-prod-apps.firebasestorage.app';
     const bucket = storage.bucket(bucketName);
     console.log('🪣 Using storage bucket:', bucketName);
     const file = bucket.file(storagePath);
@@ -390,7 +390,7 @@ async function deleteDocument(
 
     // Delete from Firebase Storage
     const storage = getStorage();
-    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'elektro-ekspert-apps.firebasestorage.app';
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'ee-prod-apps.firebasestorage.app';
     const bucket = storage.bucket(bucketName);
     const file = bucket.file(documentPath);
 
