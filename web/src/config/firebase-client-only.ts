@@ -84,7 +84,8 @@ export const getFirebaseFirestore = () => {
   }
 
   if (!_db) {
-    _db = getFirestore(getFirebaseApp())
+    // Configure Firestore to use the native-db database
+    _db = getFirestore(getFirebaseApp(), 'native-db')
   }
   return _db
 }

@@ -2,6 +2,7 @@ import { ProtectedRoute } from '@/components/auth/AuthGuard'
 import EmailVerificationBanner from '@/components/EmailVerificationBanner'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
+import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo } from 'react'
 
@@ -219,4 +220,11 @@ export default function VerifyEmailPage() {
       </div>
     </ProtectedRoute>
   )
+}
+
+// Force server-side rendering to prevent static generation
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {},
+  }
 }

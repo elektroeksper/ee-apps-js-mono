@@ -48,8 +48,15 @@ export const adminStorage = admin.storage(app)
 
 // Get reference to the native-db database using databaseId
 export const adminDb = admin.firestore(app)
-// Configure the database ID for native-db
-adminDb.settings({ databaseId: 'native-db' })
+
+// Configure the database ID for native-db (only if not already initialized)
+try {
+  adminDb.settings({ databaseId: 'native-db' })
+  console.log('✅ Firebase Admin Firestore configured for native-db')
+} catch (error) {
+  // Settings already configured, ignore
+  console.log('ℹ️ Firebase Admin Firestore settings already configured')
+}
 // Note: Functions are not needed for admin operations
 
 // Utility function to verify Firebase ID tokens

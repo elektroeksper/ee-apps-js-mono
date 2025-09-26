@@ -14,6 +14,7 @@ import {
   IServiceItem,
   ISliderItem,
 } from '@/shared-generated'
+import { GetServerSideProps } from 'next'
 import { useCallback, useEffect, useState } from 'react'
 import {
   FiEdit,
@@ -769,4 +770,11 @@ function AdminContentsPageContent() {
       </div>
     </div>
   )
+}
+
+// Force server-side rendering to prevent static generation
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {},
+  }
 }

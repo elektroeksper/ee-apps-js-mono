@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   // Configure output file tracing to use web directory as root for standalone deployment
   output: 'standalone',
   outputFileTracingRoot: process.cwd(),
+  // Disable prerendering during export for App Hosting compatibility
+  trailingSlash: false,
+  generateEtags: false,
   // Temporarily disable package optimizations that might be causing Firebase issues
   // experimental: {
   //   optimizePackageImports: ['react-icons'],

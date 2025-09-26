@@ -3,6 +3,7 @@
 import AdminLayout from '@/components/admin/AdminLayout'
 import { AuthGuard } from '@/components/auth'
 import { useAuth } from '@/contexts/AuthContext'
+import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
@@ -366,4 +367,11 @@ function AdminDashboardContent() {
       </div>
     </div>
   )
+}
+
+// Force server-side rendering to prevent static generation
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {},
+  }
 }

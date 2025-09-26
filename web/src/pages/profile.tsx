@@ -339,7 +339,8 @@ function ProfileContent() {
         let idToken: string | null = null
         try {
           // Import Firebase auth dynamically to avoid SSR issues
-          const { auth } = await import('@/lib/firebase-auth-config')
+          const { getFirebaseAuth } = await import('@/config/firebase-client-only')
+          const auth = getFirebaseAuth()
           if (auth?.currentUser) {
             idToken = await auth.currentUser.getIdToken()
             console.log('🔑 Profile: Using Authorization header with ID token')
@@ -410,7 +411,8 @@ function ProfileContent() {
       }
 
       try {
-        const { auth } = await import('@/lib/firebase-auth-config')
+        const { getFirebaseAuth } = await import('@/config/firebase-client-only')
+        const auth = getFirebaseAuth()
         let idToken: string | null = null
 
         if (auth?.currentUser) {

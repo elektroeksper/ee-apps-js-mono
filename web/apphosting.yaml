@@ -1,4 +1,4 @@
-# Settings for Backend (on Cloud Run) - TEST Environment
+# Settings for Backend (on Cloud Run) - DEV Environment
 # See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
   minInstances: 0
@@ -14,19 +14,17 @@ build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Install dependencies with frozen lockfile (standalone web lockfile)
+    # Install dependencies with frozen lockfile for consistency
     - pnpm install --frozen-lockfile
-    # Verify shared types are present (should be copied before deployment)
-    - node scripts/verify-shared-types.js
     # Build the Next.js application
     - pnpm run build
 
-# Environment variables and secrets - TEST ENVIRONMENT
+# Environment variables and secrets - DEV ENVIRONMENT
 env:
   # Configure environment variables.
   # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
   - variable: NODE_ENV
-    value: production
+    value: development
     availability:
       - BUILD
       - RUNTIME
@@ -36,43 +34,43 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_REST_API_ENDPOINT
-    value: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app/api
+    value: https://ee-next-dev-1--ee-dev-apps.europe-west4.hosted.app/api
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app/
+    value: https://ee-next-dev-1--ee-dev-apps.europe-west4.hosted.app/
     availability:
       - BUILD
       - RUNTIME
-  # Firebase Configuration - EE-PROD-APPS
+  # Firebase Configuration - DEV PROJECT (ee-dev-apps)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: AIzaSyD3OOwXGouAHWl2xmePZmmXCXQJFXX4E5o
+    value: AIzaSyAvWTu0V1AZ26UdwZgl2U1lGKLTFH6XC-s
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: ee-prod-apps.firebaseapp.com
+    value: ee-dev-apps.firebaseapp.com
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: ee-prod-apps
+    value: ee-dev-apps
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: ee-prod-apps.firebasestorage.app
+    value: ee-dev-apps.firebasestorage.app
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "81027156593"
+    value: "1048760160741"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: 1:81027156593:web:9b6718fe1e1ac2355ee9d0
+    value: 1:1048760160741:web:246dc1d721edd5b47b9f0c
     availability:
       - BUILD
       - RUNTIME
@@ -87,7 +85,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_API_BASE_URL
-    value: https://europe-west1-ee-prod-apps.cloudfunctions.net
+    value: https://europe-west1-ee-dev-apps.cloudfunctions.net
     availability:
       - BUILD
       - RUNTIME

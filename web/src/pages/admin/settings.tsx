@@ -7,6 +7,7 @@ import {
   ISettingItem,
   SystemSettingsKey,
 } from '@/shared-generated/types/common-types'
+import { GetServerSideProps } from 'next'
 import { useEffect, useState } from 'react'
 import {
   FiAlertTriangle,
@@ -398,4 +399,11 @@ function AdminSettingsPageContent() {
       </div>
     </div>
   )
+}
+
+// Force server-side rendering to prevent static generation
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {},
+  }
 }

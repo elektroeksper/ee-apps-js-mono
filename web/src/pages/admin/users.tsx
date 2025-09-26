@@ -10,6 +10,7 @@ import {
   IAppUser,
   IBusiness,
 } from '@/shared-generated'
+import { GetServerSideProps } from 'next'
 import { useCallback, useEffect, useState } from 'react'
 import {
   FiAlertTriangle,
@@ -709,4 +710,11 @@ function AdminUsersPageContent() {
       </div>
     </div>
   )
+}
+
+// Force server-side rendering to prevent static generation
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    props: {},
+  }
 }

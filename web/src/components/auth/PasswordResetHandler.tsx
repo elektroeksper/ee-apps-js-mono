@@ -37,7 +37,8 @@ const PasswordResetHandler = ({ oobCode }: PasswordResetHandlerProps) => {
 
   const onSubmit = async (data: PasswordResetCompletionFormData) => {
     try {
-      const { auth } = await import('@/lib/firebase-auth-config')
+      const { getFirebaseAuth } = await import('@/config/firebase-client-only')
+      const auth = getFirebaseAuth()
       if (!auth) {
         throw new Error('Firebase Auth not available')
       }

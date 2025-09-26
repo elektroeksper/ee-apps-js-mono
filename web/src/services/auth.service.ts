@@ -5,7 +5,13 @@
  */
 
 import { getAuthErrorMessage } from '@/config/firebase-error-messages'
-import { auth } from '@/lib/firebase-auth-config'
+import { getFirebaseAuth } from '@/config/firebase-client-only'
+
+// Get auth instance safely
+const getAuth = () => {
+  if (typeof window === 'undefined') return null
+  return getFirebaseAuth()
+}
 import {
   AuthErrorCode,
   IAuthService,
@@ -62,6 +68,7 @@ export class AuthService implements IAuthService {
    * Get Firebase Auth instance with safety check
    */
   private getAuth() {
+    const auth = getAuth()
     if (!auth) {
       throw new Error(
         'Firebase Auth not available. This operation should only be performed on the client side.'
@@ -74,6 +81,7 @@ export class AuthService implements IAuthService {
    * Check if we're in a client-side environment
    */
   private isClientSide(): boolean {
+    const auth = getAuth()
     return typeof window !== 'undefined' && auth !== null
   }
 

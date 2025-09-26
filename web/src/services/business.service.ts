@@ -4,7 +4,13 @@
  * Focuses on business document management, not user-business relationships
  */
 
-import { auth } from '@/lib/firebase-auth-config'
+import { getFirebaseAuth } from '@/config/firebase-client-only'
+
+// Get auth instance safely
+const getAuth = () => {
+  if (typeof window === 'undefined') return null
+  return getFirebaseAuth()
+}
 import {
   IBusiness,
   IBusinessFilter,
@@ -20,6 +26,7 @@ export class BusinessService {
    */
   private async getIdToken(): Promise<string | null> {
     try {
+      const auth = getAuth()
       if (!auth?.currentUser) {
         console.warn('No authenticated user found')
         return null

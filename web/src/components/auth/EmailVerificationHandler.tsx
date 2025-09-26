@@ -28,7 +28,8 @@ const EmailVerificationHandler = ({
         setStatus('verifying')
 
         // Import auth dynamically to avoid build-time issues
-        const { auth } = await import('@/lib/firebase-auth-config')
+        const { getFirebaseAuth } = await import('@/config/firebase-client-only')
+        const auth = getFirebaseAuth()
         if (!auth) {
           throw new Error('Firebase Auth not available')
         }
