@@ -4,14 +4,8 @@
  * Updated to use dedicated auth config
  */
 
-import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { getFirebaseAuth } from '@/config/firebase-client-only'
-
-// Get auth instance safely
-const getAuth = () => {
-  if (typeof window === 'undefined') return null
-  return getFirebaseAuth()
-}
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import {
   AuthErrorCode,
   IAuthService,
@@ -41,6 +35,12 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth'
+
+// Get auth instance safely
+const getAuth = () => {
+  if (typeof window === 'undefined') return null
+  return getFirebaseAuth()
+}
 
 export class AuthService implements IAuthService {
   /**

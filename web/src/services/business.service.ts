@@ -5,17 +5,17 @@
  */
 
 import { getFirebaseAuth } from '@/config/firebase-client-only'
+import {
+  IBusiness,
+  IBusinessFilter,
+  IOperationResult,
+} from '@/shared-generated'
 
 // Get auth instance safely
 const getAuth = () => {
   if (typeof window === 'undefined') return null
   return getFirebaseAuth()
 }
-import {
-  IBusiness,
-  IBusinessFilter,
-  IOperationResult,
-} from '@/shared-generated'
 
 export class BusinessService {
   private baseUrl = '/api/business'

@@ -46,7 +46,9 @@ const VerificationStatus: React.FC = () => {
         let idToken: string | null = null
         try {
           // Import Firebase auth dynamically to avoid SSR issues
-          const { getFirebaseAuth } = await import('@/config/firebase-client-only')
+          const { getFirebaseAuth } = await import(
+            '@/config/firebase-client-only'
+          )
           const auth = getFirebaseAuth()
           if (auth?.currentUser) {
             idToken = await auth.currentUser.getIdToken()
