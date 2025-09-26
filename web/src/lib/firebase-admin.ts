@@ -19,21 +19,24 @@ if (!admin.apps.length) {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     })
   } else {
-    // Use service account file directly (for development)
+    // Use environment-specific service account file (for development)
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ee-prod-apps'
+    const serviceAccountFile = projectId === 'ee-dev-apps'
+      ? './admin-service-account-dev.json'
+      : './admin-service-account-prod.json'
+
     try {
-      const serviceAccount = require('./admin-service-account.json')
+      const serviceAccount = require(serviceAccountFile)
       app = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        projectId:
-          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ee-prod-apps',
+        projectId: projectId,
       })
-      console.log('✅ Firebase Admin initialized with service account file')
+      console.log(`✅ Firebase Admin initialized with service account file for ${projectId}`)
     } catch (fileError) {
-      console.error('❌ Service account file not found:', fileError)
+      console.error(`❌ Service account file not found (${serviceAccountFile}):`, fileError)
       // Fallback to default credentials
       app = admin.initializeApp({
-        projectId:
-          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ee-prod-apps',
+        projectId: projectId,
       })
       console.log('⚠️ Firebase Admin initialized with default credentials')
     }

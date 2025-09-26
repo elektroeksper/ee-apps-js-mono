@@ -133,7 +133,7 @@ functions/node_modules/
 functions/lib/
 functions/.env
 .firebaserc
-functions/admin-service-account.json
+admin-service-*.json
 
 # Temporary Firebase config files created during deployment
 web/firebase.json
@@ -148,6 +148,5 @@ shared-generated/
 # Lock files (keep pnpm-lock.yaml but ignore others)
 package-lock.json
 yarn.lock
-functions/admin-service-account.json
 
 emulator-data/
