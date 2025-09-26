@@ -1,13 +1,30 @@
 import * as admin from 'firebase-admin'
 
+// Determine project configuration based on environment
+const getProjectConfig = () => {
+  // Check for explicit project environment variable
+  const projectEnv = process.env.FIREBASE_PROJECT_ENV || 'prod'
+
+  if (projectEnv === 'dev') {
+    return {
+      projectId: 'ee-dev-apps',
+      storageBucket: 'ee-dev-apps.firebasestorage.app',
+    }
+  } else {
+    return {
+      projectId: 'ee-prod-apps',
+      storageBucket: 'ee-prod-apps.firebasestorage.app',
+    }
+  }
+}
+
 // Initialize using standard Application Default Credentials.
 // Production (Cloud Functions) automatically injects a service account.
 // Local/CI: export GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
 if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: 'ee-prod-apps',
-    storageBucket: 'ee-prod-apps.firebasestorage.app',
-  })
+  const config = getProjectConfig()
+  admin.initializeApp(config)
+  console.log(`🔥 Firebase Admin initialized for project: ${config.projectId}`)
 }
 
 // Export the initialized services for use in other files

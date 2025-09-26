@@ -31,17 +31,17 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_TELEMETRY_DISABLED
-    value: '1'
+    value: "1"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_REST_API_ENDPOINT
-    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/api
+    value: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app/api
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app/
+    value: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app/
     availability:
       - BUILD
       - RUNTIME
@@ -67,7 +67,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: '81027156593'
+    value: "81027156593"
     availability:
       - BUILD
       - RUNTIME
@@ -99,12 +99,12 @@ env:
       - RUNTIME
   # Default map center coordinates (Istanbul)
   - variable: NEXT_PUBLIC_DEFAULT_MAP_CENTER_LAT
-    value: '41.0082'
+    value: "41.0082"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_DEFAULT_MAP_CENTER_LNG
-    value: '28.9784'
+    value: "28.9784"
     availability:
       - BUILD
       - RUNTIME

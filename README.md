@@ -235,8 +235,8 @@ The web application is configured for deployment to Firebase App Hosting with pr
 
 **Live Environments:**
 
-- **Test**: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app
-- **Production**: https://electro-expert-next--elektro-ekspert-apps.europe-west4.hosted.app
+- **Test**: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app
+- **Production**: https://ee-next-live--ee-prod-apps.europe-west4.hosted.app
 
 ## 🆘 Troubleshooting
 

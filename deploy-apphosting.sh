@@ -32,27 +32,36 @@ trap cleanup EXIT
 # Define backend targets
 LIVE_BACKEND="ee-next-live"
 TEST_BACKEND="ee-next-test"
-LIVE_URL="https://ee-next-live--elektro-ekspert-apps.europe-west4.hosted.app"
-TEST_URL="https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app"
+DEV_BACKEND="ee-next-dev-1"
+LIVE_URL="https://ee-next-live--ee-prod-apps.europe-west4.hosted.app"
+TEST_URL="https://ee-next-test--ee-prod-apps.europe-west4.hosted.app"
+DEV_URL="https://ee-next-dev-1--ee-dev-apps.europe-west4.hosted.app"
 
 # Function to select target
 select_target() {
     echo ""
     echo "📋 Available deployment targets:"
-    echo "  1) Test Environment (${TEST_BACKEND})"
-    echo "  2) Live Environment (${LIVE_BACKEND})"
+    echo "  1) Dev Environment (${DEV_BACKEND})"
+    echo "  2) Test Environment (${TEST_BACKEND})"
+    echo "  3) Live Environment (${LIVE_BACKEND})"
     echo ""
     
     while true; do
-        read -p "🎯 Select deployment target (1 for test, 2 for live): " choice
+        read -p "🎯 Select deployment target (1 for dev, 2 for test, 3 for live): " choice
         case $choice in
             1)
+                SELECTED_BACKEND=$DEV_BACKEND
+                SELECTED_URL=$DEV_URL
+                SELECTED_ENV="DEV"
+                break
+                ;;
+            2)
                 SELECTED_BACKEND=$TEST_BACKEND
                 SELECTED_URL=$TEST_URL
                 SELECTED_ENV="TEST"
                 break
                 ;;
-            2)
+            3)
                 SELECTED_BACKEND=$LIVE_BACKEND
                 SELECTED_URL=$LIVE_URL
                 SELECTED_ENV="LIVE"
@@ -67,14 +76,19 @@ select_target() {
                 fi
                 ;;
             *)
-                echo "❌ Invalid selection. Please enter 1 or 2."
+                echo "❌ Invalid selection. Please enter 1, 2, or 3."
                 ;;
         esac
     done
 }
 
 # Check if target is provided as argument
-if [ "$1" == "test" ]; then
+if [ "$1" == "dev" ]; then
+    SELECTED_BACKEND=$DEV_BACKEND
+    SELECTED_URL=$DEV_URL
+    SELECTED_ENV="DEV"
+    echo "🎯 Using DEV environment (provided as argument)"
+elif [ "$1" == "test" ]; then
     SELECTED_BACKEND=$TEST_BACKEND
     SELECTED_URL=$TEST_URL
     SELECTED_ENV="TEST"
@@ -88,8 +102,8 @@ elif [ "$1" == "" ]; then
     # No argument provided, show interactive selection
     select_target
 else
-    echo "❌ Invalid argument. Use 'test' or 'live', or run without arguments for interactive selection."
-    echo "Usage: $0 [test|live]"
+    echo "❌ Invalid argument. Use 'dev', 'test', or 'live', or run without arguments for interactive selection."
+    echo "Usage: $0 [dev|test|live]"
     exit 1
 fi
 
@@ -98,9 +112,9 @@ echo "🎯 Selected target: ${SELECTED_ENV} (${SELECTED_BACKEND})"
 echo "🌐 URL: ${SELECTED_URL}"
 
 # Check if we're in the right directory
-if [ ! -f "web/apphosting.test.yaml" ] || [ ! -f "web/apphosting.live.yaml" ]; then
+if [ ! -f "web/apphosting.dev.yaml" ] || [ ! -f "web/apphosting.test.yaml" ] || [ ! -f "web/apphosting.live.yaml" ]; then
     echo "❌ Error: apphosting configuration files not found in web/ directory"
-    echo "Please ensure apphosting.test.yaml and apphosting.live.yaml are properly set up"
+    echo "Please ensure apphosting.dev.yaml, apphosting.test.yaml, and apphosting.live.yaml are properly set up"
     exit 1
 fi
 
@@ -184,6 +198,9 @@ EOF
 if [ "$SELECTED_ENV" == "LIVE" ]; then
     APPHOSTING_CONFIG="apphosting.live.yaml"
     echo "✅ Using LIVE configuration: ${APPHOSTING_CONFIG}"
+elif [ "$SELECTED_ENV" == "DEV" ]; then
+    APPHOSTING_CONFIG="apphosting.dev.yaml"
+    echo "✅ Using DEV configuration: ${APPHOSTING_CONFIG}"
 else
     APPHOSTING_CONFIG="apphosting.test.yaml"
     echo "✅ Using TEST configuration: ${APPHOSTING_CONFIG}"
@@ -211,7 +228,11 @@ echo "✅ Using ${APPHOSTING_CONFIG} as apphosting.yaml"
 
 # Deploy using standard firebase deploy command from web directory
 # This ensures only the web directory content is uploaded
-firebase deploy --only apphosting --project elektro-ekspert-apps
+if [ "$SELECTED_ENV" == "DEV" ]; then
+    firebase deploy --only apphosting --project ee-dev-apps
+else
+    firebase deploy --only apphosting --project ee-prod-apps
+fi
 
 # Return to root directory
 cd ..
@@ -228,11 +249,22 @@ echo "✅ Original configuration files restored"
 echo ""
 echo "🎉 Deployment completed successfully!"
 echo "🌐 Your app is available at: ${SELECTED_URL}"
-echo "📊 Monitor deployment at: https://console.firebase.google.com/project/elektro-ekspert-apps/apphosting"
+if [ "$SELECTED_ENV" == "DEV" ]; then
+    echo "📊 Monitor deployment at: https://console.firebase.google.com/project/ee-dev-apps/apphosting"
+else
+    echo "📊 Monitor deployment at: https://console.firebase.google.com/project/ee-prod-apps/apphosting"
+fi
 echo ""
 echo "📝 Deployment Summary:"
 echo "   Environment: ${SELECTED_ENV}"
 echo "   Backend: ${SELECTED_BACKEND}"
-echo "   Config: web/apphosting.$([ "$SELECTED_ENV" == "LIVE" ] && echo "live" || echo "test").yaml"
+if [ "$SELECTED_ENV" == "LIVE" ]; then
+    echo "   Config: web/apphosting.live.yaml"
+elif [ "$SELECTED_ENV" == "DEV" ]; then
+    echo "   Config: web/apphosting.dev.yaml"
+else
+    echo "   Config: web/apphosting.test.yaml"
+fi
+echo "   Project: $([ "$SELECTED_ENV" == "DEV" ] && echo "ee-dev-apps" || echo "ee-prod-apps")"
 echo "   Source: Local"
 echo "   URL: ${SELECTED_URL}"
