@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin'
 import { db } from '../utils/firebase-admin'
 // Import types from shared-generated (will be copied at build time)
+import { logger } from 'firebase-functions/v2'
 import { IOperationResult, IOrder, OrderStatus } from '../shared-generated'
 
 // Get user orders
@@ -36,7 +37,7 @@ export async function getUserOrders(
       code: 200,
     }
   } catch (error) {
-    console.error('Error getting user orders:', error)
+    logger.error('Error getting user orders:', error)
     return {
       success: false,
       error: 'Failed to fetch user orders',
@@ -91,7 +92,7 @@ export async function getOrder(
       code: 200,
     }
   } catch (error) {
-    console.error('Error getting order:', error)
+    logger.error('Error getting order:', error)
     return {
       success: false,
       error: 'Failed to fetch order',
@@ -145,7 +146,7 @@ export async function createOrder(
       code: 201,
     }
   } catch (error) {
-    console.error('Error creating order:', error)
+    logger.error('Error creating order:', error)
     return {
       success: false,
       error: 'Failed to create order',
@@ -196,7 +197,7 @@ export async function updateOrderStatus(
       code: 200,
     }
   } catch (error) {
-    console.error('Error updating order status:', error)
+    logger.error('Error updating order status:', error)
     return {
       success: false,
       error: 'Failed to update order status',

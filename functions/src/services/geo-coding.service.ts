@@ -1,3 +1,4 @@
+import { logger } from 'firebase-functions/v2'
 import https from 'node:https'
 import { URL } from 'node:url'
 import { IAddress, IOperationResult } from '../shared-generated'
@@ -8,7 +9,7 @@ class GeocodingService {
   constructor() {
     this.apiKey = process.env.MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY
     if (!this.apiKey) {
-      console.warn(
+      logger.warn(
         '[GeocodingService] Google Maps API key not set (MAPS_API_KEY or GOOGLE_MAPS_API_KEY). Geocoding calls will fail until configured.'
       )
     }
@@ -109,7 +110,7 @@ class GeocodingService {
           formattedAddress: firstResult.formatted_address,
         }
 
-        console.log('Reverse geocoding successful:', addressInfo)
+        logger.info('Reverse geocoding successful:', addressInfo)
         return {
           success: true,
           data: addressInfo,
@@ -122,7 +123,7 @@ class GeocodingService {
         error: 'No results found',
       }
     } catch (error: any) {
-      console.error('Error decoding address by location:', error)
+      logger.error('Error decoding address by location:', error)
 
       // More specific error handling
       if (error.response?.status === 403) {
@@ -200,7 +201,7 @@ class GeocodingService {
         error: 'No results found',
       }
     } catch (error) {
-      console.error('Error geocoding address:', error)
+      logger.error('Error geocoding address:', error)
       return {
         success: false,
         data: null,

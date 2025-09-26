@@ -1,3 +1,4 @@
+import { logger } from 'firebase-functions/v2'
 import {
   BusinessUserRole,
   BusinessVerificationStatus,
@@ -52,7 +53,7 @@ export class BusinessService {
 
       return { success: true, data: filteredBusinesses }
     } catch (error) {
-      console.error('Error getting businesses:', error)
+      logger.error('Error getting businesses:', error)
       return {
         success: false,
         error:
@@ -78,7 +79,7 @@ export class BusinessService {
 
       return { success: true, data: createdBusiness }
     } catch (error) {
-      console.error('Error creating business:', error)
+      logger.error('Error creating business:', error)
       return {
         success: false,
         error:
@@ -110,7 +111,7 @@ export class BusinessService {
 
       return { success: true, data: updatedBusiness }
     } catch (error) {
-      console.error('Error updating business:', error)
+      logger.error('Error updating business:', error)
       return {
         success: false,
         error:
@@ -131,7 +132,7 @@ export class BusinessService {
       const business = { ...(doc.data() as IBusiness), id }
       return { success: true, data: business }
     } catch (error) {
-      console.error('Error getting business by ID:', error)
+      logger.error('Error getting business by ID:', error)
       return {
         success: false,
         error:
@@ -158,7 +159,7 @@ export class BusinessService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error deleting business:', error)
+      logger.error('Error deleting business:', error)
       return {
         success: false,
         error:
@@ -217,7 +218,7 @@ export class BusinessService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error verifying business:', error)
+      logger.error('Error verifying business:', error)
       return {
         success: false,
         error:
@@ -263,7 +264,7 @@ export class BusinessService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error adding user to business:', error)
+      logger.error('Error adding user to business:', error)
       return {
         success: false,
         error:
@@ -311,7 +312,7 @@ export class BusinessService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error removing user from business:', error)
+      logger.error('Error removing user from business:', error)
       return {
         success: false,
         error:
@@ -365,7 +366,7 @@ export class BusinessService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error updating user role:', error)
+      logger.error('Error updating user role:', error)
       return {
         success: false,
         error:

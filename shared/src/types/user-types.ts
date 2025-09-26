@@ -1,5 +1,5 @@
 import { Timestamp } from 'firebase/firestore'
-import { AccountType, BusinessUserRole } from '../enums'
+import { AccountType, BusinessUserRole, BusinessVerificationStatus } from '../enums'
 import { IOperationResult } from './common-types'
 import { IAddress } from './map-types'
 
@@ -101,10 +101,8 @@ type BusinessUser = IAppUser & {
 
 export type {
   BusinessUser,
-  IAppUser,
-  INotificationPreferences,
-  IPrivacyPreferences,
-  IUserFilter,
+  IAppUser, INotificationPreferences,
+  IPrivacyPreferences, IUserBusinessInfo, IUserFilter,
   IUserPreferences,
   IUserService
 }

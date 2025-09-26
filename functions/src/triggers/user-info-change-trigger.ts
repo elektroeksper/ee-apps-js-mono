@@ -13,9 +13,7 @@ export const onUserProfileUpdate = onDocumentUpdated(
     const beforeData: IAppUser = event.data?.before?.data() as IAppUser
     const afterData: IAppUser = event.data?.after?.data() as IAppUser
     if (!beforeData || !afterData) {
-      logger.warn(
-        'Missing before or after data in user update trigger'
-      )
+      logger.warn('Missing before or after data in user update trigger')
       return
     }
 
@@ -43,7 +41,7 @@ export const onUserProfileUpdate = onDocumentUpdated(
       // Fetch the business
       const businessResult = await businessService.getById(businessId)
       if (!businessResult.success || !businessResult.data) {
-        console.warn(
+        logger.warn(
           `Business with ID ${businessId} not found for user ${userId}`
         )
         return
@@ -59,10 +57,7 @@ export const onUserProfileUpdate = onDocumentUpdated(
           : undefined
       } catch (err) {
         // Fallback to Firestore lastLogin or current date if Auth lookup fails
-        logger.warn(
-          `Failed to get Auth record for user ${userId}:`,
-          err
-        )
+        logger.warn(`Failed to get Auth record for user ${userId}:`, err)
       }
 
       // Update the user's info in the business's users map
@@ -78,7 +73,7 @@ export const onUserProfileUpdate = onDocumentUpdated(
 
         // Save the updated business
         await businessService.update(businessId, { users: currentUsers })
-        console.log(
+        logger.info(
           `Updated business info for user ${userId} in business ${businessId}`
         )
       } else {

@@ -577,11 +577,11 @@ async function updateBusinessVerificationStatus(userId: string) {
       const now = Timestamp.now()
 
       // Determine appropriate reason based on current status
-      let reason = 'Documents uploaded - pending admin review';
+      let reason = 'Documents uploaded - pending admin review'
       if (currentStatus === BusinessVerificationStatus.REJECTED) {
-        reason = 'New documents uploaded after rejection - pending admin review';
+        reason = 'New documents uploaded after rejection - pending admin review'
       } else if (currentStatus === BusinessVerificationStatus.VERIFIED) {
-        reason = 'Additional documents uploaded - pending admin re-review';
+        reason = 'Additional documents uploaded - pending admin re-review'
       }
 
       // Update verification status to PENDING with history entry

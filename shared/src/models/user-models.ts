@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore'
 import { AccountType } from '../enums'
-import { IAddress, IBusinessUserInfo } from '../types'
-import { IAppUser, IUserPreferences } from '../types/user-types'
+import { IAddress } from '../types'
+import { IAppUser, IUserBusinessInfo, IUserPreferences } from '../types/user-types'
 
 class AppUser implements IAppUser {
   id: string
@@ -16,7 +16,7 @@ class AppUser implements IAppUser {
   preferences: IUserPreferences
   address?: IAddress | undefined
   // Business related fields
-  businessInfo?: IBusinessUserInfo | null
+  businessInfo?: IUserBusinessInfo | null
 
   // Status
   isActive: boolean

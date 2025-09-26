@@ -13,8 +13,8 @@
     "logs": "firebase functions:log",
     "lint": "eslint src/**/*.ts --ignore-pattern 'src/shared-generated/**'",
     "lint:fix": "eslint src/**/*.ts --ignore-pattern 'src/shared-generated/**' --fix",
-    "format": "prettier --write \"src/**/*.{ts,js,json}\" --ignore-path \"src/shared-generated/**\"",
-    "format:check": "prettier --check \"src/**/*.{ts,js,json}\" --ignore-path \"src/shared-generated/**\"",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
     "type:check": "tsc --noEmit",
     "test-emails": "npm run build && node lib/tests/test-business-verification-emails.js"
   },

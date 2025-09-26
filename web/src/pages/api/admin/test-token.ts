@@ -2,7 +2,7 @@
  * Simple test endpoint to debug token verification
  */
 
-import { verifyIdToken } from '@/lib/firebase-admin'
+import { adminAuth, verifyIdToken } from '@/lib/firebase-admin'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(
@@ -51,14 +51,22 @@ export default async function handler(
     console.log('User UID:', user.uid)
     console.log('Custom Claims:', JSON.stringify(user.customClaims, null, 2))
 
+    // Get claims from token
+    const tokenClaims = user.customClaims || {}
+
+    // Fetch fresh claims from Firebase Auth
+    const userRecord = await adminAuth.getUser(user.uid)
+    const freshClaims = userRecord.customClaims || {}
+
     // Check admin status
-    const userClaims = user.customClaims || {}
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin'
+    const isAdmin = freshClaims.admin === true || freshClaims.role === 'admin'
 
     console.log('Admin Check Results:', {
       hasCustomClaims: !!user.customClaims,
-      adminClaim: userClaims.admin,
-      roleClaim: userClaims.role,
+      tokenAdminClaim: tokenClaims.admin,
+      tokenRoleClaim: tokenClaims.role,
+      freshAdminClaim: freshClaims.admin,
+      freshRoleClaim: freshClaims.role,
       isAdmin: isAdmin,
     })
 
@@ -76,7 +84,7 @@ export default async function handler(
         claimsComparison: {
           tokenAdmin: tokenClaims.admin,
           freshAdmin: freshClaims.admin,
-          areEqual: tokenClaims.admin === freshClaims.admin
+          areEqual: tokenClaims.admin === freshClaims.admin,
         },
         tokenIssuedAt: new Date(user.iat * 1000).toISOString(),
         tokenExpiresAt: new Date(user.exp * 1000).toISOString(),

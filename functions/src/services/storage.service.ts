@@ -6,6 +6,7 @@ import {
   IDocument,
   StorageDocumentType,
 } from '../shared-generated'
+import { logger } from 'firebase-functions/v2'
 
 // Initialize Firebase Admin Storage (bucket configured in firebase-admin.ts)
 const storage = getStorage()
@@ -122,7 +123,7 @@ export async function getDocuments(userId: string): Promise<IDocument[]> {
     // Check each folder for documents
     for (const folderPath of documentFolders) {
       try {
-        console.log(`Checking folder: ${folderPath}`)
+        logger.info(`Checking folder: ${folderPath}`)
         const documentType: StorageDocumentType =
           inferDocumentTypeByFolderPath(folderPath)
 
@@ -143,7 +144,7 @@ export async function getDocuments(userId: string): Promise<IDocument[]> {
 
             // For Firebase Admin, we'll use a public download URL instead of signed URL
             const fileName = file.name.split('/').pop() || file.name
-            console.log(`Processing file: ${file.name}, fileName: ${fileName}`)
+            logger.info(`Processing file: ${file.name}, fileName: ${fileName}`)
 
             let fileUrl: string
             try {
@@ -152,11 +153,11 @@ export async function getDocuments(userId: string): Promise<IDocument[]> {
 
               // Use Firebase Admin's getDownloadURL function
               fileUrl = await getDownloadURL(file)
-              console.log(
+              logger.info(
                 `Generated download URL for ${fileName}: ${fileUrl.substring(0, 150)}...`
               )
             } catch (downloadUrlError) {
-              console.warn(
+              logger.warn(
                 `Failed to generate download URL for ${fileName}:`,
                 downloadUrlError
               )
@@ -168,14 +169,14 @@ export async function getDocuments(userId: string): Promise<IDocument[]> {
                 if (token) {
                   // Use the download URL with token
                   fileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media&token=${token}`
-                  console.log(
+                  logger.info(
                     `Generated download URL with token for ${fileName}`
                   )
                 } else {
                   throw new Error('No download token found')
                 }
               } catch (tokenError) {
-                console.warn(
+                logger.warn(
                   `Failed to get download token for ${fileName}:`,
                   tokenError
                 )
@@ -187,11 +188,11 @@ export async function getDocuments(userId: string): Promise<IDocument[]> {
                     version: 'v4',
                   })
                   fileUrl = signedUrl
-                  console.log(
+                  logger.info(
                     `Generated signed URL as final fallback for ${fileName}`
                   )
                 } catch (signedUrlError) {
-                  console.warn(
+                  logger.warn(
                     `All URL generation methods failed for ${fileName}:`,
                     signedUrlError
                   )
@@ -214,26 +215,26 @@ export async function getDocuments(userId: string): Promise<IDocument[]> {
               uploadedBy: '',
               status: StorageDocumentStatus.APPROVED,
             })
-            console.log(
+            logger.info(
               `Added document: ${fileName} with URL: ${fileUrl.substring(0, 100)}...`
             )
           } catch (error) {
-            console.warn(`Failed to process file ${file.name}:`, error)
+            logger.warn(`Failed to process file ${file.name}:`, error)
           }
         }
       } catch (error) {
         // Not all folders will exist, so this is expected
-        console.debug(`Folder ${folderPath} not found or inaccessible:`, error)
+        logger.debug(`Folder ${folderPath} not found or inaccessible:`, error)
       }
     }
 
-    console.log(
+    logger.info(
       `Found ${documents.length} documents for user ${userId}:`,
       documents.map(d => d.name)
     )
     return documents
   } catch (error) {
-    console.error('Error fetching user documents:', error)
+    logger.error('Error fetching user documents:', error)
     throw new Error(
       `Failed to fetch user documents: ${error instanceof Error ? error.message : 'Unknown error'}`
     )
@@ -282,7 +283,7 @@ export async function uploadDocument(
         break
     }
 
-    console.log(`Uploading file to: ${filePath}`)
+    logger.info(`Uploading file to: ${filePath}`)
 
     // Convert base64 data to buffer
     const base64Data = fileData.includes(',')
@@ -308,7 +309,7 @@ export async function uploadDocument(
       },
     })
 
-    console.log(`File uploaded successfully: ${filePath}`)
+    logger.info(`File uploaded successfully: ${filePath}`)
 
     // Generate public download URL
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filePath)}?alt=media`
@@ -336,10 +337,10 @@ export async function uploadDocument(
           : StorageDocumentStatus.PENDING,
     }
 
-    console.log(`Document created successfully:`, document)
+    logger.info(`Document created successfully:`, document)
     return document
   } catch (error) {
-    console.error('Error uploading document:', error)
+    logger.error('Error uploading document:', error)
     throw new Error(
       `Failed to upload document: ${error instanceof Error ? error.message : 'Unknown error'}`
     )

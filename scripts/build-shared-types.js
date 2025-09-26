@@ -5,9 +5,13 @@
  * Optimized for monorepo with smart caching and dependency management
  */
 
-const fs = require('fs')
-const path = require('path')
-const { execSync } = require('child_process')
+import { execSync } from 'child_process'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Paths
 const ROOT_DIR = path.join(__dirname, '..')
@@ -170,7 +174,7 @@ function generateHelperFiles(packageName, targetDir) {
  * DO NOT EDIT MANUALLY - changes will be overwritten
  */
 
-module.exports = require('./index');
+export * from './index.js';
 `
 
   // Generate shared.d.ts for TypeScript
@@ -278,15 +282,13 @@ function main() {
 }
 
 // Export for programmatic use
-module.exports = {
+export {
   buildSharedTypes,
-  copyToPackage,
-  needsRebuild,
-  PACKAGES,
-  main,
+  copyToPackage, main, needsRebuild,
+  PACKAGES
 }
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main()
 }

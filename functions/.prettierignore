@@ -1,0 +1,14 @@
+# Ignore auto-generated files from shared types
+src/shared-generated/
+**/shared-generated/
+**/*-generated/
+
+# Ignore build outputs
+lib/
+dist/
+node_modules/
+
+# Ignore config files
+.env
+.env.local
+.env.*.local

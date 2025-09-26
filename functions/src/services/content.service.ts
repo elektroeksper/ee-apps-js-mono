@@ -4,6 +4,7 @@
  */
 
 import { FieldValue } from 'firebase-admin/firestore'
+import { logger } from 'firebase-functions/v2'
 import {
   IAboutInfo,
   IBrandingInfo,
@@ -30,7 +31,7 @@ export class ContentService {
     error: any,
     operation: string
   ): IContentOperationResult<never> {
-    console.error(`❌ ${operation} failed:`, error)
+    logger.error(`❌ ${operation} failed:`, error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Operation failed',
@@ -41,7 +42,7 @@ export class ContentService {
   // Video Management
   async getVideos(): Promise<IContentOperationResult<IVideoItem[]>> {
     try {
-      console.log('🔍 Fetching all videos...')
+      logger.info('🔍 Fetching all videos...')
       const snapshot = await this.videosRef.orderBy('createdAt', 'desc').get()
 
       const videos: IVideoItem[] = []
@@ -55,7 +56,7 @@ export class ContentService {
         } as IVideoItem)
       })
 
-      console.log(`✅ Fetched ${videos.length} videos`)
+      logger.info(`✅ Fetched ${videos.length} videos`)
       return {
         success: true,
         data: videos,
@@ -70,7 +71,7 @@ export class ContentService {
     location: VideoLocation
   ): Promise<IContentOperationResult<IVideoItem[]>> {
     try {
-      console.log(`🔍 Fetching videos for location: ${location}`)
+      logger.info(`🔍 Fetching videos for location: ${location}`)
       const snapshot = await this.videosRef
         .where('location', '==', location)
         .where('isActive', '==', true)
@@ -88,7 +89,7 @@ export class ContentService {
         } as IVideoItem)
       })
 
-      console.log(`✅ Fetched ${videos.length} videos for location ${location}`)
+      logger.info(`✅ Fetched ${videos.length} videos for location ${location}`)
       return {
         success: true,
         data: videos,
@@ -103,7 +104,7 @@ export class ContentService {
     video: Omit<IVideoItem, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<IContentOperationResult<IVideoItem>> {
     try {
-      console.log('➕ Adding new video...')
+      logger.info('➕ Adding new video...')
       const now = FieldValue.serverTimestamp()
       const docRef = await this.videosRef.add({
         ...video,
@@ -121,7 +122,7 @@ export class ContentService {
         updatedAt: savedData!.updatedAt?.toDate?.() || new Date(),
       } as IVideoItem
 
-      console.log(`✅ Video added with ID: ${docRef.id}`)
+      logger.info(`✅ Video added with ID: ${docRef.id}`)
       return {
         success: true,
         data: savedVideo,
@@ -137,7 +138,7 @@ export class ContentService {
     updates: Partial<Omit<IVideoItem, 'id' | 'createdAt'>>
   ): Promise<IContentOperationResult<IVideoItem>> {
     try {
-      console.log(`🔄 Updating video ${id}...`)
+      logger.info(`🔄 Updating video ${id}...`)
       const docRef = this.videosRef.doc(id)
 
       await docRef.update({
@@ -158,7 +159,7 @@ export class ContentService {
         updatedAt: updatedData!.updatedAt?.toDate?.() || new Date(),
       } as IVideoItem
 
-      console.log(`✅ Video ${id} updated successfully`)
+      logger.info(`✅ Video ${id} updated successfully`)
       return {
         success: true,
         data: updatedVideo,
@@ -171,10 +172,10 @@ export class ContentService {
 
   async deleteVideo(id: string): Promise<IContentOperationResult<void>> {
     try {
-      console.log(`🗑️ Deleting video ${id}...`)
+      logger.info(`🗑️ Deleting video ${id}...`)
       await this.videosRef.doc(id).delete()
 
-      console.log(`✅ Video ${id} deleted successfully`)
+      logger.info(`✅ Video ${id} deleted successfully`)
       return {
         success: true,
         message: 'Video deleted successfully',
@@ -187,7 +188,7 @@ export class ContentService {
   // Slider Management
   async getSliderItems(): Promise<IContentOperationResult<ISliderItem[]>> {
     try {
-      console.log('🔍 Fetching slider items...')
+      logger.info('🔍 Fetching slider items...')
       const snapshot = await this.slidersRef.orderBy('order', 'asc').get()
 
       const sliders: ISliderItem[] = []
@@ -201,7 +202,7 @@ export class ContentService {
         } as ISliderItem)
       })
 
-      console.log(`✅ Fetched ${sliders.length} slider items`)
+      logger.info(`✅ Fetched ${sliders.length} slider items`)
       return {
         success: true,
         data: sliders,
@@ -215,7 +216,7 @@ export class ContentService {
   // Service Management
   async getServices(): Promise<IContentOperationResult<IServiceItem[]>> {
     try {
-      console.log('🔍 Fetching services...')
+      logger.info('🔍 Fetching services...')
       const snapshot = await this.servicesRef.orderBy('order', 'asc').get()
 
       const services: IServiceItem[] = []
@@ -229,7 +230,7 @@ export class ContentService {
         } as IServiceItem)
       })
 
-      console.log(`✅ Fetched ${services.length} services`)
+      logger.info(`✅ Fetched ${services.length} services`)
       return {
         success: true,
         data: services,
@@ -245,7 +246,7 @@ export class ContentService {
     IContentOperationResult<IContactInfo | null>
   > {
     try {
-      console.log('🔍 Fetching contact info...')
+      logger.info('🔍 Fetching contact info...')
       const doc = await this.contentRef.doc('contact').get()
 
       if (!doc.exists) {
@@ -263,7 +264,7 @@ export class ContentService {
         updatedAt: data!.updatedAt?.toDate?.() || data!.updatedAt,
       } as unknown as IContactInfo
 
-      console.log('✅ Contact info fetched successfully')
+      logger.info('✅ Contact info fetched successfully')
       return {
         success: true,
         data: contactInfo,
@@ -276,7 +277,7 @@ export class ContentService {
 
   async getAboutInfo(): Promise<IContentOperationResult<IAboutInfo | null>> {
     try {
-      console.log('🔍 Fetching about info...')
+      logger.info('🔍 Fetching about info...')
       const doc = await this.contentRef.doc('about').get()
 
       if (!doc.exists) {
@@ -294,7 +295,7 @@ export class ContentService {
         updatedAt: data!.updatedAt?.toDate?.() || data!.updatedAt,
       } as unknown as IAboutInfo
 
-      console.log('✅ About info fetched successfully')
+      logger.info('✅ About info fetched successfully')
       return {
         success: true,
         data: aboutInfo,
@@ -309,7 +310,7 @@ export class ContentService {
     IContentOperationResult<IBrandingInfo | null>
   > {
     try {
-      console.log('🔍 Fetching branding info...')
+      logger.info('🔍 Fetching branding info...')
       const doc = await this.contentRef.doc('branding').get()
 
       if (!doc.exists) {
@@ -327,7 +328,7 @@ export class ContentService {
         updatedAt: data!.updatedAt?.toDate?.() || data!.updatedAt,
       } as unknown as IBrandingInfo
 
-      console.log('✅ Branding info fetched successfully')
+      logger.info('✅ Branding info fetched successfully')
       return {
         success: true,
         data: brandingInfo,
@@ -342,7 +343,7 @@ export class ContentService {
     IContentOperationResult<IVideoSettings | null>
   > {
     try {
-      console.log('🔍 Fetching video settings...')
+      logger.info('🔍 Fetching video settings...')
       const doc = await this.videoSettingsRef.doc('global').get()
 
       if (!doc.exists) {
@@ -360,7 +361,7 @@ export class ContentService {
         updatedAt: data!.updatedAt?.toDate?.() || data!.updatedAt,
       } as IVideoSettings
 
-      console.log('✅ Video settings fetched successfully')
+      logger.info('✅ Video settings fetched successfully')
       return {
         success: true,
         data: settings,

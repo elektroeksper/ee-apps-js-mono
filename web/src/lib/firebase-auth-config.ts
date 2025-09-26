@@ -4,11 +4,11 @@
  * This file is safe from Next.js 15 build issues
  */
 
-import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getApp, getApps, initializeApp } from 'firebase/app'
+import { getAuth } from 'firebase/auth'
 
 // Build-time safety check
-const isClientSide = typeof window !== 'undefined';
+const isClientSide = typeof window !== 'undefined'
 
 // Firebase config (safe to use client-side)
 const firebaseConfig = {
@@ -18,28 +18,28 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+}
 
 // Initialize Firebase app (client-side only)
-let app: any = null;
+let app: any = null
 
 const getFirebaseApp = () => {
   if (!isClientSide) {
-    return null;
+    return null
   }
 
   if (!app) {
     if (getApps().length === 0) {
-      app = initializeApp(firebaseConfig);
+      app = initializeApp(firebaseConfig)
     } else {
-      app = getApp();
+      app = getApp()
     }
   }
-  return app;
-};
+  return app
+}
 
 // Initialize Firebase Auth (client-side only)
-export const auth = isClientSide ? getAuth(getFirebaseApp()!) : null;
+export const auth = isClientSide ? getAuth(getFirebaseApp()!) : null
 
 // Connect to Auth Emulator in development (disabled for testing)
 // Uncomment below if you want to use Firebase emulators
@@ -53,4 +53,4 @@ if (process.env.NODE_ENV === 'development') {
 }
 */
 
-export default getFirebaseApp;
+export default getFirebaseApp

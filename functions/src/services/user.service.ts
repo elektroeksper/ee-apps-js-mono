@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin'
 import { auth, db } from '../utils/firebase-admin'
 // Import types from shared-generated (will be copied at build time)
 
+import { logger } from 'firebase-functions/v2'
 import { onCall } from 'firebase-functions/v2/https'
 import { ADMIN_USERS } from '../configs/constant'
 import {
@@ -47,7 +48,7 @@ export async function getUserProfile(
       code: 200,
     }
   } catch (error) {
-    console.error('Error getting user profile:', error)
+    logger.error('Error getting user profile:', error)
     return {
       success: false,
       error: 'Failed to fetch user profile',
@@ -103,7 +104,7 @@ export async function createUserProfile(
       code: 201,
     }
   } catch (error) {
-    console.error('Error creating user profile:', error)
+    logger.error('Error creating user profile:', error)
     return {
       success: false,
       error: 'Failed to create user profile',
@@ -165,7 +166,7 @@ export async function updateUserProfile(
       code: 200,
     }
   } catch (error) {
-    console.error('Error updating user profile:', error)
+    logger.error('Error updating user profile:', error)
     return {
       success: false,
       error: 'Failed to update user profile',
@@ -201,7 +202,7 @@ export async function setAdminRole(
       code: 200,
     }
   } catch (error) {
-    console.error('Error setting admin role:', error)
+    logger.error('Error setting admin role:', error)
     return {
       success: false,
       error: 'Failed to set admin role',
@@ -234,7 +235,7 @@ export async function deleteUserProfile(
       code: 200,
     }
   } catch (error) {
-    console.error('Error deleting user profile:', error)
+    logger.error('Error deleting user profile:', error)
     return {
       success: false,
       error: 'Failed to delete user profile',
@@ -282,7 +283,7 @@ export async function getUserByEmail(
       code: 200,
     }
   } catch (error) {
-    console.error('Error getting user by email:', error)
+    logger.error('Error getting user by email:', error)
     return {
       success: false,
       error: 'Failed to fetch user',
@@ -335,7 +336,7 @@ export async function searchUsers(
       code: 200,
     }
   } catch (error) {
-    console.error('Error searching users:', error)
+    logger.error('Error searching users:', error)
     return {
       success: false,
       error: 'Failed to search users',
@@ -389,7 +390,7 @@ export async function createBusinessDocument(
       code: 201,
     }
   } catch (error) {
-    console.error('Error creating business document:', error)
+    logger.error('Error creating business document:', error)
     return {
       success: false,
       error: 'Failed to upload business document',
@@ -409,12 +410,12 @@ export const setAdminsClaims = onCall(
           const userRecord = await auth.getUserByEmail(email)
           if (userRecord) {
             await auth.setCustomUserClaims(userRecord.uid, { admin: true })
-            console.log(`Set admin claim for user: ${email}`)
+            logger.info(`Set admin claim for user: ${email}`)
           } else {
-            console.warn(`User not found for email: ${email}`)
+            logger.warn(`User not found for email: ${email}`)
           }
         } catch (error) {
-          console.error(`Error setting admin claim for email ${email}:`, error)
+          logger.error(`Error setting admin claim for email ${email}:`, error)
         }
       }
 
@@ -423,7 +424,7 @@ export const setAdminsClaims = onCall(
         code: 200,
       }
     } catch (error) {
-      console.error('Error setting admin claims:', error)
+      logger.error('Error setting admin claims:', error)
       return {
         success: false,
         error: 'Failed to set admin claims',
@@ -434,11 +435,12 @@ export const setAdminsClaims = onCall(
 )
 
 export const checkUserClaims = onCall(
-  async (
-    request
-  ): Promise<IOperationResult<{ claims: any }>> => {
+  async (request): Promise<IOperationResult<{ claims: any }>> => {
     try {
-      const { userId, claims } = request.data as { userId: string; claims: string[] }
+      const { userId, claims } = request.data as {
+        userId: string
+        claims: string[]
+      }
       if (!userId || !claims || !Array.isArray(claims)) {
         return {
           success: false,
@@ -471,7 +473,7 @@ export const checkUserClaims = onCall(
         code: 200,
       }
     } catch (error) {
-      console.error('Error checking admin claims:', error)
+      logger.error('Error checking admin claims:', error)
       return {
         success: false,
         error: 'Failed to check admin claims',

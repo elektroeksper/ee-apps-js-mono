@@ -28,9 +28,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
     const afterData = event.data?.after?.data() as IBusiness | undefined
 
     if (!beforeData || !afterData) {
-      logger.warn(
-        'Missing before or after data in business update trigger'
-      )
+      logger.warn('Missing before or after data in business update trigger')
       return
     }
 
@@ -46,14 +44,11 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
     // Only proceed if verification status actually changed
     if (beforeStatus === afterStatus) {
-      logger.info(
-        `No verification status change for business ${businessId}`,
-        {
-          businessId,
-          businessName,
-          status: afterStatus,
-        }
-      )
+      logger.info(`No verification status change for business ${businessId}`, {
+        businessId,
+        businessName,
+        status: afterStatus,
+      })
       return
     }
 
@@ -73,13 +68,10 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
       const ownerUser = await auth.getUser(ownerId)
 
       if (!ownerUser.email) {
-        logger.error(
-          `Owner user ${ownerId} does not have an email address`,
-          {
-            businessId,
-            ownerId,
-          }
-        )
+        logger.error(`Owner user ${ownerId} does not have an email address`, {
+          businessId,
+          ownerId,
+        })
         return
       }
 
@@ -99,9 +91,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
       switch (afterStatus) {
         case BusinessVerificationStatus.VERIFIED:
-          logger.info(
-            `Sending approval email for business ${businessId}`
-          )
+          logger.info(`Sending approval email for business ${businessId}`)
           emailResult = await sendBusinessApprovalEmail(
             ownerEmail,
             businessName,
@@ -118,13 +108,10 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
           const rejectionReason = latestRejection?.rejectionReason || undefined
 
-          logger.info(
-            `Sending rejection email for business ${businessId}`,
-            {
-              hasReason: !!rejectionReason,
-              reasonLength: rejectionReason?.length || 0,
-            }
-          )
+          logger.info(`Sending rejection email for business ${businessId}`, {
+            hasReason: !!rejectionReason,
+            reasonLength: rejectionReason?.length || 0,
+          })
 
           emailResult = await sendBusinessRejectionEmail(
             ownerEmail,
@@ -137,9 +124,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
         case BusinessVerificationStatus.PENDING: {
           // Send pending notification email
-          logger.info(
-            `Sending pending review email for business ${businessId}`
-          )
+          logger.info(`Sending pending review email for business ${businessId}`)
           emailResult = await sendBusinessPendingEmail(
             ownerEmail,
             businessName,

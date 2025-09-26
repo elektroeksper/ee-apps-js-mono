@@ -14,6 +14,5 @@ export {
   checkUserClaims,
   onBusinessVerificationStatusChange,
   onUserProfileUpdate,
-  setAdminsClaims
+  setAdminsClaims,
 }
-

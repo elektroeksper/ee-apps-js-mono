@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin'
+import { logger } from 'firebase-functions/v2'
 import { db } from '../utils/firebase-admin'
 // Import types from shared-generated (will be copied at build time)
 import { IOperationResult, IProduct } from '../shared-generated'
@@ -21,7 +22,7 @@ export async function getProducts(): Promise<IOperationResult<IProduct[]>> {
       code: 200,
     }
   } catch (error) {
-    console.error('Error getting products:', error)
+    logger.error('Error getting products:', error)
     return {
       success: false,
       error: 'Failed to fetch products',
@@ -64,7 +65,7 @@ export async function getProduct(
       code: 200,
     }
   } catch (error) {
-    console.error('Error getting product:', error)
+    logger.error('Error getting product:', error)
     return {
       success: false,
       error: 'Failed to fetch product',
@@ -98,7 +99,7 @@ export async function createProduct(
       code: 201,
     }
   } catch (error) {
-    console.error('Error creating product:', error)
+    logger.error('Error creating product:', error)
     return {
       success: false,
       error: 'Failed to create product',
@@ -151,7 +152,7 @@ export async function updateProduct(
       code: 200,
     }
   } catch (error) {
-    console.error('Error updating product:', error)
+    logger.error('Error updating product:', error)
     return {
       success: false,
       error: 'Failed to update product',
@@ -191,7 +192,7 @@ export async function deleteProduct(
       code: 200,
     }
   } catch (error) {
-    console.error('Error deleting product:', error)
+    logger.error('Error deleting product:', error)
     return {
       success: false,
       error: 'Failed to delete product',

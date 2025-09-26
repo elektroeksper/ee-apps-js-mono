@@ -3,7 +3,7 @@
  * Provides aggregated user statistics and metrics
  */
 
-import { adminDb, verifyIdToken } from '@/lib/firebase-admin'
+import { adminAuth, adminDb, verifyIdToken } from '@/lib/firebase-admin'
 import { AccountType, BusinessVerificationStatus } from '@/shared-generated'
 import { NextApiRequest, NextApiResponse } from 'next'
 
@@ -52,16 +52,15 @@ export default async function handler(
     }
 
     // Check if user has admin privileges - fetch latest claims from Firebase Auth
-    const userRecord = await adminAuth.getUser(decodedResult.user.uid);
-    const userClaims = userRecord.customClaims || {};
-    const isAdmin = userClaims.admin === true;
+    const userRecord = await adminAuth.getUser(decodedResult.user.uid)
+    const userClaims = userRecord.customClaims || {}
 
     // Debug logging for claims
-    const userClaims = decodedResult.user.customClaims || {}
+    const tokenClaims = decodedResult.user.customClaims || {}
 
     // Also check if claims are in different locations
     const allPossibleClaims = {
-      customClaims: decodedResult.user.customClaims,
+      customClaims: tokenClaims,
       admin: decodedResult.user.admin,
       role: decodedResult.user.role,
       // Check all properties of the decoded token
@@ -209,8 +208,8 @@ export default async function handler(
     const monthlyGrowth =
       lastMonthUsers > 0
         ? Math.round(
-          ((currentMonthUsers - lastMonthUsers) / lastMonthUsers) * 100
-        )
+            ((currentMonthUsers - lastMonthUsers) / lastMonthUsers) * 100
+          )
         : currentMonthUsers > 0
           ? 100
           : 0

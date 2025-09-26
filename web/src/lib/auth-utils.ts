@@ -9,7 +9,10 @@ import { NextRouter } from 'next/router'
 /**
  * Logout user and redirect to login page with proper URL update
  */
-export async function logoutAndRedirect(router: NextRouter, redirectTo: string = '/login'): Promise<void> {
+export async function logoutAndRedirect(
+  router: NextRouter,
+  redirectTo: string = '/login'
+): Promise<void> {
   try {
     console.log('🚪 Logging out user and redirecting...')
 
@@ -19,12 +22,14 @@ export async function logoutAndRedirect(router: NextRouter, redirectTo: string =
     if (result.success) {
       console.log('✅ Logout successful, redirecting to:', redirectTo)
     } else {
-      console.warn('⚠️ Logout had issues but proceeding with redirect:', result.error)
+      console.warn(
+        '⚠️ Logout had issues but proceeding with redirect:',
+        result.error
+      )
     }
 
     // Force URL update using replace (doesn't add to history)
     await router.replace(redirectTo)
-
   } catch (error) {
     console.error('❌ Logout error:', error)
     // Force redirect even if logout fails
@@ -35,8 +40,13 @@ export async function logoutAndRedirect(router: NextRouter, redirectTo: string =
 /**
  * Redirect to login with proper URL update
  */
-export async function redirectToLogin(router: NextRouter, returnUrl?: string): Promise<void> {
-  const loginUrl = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'
+export async function redirectToLogin(
+  router: NextRouter,
+  returnUrl?: string
+): Promise<void> {
+  const loginUrl = returnUrl
+    ? `/login?returnUrl=${encodeURIComponent(returnUrl)}`
+    : '/login'
   console.log('🔄 Redirecting to login:', loginUrl)
   await router.replace(loginUrl)
 }
@@ -44,7 +54,10 @@ export async function redirectToLogin(router: NextRouter, returnUrl?: string): P
 /**
  * Redirect after successful authentication
  */
-export async function redirectAfterAuth(router: NextRouter, defaultUrl: string = '/'): Promise<void> {
+export async function redirectAfterAuth(
+  router: NextRouter,
+  defaultUrl: string = '/'
+): Promise<void> {
   // Check if there's a return URL from query params
   const returnUrl = router.query.returnUrl as string
   const targetUrl = returnUrl || defaultUrl
