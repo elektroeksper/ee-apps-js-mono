@@ -1,6 +1,8 @@
 'use client'
 
+import { useBusiness } from '@/hooks/useBusinessQueries'
 import { AccountType, BusinessUserRole, IAppUser } from '@/shared-generated'
+import React from 'react'
 import {
   FiCalendar,
   FiCheck,
@@ -25,6 +27,15 @@ export default function UserDetailModal({
   onClose,
 }: UserDetailModalProps) {
   if (!isOpen || !user) return null
+
+  const { data: businessResult } = useBusiness(user.businessInfo?.businessId)
+
+  const userBusinessInfo = React.useMemo(
+    () => businessResult?.data?.users[user.id],
+    [businessResult, user.id]
+  )
+
+  // Helper function to format dates
 
   const formatDate = (date: any) => {
     if (!date) return 'Bilinmiyor'
@@ -219,11 +230,11 @@ export default function UserDetailModal({
                     </span>
                   </div>
 
-                  {user.businessInfo.businessTitle && (
+                  {userBusinessInfo?.businessTitle && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Unvan</span>
                       <span className="font-medium">
-                        {user.businessInfo.businessTitle}
+                        {userBusinessInfo.businessTitle}
                       </span>
                     </div>
                   )}
@@ -241,13 +252,13 @@ export default function UserDetailModal({
                     </span>
                   </div>
 
-                  {user.businessInfo.addedAt && (
+                  {userBusinessInfo?.addedAt && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">
                         Ekleme Tarihi
                       </span>
                       <span className="font-medium">
-                        {formatDate(user.businessInfo.addedAt)}
+                        {formatDate(userBusinessInfo.addedAt)}
                       </span>
                     </div>
                   )}

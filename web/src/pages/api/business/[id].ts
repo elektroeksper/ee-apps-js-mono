@@ -241,8 +241,8 @@ async function handleUpdateBusiness(
       }
     })
 
-    // Add update metadata
-    ;(filteredUpdateData as any).updatedAt = Timestamp.now()
+      // Add update metadata
+      ; (filteredUpdateData as any).updatedAt = Timestamp.now()
 
     // Update business document
     await adminDb

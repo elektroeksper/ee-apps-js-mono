@@ -51,6 +51,11 @@ export default async function handler(
       return res.status(401).json({ error: 'Invalid token' })
     }
 
+    // Check if user has admin privileges - fetch latest claims from Firebase Auth
+    const userRecord = await adminAuth.getUser(decodedResult.user.uid);
+    const userClaims = userRecord.customClaims || {};
+    const isAdmin = userClaims.admin === true;
+
     // Debug logging for claims
     const userClaims = decodedResult.user.customClaims || {}
 
@@ -72,7 +77,7 @@ export default async function handler(
     console.log('DEBUG - User Claims:', {
       uid: decodedResult.user.uid,
       email: decodedResult.user.email,
-      claims: userClaims,
+      customClaims: userClaims,
       adminClaim: userClaims.admin,
       roleClaim: userClaims.role,
       directAdmin: decodedResult.user.admin,
@@ -204,8 +209,8 @@ export default async function handler(
     const monthlyGrowth =
       lastMonthUsers > 0
         ? Math.round(
-            ((currentMonthUsers - lastMonthUsers) / lastMonthUsers) * 100
-          )
+          ((currentMonthUsers - lastMonthUsers) / lastMonthUsers) * 100
+        )
         : currentMonthUsers > 0
           ? 100
           : 0

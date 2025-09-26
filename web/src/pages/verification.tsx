@@ -36,8 +36,29 @@ function PendingApprovalContent() {
       // Fetch business data to check document status and phone
       const checkBusinessStatus = async () => {
         try {
+          // Get current user's ID token for authentication
+          let idToken: string | null = null
+          try {
+            // Import Firebase auth dynamically to avoid SSR issues
+            const { auth } = await import('@/lib/firebase-auth-config')
+            if (auth?.currentUser) {
+              idToken = await auth.currentUser.getIdToken()
+            }
+          } catch (error) {
+            console.warn('Error getting ID token:', error)
+          }
+
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+          }
+
+          if (idToken) {
+            headers.Authorization = `Bearer ${idToken}`
+          }
+
           const response = await fetch(`/api/business/${businessId}`, {
             method: 'GET',
+            headers,
             credentials: 'include',
           })
 

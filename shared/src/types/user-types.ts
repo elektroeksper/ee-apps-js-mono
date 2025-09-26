@@ -1,8 +1,20 @@
 import { Timestamp } from 'firebase/firestore'
 import { AccountType, BusinessUserRole } from '../enums'
-import { IBusinessUserInfo } from './business-types'
 import { IOperationResult } from './common-types'
 import { IAddress } from './map-types'
+
+interface IUserBusinessInfo {
+  businessId: string
+  userId?: string
+  businessTitle?: string
+  displayName?: string
+  email?: string
+  role: BusinessUserRole
+  permissions?: any
+  isActive: boolean
+  status?: BusinessVerificationStatus
+  addedAt?: Date
+}
 
 interface IAppUser {
   id: string
@@ -18,7 +30,7 @@ interface IAppUser {
   preferences: IUserPreferences // Add this
 
   // Business Association - Add these
-  businessInfo?: IBusinessUserInfo | null // Info about the business the user is associated with
+  businessInfo?: IUserBusinessInfo | null // Info about the business the user is associated with
   // Status fields - Add these
   isActive: boolean
   lastLoginAt?: Date | Timestamp
@@ -94,5 +106,6 @@ export type {
   IPrivacyPreferences,
   IUserFilter,
   IUserPreferences,
-  IUserService,
+  IUserService
 }
+

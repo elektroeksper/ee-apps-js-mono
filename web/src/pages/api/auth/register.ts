@@ -180,12 +180,7 @@ export default async function handler(
       // Add business info to user profile
       userProfileData.businessInfo = {
         businessId: businessId,
-        userId: userId,
-        businessTitle: businessData.userTitle,
-        displayName: `${businessData.firstName} ${businessData.lastName}`,
-        email: businessData.email,
-        role: 'owner' as any,
-        permissions: businessUserInfo.permissions,
+        role: BusinessUserRole.OWNER,
         isActive: true,
         addedAt: new Date(),
       }

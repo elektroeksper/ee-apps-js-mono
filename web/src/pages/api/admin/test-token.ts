@@ -68,10 +68,16 @@ export default async function handler(
       data: {
         uid: user.uid,
         email: user.email,
-        customClaims: userClaims,
+        tokenClaims: tokenClaims,
+        freshClaims: freshClaims,
         isAdmin: isAdmin,
-        adminClaimValue: userClaims.admin,
-        roleClaimValue: userClaims.role,
+        adminClaimValue: freshClaims.admin,
+        roleClaimValue: freshClaims.role,
+        claimsComparison: {
+          tokenAdmin: tokenClaims.admin,
+          freshAdmin: freshClaims.admin,
+          areEqual: tokenClaims.admin === freshClaims.admin
+        },
         tokenIssuedAt: new Date(user.iat * 1000).toISOString(),
         tokenExpiresAt: new Date(user.exp * 1000).toISOString(),
       },

@@ -148,5 +148,6 @@ export type {
   IBusinessPermissions,
   IBusinessService,
   IBusinessSetupData,
-  IBusinessUserInfo,
+  IBusinessUserInfo
 }
+

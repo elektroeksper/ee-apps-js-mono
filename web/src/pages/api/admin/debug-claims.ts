@@ -46,8 +46,8 @@ export default async function handler(
         emailVerified: user.email_verified,
         customClaims: userClaims,
         hasAdminClaim: userClaims.admin === true,
-        hasRoleAdmin: userClaims.role === 'admin',
-        isAdmin: userClaims.admin === true || userClaims.role === 'admin',
+        isAdmin: userClaims.admin === true,
+        note: 'Only checking customClaims.admin === true for admin permissions',
         tokenIssuedAt: new Date(user.iat * 1000).toISOString(),
         tokenExpiresAt: new Date(user.exp * 1000).toISOString(),
         authTime: user.auth_time

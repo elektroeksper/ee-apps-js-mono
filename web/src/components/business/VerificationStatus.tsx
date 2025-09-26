@@ -24,7 +24,7 @@ import {
 } from 'react-icons/fi'
 
 const VerificationStatus: React.FC = () => {
-  const { appUser, logout } = useAuth()
+  const { appUser, fireUser, logout } = useAuth()
   const [businessData, setBusinessData] = useState<IBusiness | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -41,10 +41,39 @@ const VerificationStatus: React.FC = () => {
           '🔍 VerificationStatus: Fetching business data for ID:',
           appUser.businessInfo.businessId
         )
+
+        // Get current user's ID token for authentication
+        let idToken: string | null = null
+        try {
+          // Import Firebase auth dynamically to avoid SSR issues
+          const { auth } = await import('@/lib/firebase-auth-config')
+          if (auth?.currentUser) {
+            idToken = await auth.currentUser.getIdToken()
+            console.log(
+              '🔑 VerificationStatus: Using Authorization header with ID token'
+            )
+          } else {
+            console.warn(
+              '🚨 VerificationStatus: No current user in Firebase auth'
+            )
+          }
+        } catch (error) {
+          console.warn('🚨 VerificationStatus: Error getting ID token:', error)
+        }
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        }
+
+        if (idToken) {
+          headers.Authorization = `Bearer ${idToken}`
+        }
+
         const response = await fetch(
           `/api/business/${appUser.businessInfo.businessId}`,
           {
             method: 'GET',
+            headers,
             credentials: 'include',
           }
         )

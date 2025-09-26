@@ -10,7 +10,7 @@ import { businessService } from '@/services/business.service'
 import { AccountType } from '@/shared-generated'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   FiAlertTriangle,
   FiCheck,
@@ -316,12 +316,135 @@ function ProfileContent() {
   const router = useRouter()
   const [showDocumentModal, setShowDocumentModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [latestBusinessData, setLatestBusinessData] = useState<any>(null)
+  const [businessDataLoading, setBusinessDataLoading] = useState(false)
+
+  // Fetch latest business data for accurate verification status
+  useEffect(() => {
+    const fetchLatestBusinessData = async () => {
+      if (!appUser || appUser.accountType !== AccountType.BUSINESS) {
+        return
+      }
+
+      const businessInfo = (appUser as any).businessInfo
+      const businessId = businessInfo?.businessId
+
+      if (!businessId) {
+        return
+      }
+
+      setBusinessDataLoading(true)
+      try {
+        // Get current user's ID token for authentication
+        let idToken: string | null = null
+        try {
+          // Import Firebase auth dynamically to avoid SSR issues
+          const { auth } = await import('@/lib/firebase-auth-config')
+          if (auth?.currentUser) {
+            idToken = await auth.currentUser.getIdToken()
+            console.log('🔑 Profile: Using Authorization header with ID token')
+          } else {
+            console.warn('🚨 Profile: No current user in Firebase auth')
+          }
+        } catch (error) {
+          console.warn('🚨 Profile: Error getting ID token:', error)
+        }
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        }
+
+        if (idToken) {
+          headers.Authorization = `Bearer ${idToken}`
+        }
+
+        const response = await fetch(`/api/business/${businessId}`, {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            setLatestBusinessData(result.data)
+            console.log('🔍 Profile: Latest business data fetched:', {
+              verificationStatus: result.data.verification?.status,
+            })
+          }
+        } else {
+          console.error(
+            '🔍 Profile: Failed to fetch business data:',
+            response.status
+          )
+        }
+      } catch (error) {
+        console.error('Error fetching latest business data:', error)
+      } finally {
+        setBusinessDataLoading(false)
+      }
+    }
+
+    if (appUser) {
+      fetchLatestBusinessData()
+    }
+  }, [appUser])
 
   const handleDocumentUploadSuccess = () => {
     // Refresh user data to get updated business info
     if (refreshUser) {
       refreshUser()
     }
+
+    // Also refresh the latest business data to get current verification status
+    const refreshBusinessData = async () => {
+      if (!appUser || appUser.accountType !== AccountType.BUSINESS) {
+        return
+      }
+
+      const businessInfo = (appUser as any).businessInfo
+      const businessId = businessInfo?.businessId
+
+      if (!businessId) {
+        return
+      }
+
+      try {
+        const { auth } = await import('@/lib/firebase-auth-config')
+        let idToken: string | null = null
+
+        if (auth?.currentUser) {
+          idToken = await auth.currentUser.getIdToken()
+        }
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        }
+
+        if (idToken) {
+          headers.Authorization = `Bearer ${idToken}`
+        }
+
+        const response = await fetch(`/api/business/${businessId}`, {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            setLatestBusinessData(result.data)
+            console.log('🔄 Profile: Business data refreshed after upload')
+          }
+        }
+      } catch (error) {
+        console.error('Error refreshing business data:', error)
+      }
+    }
+
+    // Delay to allow the backend to process the status change
+    setTimeout(refreshBusinessData, 1000)
   }
 
   const handlePasswordChangeSuccess = () => {
@@ -374,9 +497,27 @@ function ProfileContent() {
 
   const isBusinessAccount = appUser.accountType === AccountType.BUSINESS
   const businessInfo = isBusinessAccount ? (appUser as any).businessInfo : null
-  const isBusinessApproved = businessInfo?.isApproved === true
-  const isBusinessRejected = businessInfo?.rejectedAt && !isBusinessApproved
-  const rejectionReason = businessInfo?.rejectionReason
+
+  // Use latest business data for verification status if available
+  // Note: businessInfo from user document doesn't contain verification status
+  // Only the actual business document (latestBusinessData) has the verification info
+  const verificationStatus = latestBusinessData?.verification?.status
+  const verificationHistory = latestBusinessData?.verification?.history || []
+
+  // Determine verification status from the latest business data
+  const isBusinessApproved = verificationStatus === 'verified'
+  const isBusinessPending = verificationStatus === 'pending'
+  const isBusinessRejected = verificationStatus === 'rejected'
+
+  // Get latest rejection reason from verification history
+  const latestRejection = verificationHistory
+    .slice()
+    .reverse()
+    .find((entry: any) => entry.rejectedAt && entry.rejectionReason)
+  const rejectionReason = latestRejection?.rejectionReason
+
+  // If we don't have fresh business data yet, show loading or unknown state
+  const hasVerificationStatus = latestBusinessData && verificationStatus
 
   // Helper function to safely format address
   const formatAddress = (address: any) => {
@@ -472,14 +613,26 @@ function ProfileContent() {
                 {isBusinessAccount && (
                   <span
                     className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
-                      isBusinessApproved
-                        ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-md'
-                        : isBusinessRejected
-                          ? 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
-                          : 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-md'
+                      businessDataLoading || !hasVerificationStatus
+                        ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-md'
+                        : isBusinessApproved
+                          ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-md'
+                          : isBusinessRejected
+                            ? 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
+                            : 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-md'
                     }`}
                   >
-                    {isBusinessApproved ? (
+                    {businessDataLoading ? (
+                      <>
+                        <FiClock className="h-4 w-4 mr-2 animate-spin" />
+                        Kontrol Ediliyor...
+                      </>
+                    ) : !hasVerificationStatus ? (
+                      <>
+                        <FiClock className="h-4 w-4 mr-2" />
+                        Durum Yükleniyor...
+                      </>
+                    ) : isBusinessApproved ? (
                       <>
                         <FiCheck className="h-4 w-4 mr-2" />
                         İşletme Onaylandı
