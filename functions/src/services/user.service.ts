@@ -2,9 +2,10 @@ import * as admin from 'firebase-admin'
 import { auth, db } from '../utils/firebase-admin'
 // Import types from shared-generated (will be copied at build time)
 
-import * as functions from 'firebase-functions'
+import { onCall } from 'firebase-functions/v2/https'
 import { ADMIN_USERS } from '../configs/constant'
 import {
+  DocumentFileType,
   FB_COLL_NAMES,
   IAppUser,
   IDocument,
@@ -174,7 +175,9 @@ export async function updateUserProfile(
 }
 
 // Set admin role for a user
-export async function setAdminRole(userId: string): Promise<IOperationResult<void>> {
+export async function setAdminRole(
+  userId: string
+): Promise<IOperationResult<void>> {
   try {
     if (!userId) {
       return {
@@ -345,7 +348,7 @@ export async function searchUsers(
 export async function createBusinessDocument(
   userId: string,
   documentData: {
-    type: DocumentType
+    type: DocumentFileType
     fileName: string
     fileUrl: string
   }
@@ -396,8 +399,8 @@ export async function createBusinessDocument(
 }
 
 // Set admin claims for predefined admin users
-export const setAdminsClaims = functions.https.onCall(
-  async (_data, context): Promise<IOperationResult<void>> => {
+export const setAdminsClaims = onCall(
+  async (_request): Promise<IOperationResult<void>> => {
     try {
       const adminEmails = ADMIN_USERS
 
@@ -430,13 +433,12 @@ export const setAdminsClaims = functions.https.onCall(
   }
 )
 
-export const checkUserClaims = functions.https.onCall(
+export const checkUserClaims = onCall(
   async (
-    data: { userId: string; claims: string[] },
-    context
+    request
   ): Promise<IOperationResult<{ claims: any }>> => {
     try {
-      const { userId, claims } = data
+      const { userId, claims } = request.data as { userId: string; claims: string[] }
       if (!userId || !claims || !Array.isArray(claims)) {
         return {
           success: false,

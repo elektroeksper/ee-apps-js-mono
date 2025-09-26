@@ -4,7 +4,7 @@
  * when verification status changes
  */
 
-import * as functions from 'firebase-functions'
+import { logger } from 'firebase-functions/v2'
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { BusinessVerificationStatus, IBusiness } from '../shared-generated'
 import {
@@ -28,7 +28,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
     const afterData = event.data?.after?.data() as IBusiness | undefined
 
     if (!beforeData || !afterData) {
-      functions.logger.warn(
+      logger.warn(
         'Missing before or after data in business update trigger'
       )
       return
@@ -46,7 +46,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
     // Only proceed if verification status actually changed
     if (beforeStatus === afterStatus) {
-      functions.logger.info(
+      logger.info(
         `No verification status change for business ${businessId}`,
         {
           businessId,
@@ -57,7 +57,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
       return
     }
 
-    functions.logger.info(
+    logger.info(
       `Business verification status changed: ${beforeStatus} → ${afterStatus}`,
       {
         businessId,
@@ -73,7 +73,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
       const ownerUser = await auth.getUser(ownerId)
 
       if (!ownerUser.email) {
-        functions.logger.error(
+        logger.error(
           `Owner user ${ownerId} does not have an email address`,
           {
             businessId,
@@ -86,7 +86,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
       const ownerEmail = ownerUser.email
       const ownerName = ownerUser.displayName || ownerEmail.split('@')[0]
 
-      functions.logger.info(`Preparing to send email notification`, {
+      logger.info(`Preparing to send email notification`, {
         businessId,
         businessName,
         ownerEmail,
@@ -99,7 +99,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
       switch (afterStatus) {
         case BusinessVerificationStatus.VERIFIED:
-          functions.logger.info(
+          logger.info(
             `Sending approval email for business ${businessId}`
           )
           emailResult = await sendBusinessApprovalEmail(
@@ -118,7 +118,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
           const rejectionReason = latestRejection?.rejectionReason || undefined
 
-          functions.logger.info(
+          logger.info(
             `Sending rejection email for business ${businessId}`,
             {
               hasReason: !!rejectionReason,
@@ -137,7 +137,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
         case BusinessVerificationStatus.PENDING: {
           // Send pending notification email
-          functions.logger.info(
+          logger.info(
             `Sending pending review email for business ${businessId}`
           )
           emailResult = await sendBusinessPendingEmail(
@@ -150,13 +150,13 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
         case BusinessVerificationStatus.UNVERIFIED:
           // Typically this shouldn't happen in normal flow, but we can log it
-          functions.logger.info(
+          logger.info(
             `Business ${businessId} status changed to UNVERIFIED - no email sent`
           )
           return
 
         default:
-          functions.logger.warn(`Unknown verification status: ${afterStatus}`, {
+          logger.warn(`Unknown verification status: ${afterStatus}`, {
             businessId,
             afterStatus,
           })
@@ -165,7 +165,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
 
       // Log email sending result
       if (emailResult?.success) {
-        functions.logger.info(
+        logger.info(
           `Email sent successfully for business verification status change`,
           {
             businessId,
@@ -176,7 +176,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
           }
         )
       } else {
-        functions.logger.error(
+        logger.error(
           `Failed to send email for business verification status change`,
           {
             businessId,
@@ -188,7 +188,7 @@ export const onBusinessVerificationStatusChange = onDocumentUpdated(
         )
       }
     } catch (error) {
-      functions.logger.error(`Error in business verification email trigger`, {
+      logger.error(`Error in business verification email trigger`, {
         businessId,
         businessName,
         error: error instanceof Error ? error.message : String(error),

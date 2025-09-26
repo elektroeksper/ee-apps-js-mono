@@ -61,11 +61,9 @@ async function handleUpdateVerificationStatus(
     const { action, reason } = req.body
 
     if (!action || !['approve', 'reject', 'clear-rejection'].includes(action)) {
-      return res
-        .status(400)
-        .json({
-          error: 'Valid action is required (approve, reject, clear-rejection)',
-        })
+      return res.status(400).json({
+        error: 'Valid action is required (approve, reject, clear-rejection)',
+      })
     }
 
     // For reject action, reason is required

@@ -1,5 +1,5 @@
 import { IAppUser } from '@electro-expert/shared'
-import * as functions from 'firebase-functions'
+import { logger } from 'firebase-functions/v2'
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { businessService } from '../services/business.service'
 import { auth } from '../utils/firebase-admin'
@@ -13,7 +13,7 @@ export const onUserProfileUpdate = onDocumentUpdated(
     const beforeData: IAppUser = event.data?.before?.data() as IAppUser
     const afterData: IAppUser = event.data?.after?.data() as IAppUser
     if (!beforeData || !afterData) {
-      functions.logger.warn(
+      logger.warn(
         'Missing before or after data in user update trigger'
       )
       return
@@ -31,7 +31,7 @@ export const onUserProfileUpdate = onDocumentUpdated(
     const businessInfo = afterData?.businessInfo
 
     if (!businessInfo || !businessInfo.businessId) {
-      functions.logger.warn('no business info or businessId found for user', {
+      logger.warn('no business info or businessId found for user', {
         userId,
       })
       return // No business info to update
@@ -59,7 +59,7 @@ export const onUserProfileUpdate = onDocumentUpdated(
           : undefined
       } catch (err) {
         // Fallback to Firestore lastLogin or current date if Auth lookup fails
-        functions.logger.warn(
+        logger.warn(
           `Failed to get Auth record for user ${userId}:`,
           err
         )
@@ -82,12 +82,12 @@ export const onUserProfileUpdate = onDocumentUpdated(
           `Updated business info for user ${userId} in business ${businessId}`
         )
       } else {
-        functions.logger.warn(
+        logger.warn(
           `User ${userId} not found in business ${businessId} users list`
         )
       }
     } catch (error) {
-      functions.logger.error('Error updating business user info:', error)
+      logger.error('Error updating business user info:', error)
     }
   }
 )

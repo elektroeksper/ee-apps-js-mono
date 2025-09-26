@@ -67,6 +67,16 @@ export default [
       'object-shorthand': 'warn',
       'prefer-template': 'warn',
 
+      // Disable rules that conflict with Prettier
+      indent: 'off',
+      'linebreak-style': 'off',
+      'max-len': 'off',
+      quotes: 'off',
+      semi: 'off',
+      'comma-dangle': 'off',
+      'space-before-function-paren': 'off',
+      'arrow-parens': 'off',
+
       // Disable some default rules for TypeScript
       'no-unused-vars': 'off', // Use @typescript-eslint/no-unused-vars instead
       'no-undef': 'off', // TypeScript handles this
