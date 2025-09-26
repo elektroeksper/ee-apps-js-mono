@@ -6,6 +6,7 @@
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import {
   AccountType,
+  BusinessUserRole,
   BusinessVerificationStatus,
   IAppUser,
   IBusiness,
