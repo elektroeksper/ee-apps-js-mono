@@ -5,7 +5,7 @@
 // Default center for Turkey (Istanbul)
 export const DEFAULT_MAP_CENTER = {
   lat: parseFloat(process.env.NEXT_PUBLIC_DEFAULT_MAP_CENTER_LAT || '41.0082'),
-  lng: parseFloat(process.env.NEXT_PUBLIC_DEFAULT_MAP_CENTER_LNG || '28.9784')
+  lng: parseFloat(process.env.NEXT_PUBLIC_DEFAULT_MAP_CENTER_LNG || '28.9784'),
 }
 
 export const DEFAULT_MAP_ZOOM = 12
@@ -16,20 +16,20 @@ export const GOOGLE_MAPS_CONFIG = {
   defaultZoom: DEFAULT_MAP_ZOOM,
   libraries: ['places', 'marker'],
   language: 'tr',
-  region: 'TR'
+  region: 'TR',
 }
 
 // Map styles for better visualization
 export const MAP_STYLES = [
   {
     featureType: 'poi.business',
-    stylers: [{ visibility: 'off' }]
+    stylers: [{ visibility: 'off' }],
   },
   {
     featureType: 'transit',
     elementType: 'labels.icon',
-    stylers: [{ visibility: 'off' }]
-  }
+    stylers: [{ visibility: 'off' }],
+  },
 ]
 
 // Marker icons
@@ -38,7 +38,7 @@ export const MARKER_ICONS = {
   business: '/images/markers/business.png',
   certified: '/images/markers/certified.png',
   selected: '/images/markers/selected.png',
-  user: '/images/markers/user.png'
+  user: '/images/markers/user.png',
 }
 
 // Map options
@@ -52,7 +52,7 @@ export const DEFAULT_MAP_OPTIONS: google.maps.MapOptions = {
   streetViewControl: false,
   rotateControl: false,
   fullscreenControl: true,
-  styles: MAP_STYLES
+  styles: MAP_STYLES,
 }
 
 // Autocomplete options for Turkey
@@ -63,7 +63,7 @@ export const AUTOCOMPLETE_OPTIONS: google.maps.places.AutocompleteOptions = {
     'formatted_address',
     'geometry',
     'name',
-    'place_id'
+    'place_id',
   ],
-  types: ['geocode', 'establishment']
+  types: ['geocode', 'establishment'],
 }

@@ -14,8 +14,8 @@ export default [
       'src/shared-generated/**',
       '**/*.config.js',
       'next.config.ts',
-      'tailwind.config.js'
-    ]
+      'tailwind.config.js',
+    ],
   },
   js.configs.recommended,
   {
@@ -26,8 +26,8 @@ export default [
         ecmaVersion: 2022,
         sourceType: 'module',
         ecmaFeatures: {
-          jsx: true
-        }
+          jsx: true,
+        },
       },
       globals: {
         console: 'readonly',
@@ -41,15 +41,18 @@ export default [
         localStorage: 'readonly',
         sessionStorage: 'readonly',
         fetch: 'readonly',
-        google: 'readonly'
-      }
+        google: 'readonly',
+      },
     },
     plugins: {
-      '@typescript-eslint': tseslint
+      '@typescript-eslint': tseslint,
     },
     rules: {
       // TypeScript specific rules
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -66,7 +69,7 @@ export default [
 
       // Disable some default rules for TypeScript
       'no-unused-vars': 'off', // Use @typescript-eslint/no-unused-vars instead
-      'no-undef': 'off' // TypeScript handles this
-    }
-  }
+      'no-undef': 'off', // TypeScript handles this
+    },
+  },
 ]

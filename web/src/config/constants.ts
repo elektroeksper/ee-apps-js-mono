@@ -1,4 +1,3 @@
-
 export const WEB_ROUTES = {
   ROOT: '/',
   LOGIN: '/login',
@@ -7,4 +6,4 @@ export const WEB_ROUTES = {
   ABOUT: '/about',
   CONTACT: '/contact',
   SERVICES: '/services',
-};
+}

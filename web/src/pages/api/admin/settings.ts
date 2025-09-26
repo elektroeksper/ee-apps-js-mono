@@ -1,5 +1,9 @@
 import { adminAuth } from '@/lib/firebase-admin'
-import { IApiResponse, ISettingItem, SystemSettingsKey } from '@/shared-generated/types/common-types'
+import {
+  IApiResponse,
+  ISettingItem,
+  SystemSettingsKey,
+} from '@/shared-generated/types/common-types'
 import { getFirestore } from 'firebase-admin/firestore'
 import { NextApiRequest, NextApiResponse } from 'next'
 
@@ -15,7 +19,7 @@ export default async function handler(
     if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        error: 'Authorization header required'
+        error: 'Authorization header required',
       })
     }
 
@@ -26,7 +30,7 @@ export default async function handler(
     if (!decodedToken.admin) {
       return res.status(403).json({
         success: false,
-        error: 'Admin access required'
+        error: 'Admin access required',
       })
     }
 
@@ -41,14 +45,14 @@ export default async function handler(
         res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])
         return res.status(405).json({
           success: false,
-          error: `Method ${req.method} not allowed`
+          error: `Method ${req.method} not allowed`,
         })
     }
   } catch (error) {
     console.error('Settings API error:', error)
     return res.status(500).json({
       success: false,
-      error: 'Internal server error'
+      error: 'Internal server error',
     })
   }
 }
@@ -72,13 +76,13 @@ async function getSettings(
 
     return res.status(200).json({
       success: true,
-      data: settings
+      data: settings,
     })
   } catch (error) {
     console.error('Error fetching settings:', error)
     return res.status(500).json({
       success: false,
-      error: 'Failed to fetch settings'
+      error: 'Failed to fetch settings',
     })
   }
 }
@@ -94,7 +98,7 @@ async function updateSetting(
     if (!key || value === undefined) {
       return res.status(400).json({
         success: false,
-        error: 'Key and value are required'
+        error: 'Key and value are required',
       })
     }
 
@@ -109,13 +113,13 @@ async function updateSetting(
       'analyticsEnabled',
       'sessionTimeout',
       'maxFileSize',
-      'allowedFileTypes'
+      'allowedFileTypes',
     ]
 
     if (!validKeys.includes(key as SystemSettingsKey)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid setting key'
+        error: 'Invalid setting key',
       })
     }
 
@@ -136,7 +140,7 @@ async function updateSetting(
         value,
         updatedAt: now,
         updatedBy: userId,
-        isActive: true
+        isActive: true,
       })
     } else {
       // Create new setting
@@ -147,19 +151,19 @@ async function updateSetting(
         isDeleted: false,
         createdAt: now,
         updatedAt: now,
-        updatedBy: userId
+        updatedBy: userId,
       })
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Setting updated successfully'
+      message: 'Setting updated successfully',
     })
   } catch (error) {
     console.error('Error updating setting:', error)
     return res.status(500).json({
       success: false,
-      error: 'Failed to update setting'
+      error: 'Failed to update setting',
     })
   }
 }
@@ -174,7 +178,7 @@ async function deleteSetting(
     if (!key || typeof key !== 'string') {
       return res.status(400).json({
         success: false,
-        error: 'Setting key is required'
+        error: 'Setting key is required',
       })
     }
 
@@ -188,25 +192,25 @@ async function deleteSetting(
     if (settingQuery.empty) {
       return res.status(404).json({
         success: false,
-        error: 'Setting not found'
+        error: 'Setting not found',
       })
     }
 
     const settingDoc = settingQuery.docs[0]
     await settingDoc.ref.update({
       isDeleted: true,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
 
     return res.status(200).json({
       success: true,
-      message: 'Setting deleted successfully'
+      message: 'Setting deleted successfully',
     })
   } catch (error) {
     console.error('Error deleting setting:', error)
     return res.status(500).json({
       success: false,
-      error: 'Failed to delete setting'
+      error: 'Failed to delete setting',
     })
   }
 }

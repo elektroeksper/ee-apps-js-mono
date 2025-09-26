@@ -1,8 +1,8 @@
-import { Timestamp } from "firebase/firestore"
-import { AccountType, BusinessUserRole } from "../enums"
-import { IBusinessUserInfo } from "./business-types"
-import { IOperationResult } from "./common-types"
-import { IAddress } from "./map-types"
+import { Timestamp } from 'firebase/firestore'
+import { AccountType, BusinessUserRole } from '../enums'
+import { IBusinessUserInfo } from './business-types'
+import { IOperationResult } from './common-types'
+import { IAddress } from './map-types'
 
 interface IAppUser {
   id: string
@@ -33,53 +33,52 @@ interface IAppUser {
   updatedBy?: string // Add for audit trail
 }
 
-
 // User Preferences Interface
 interface IUserPreferences {
-  theme: 'light' | 'dark' | 'system';
-  language: string;
-  notifications: INotificationPreferences;
-  privacy: IPrivacyPreferences;
+  theme: 'light' | 'dark' | 'system'
+  language: string
+  notifications: INotificationPreferences
+  privacy: IPrivacyPreferences
 }
 
 // Notification Preferences
 interface INotificationPreferences {
-  email: boolean;
-  push: boolean;
-  sms: boolean;
-  marketing: boolean;
-  orderUpdates: boolean;
-  securityAlerts: boolean;
+  email: boolean
+  push: boolean
+  sms: boolean
+  marketing: boolean
+  orderUpdates: boolean
+  securityAlerts: boolean
 }
 
 // Privacy Preferences
 interface IPrivacyPreferences {
-  profileVisibility: 'public' | 'private';
-  showEmail: boolean;
-  showPhone: boolean;
-  allowAnalytics: boolean;
+  profileVisibility: 'public' | 'private'
+  showEmail: boolean
+  showPhone: boolean
+  allowAnalytics: boolean
 }
-
-
 
 interface IUserFilter {
-  id?: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  isDeleted?: boolean;
-  accountType?: AccountType;
+  id?: string
+  email?: string
+  firstName?: string
+  lastName?: string
+  isDeleted?: boolean
+  accountType?: AccountType
 }
-
 
 // User Service Interface
 interface IUserService {
-  getAll(filter: IUserFilter): Promise<IOperationResult<IAppUser[]>>;
-  getById(uid: string): Promise<IOperationResult<IAppUser>>;
-  update(uid: string, data: Partial<IAppUser>): Promise<IOperationResult<IAppUser>>;
-  delete(uid: string): Promise<IOperationResult<void>>;
-  checkExists(uid: string): Promise<boolean>;
-  create(data: any): Promise<IOperationResult<IAppUser>>;
+  getAll(filter: IUserFilter): Promise<IOperationResult<IAppUser[]>>
+  getById(uid: string): Promise<IOperationResult<IAppUser>>
+  update(
+    uid: string,
+    data: Partial<IAppUser>
+  ): Promise<IOperationResult<IAppUser>>
+  delete(uid: string): Promise<IOperationResult<void>>
+  checkExists(uid: string): Promise<boolean>
+  create(data: any): Promise<IOperationResult<IAppUser>>
 }
 
 type BusinessUser = IAppUser & {
@@ -90,7 +89,10 @@ type BusinessUser = IAppUser & {
 
 export type {
   BusinessUser,
-  IAppUser, INotificationPreferences,
-  IPrivacyPreferences, IUserFilter, IUserPreferences, IUserService
+  IAppUser,
+  INotificationPreferences,
+  IPrivacyPreferences,
+  IUserFilter,
+  IUserPreferences,
+  IUserService,
 }
-

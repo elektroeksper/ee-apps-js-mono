@@ -1,4 +1,4 @@
 packages:
-  - "web"
-  - "functions"
-  - "shared"
+  - 'web'
+  - 'functions'
+  - 'shared'

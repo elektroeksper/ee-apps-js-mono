@@ -4,7 +4,6 @@
 
 /* Custom gradient backgrounds */
 @layer utilities {
-
   /* Primary gradients */
   .bg-gradient-primary {
     @apply bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800;
@@ -152,7 +151,9 @@
     content: '';
     @apply absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg;
     padding: 2px;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     mask-composite: xor;
     -webkit-mask-composite: xor;
   }

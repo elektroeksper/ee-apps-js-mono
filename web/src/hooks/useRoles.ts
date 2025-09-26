@@ -4,5 +4,4 @@
 //   const { isAdmin, userRoles, hasRole, hasAnyRole } = useAuth();
 // If you need grouped permission logic, create a local helper that receives
 // the auth context object instead of adding another hook here.
-export { }; // keep file as empty module placeholder until fully deleted
-
+export {} // keep file as empty module placeholder until fully deleted

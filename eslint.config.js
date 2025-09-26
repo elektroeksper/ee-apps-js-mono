@@ -21,7 +21,7 @@ export default [
       'shared-generated/**',
       'web/src/shared-generated/**',
       'functions/lib/**',
-      'functions/src/shared-generated/**'
+      'functions/src/shared-generated/**',
     ],
     languageOptions: {
       parser: tsparser,
@@ -29,8 +29,8 @@ export default [
         ecmaVersion: 2022,
         sourceType: 'module',
         ecmaFeatures: {
-          jsx: true
-        }
+          jsx: true,
+        },
       },
       globals: {
         console: 'readonly',
@@ -38,15 +38,18 @@ export default [
         Buffer: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
-        global: 'readonly'
-      }
+        global: 'readonly',
+      },
     },
     plugins: {
-      '@typescript-eslint': tseslint
+      '@typescript-eslint': tseslint,
     },
     rules: {
       // TypeScript specific rules
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -63,7 +66,7 @@ export default [
 
       // Disable some default rules for TypeScript
       'no-unused-vars': 'off', // Use @typescript-eslint/no-unused-vars instead
-      'no-undef': 'off' // TypeScript handles this
-    }
-  }
+      'no-undef': 'off', // TypeScript handles this
+    },
+  },
 ]

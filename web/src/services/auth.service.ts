@@ -4,8 +4,8 @@
  * Updated to use dedicated auth config
  */
 
-import { getAuthErrorMessage } from '@/config/firebase-error-messages';
-import { auth } from '@/lib/firebase-auth-config';
+import { getAuthErrorMessage } from '@/config/firebase-error-messages'
+import { auth } from '@/lib/firebase-auth-config'
 import {
   AuthErrorCode,
   IAuthService,
@@ -14,8 +14,8 @@ import {
   ILoginData,
   IOperationResult,
   IPasswordChangeData,
-  IRegisterData
-} from '@/shared-generated';
+  IRegisterData,
+} from '@/shared-generated'
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -34,7 +34,7 @@ import {
   signOut,
   updatePassword,
   updateProfile,
-} from 'firebase/auth';
+} from 'firebase/auth'
 
 export class AuthService implements IAuthService {
   /**
@@ -55,7 +55,7 @@ export class AuthService implements IAuthService {
         lastSignInTime: user.metadata.lastSignInTime,
       },
       customClaims: {}, // Claims are fetched separately via getIdTokenResult
-    };
+    }
   }
 
   /**
@@ -63,16 +63,18 @@ export class AuthService implements IAuthService {
    */
   private getAuth() {
     if (!auth) {
-      throw new Error('Firebase Auth not available. This operation should only be performed on the client side.');
+      throw new Error(
+        'Firebase Auth not available. This operation should only be performed on the client side.'
+      )
     }
-    return auth;
+    return auth
   }
 
   /**
    * Check if we're in a client-side environment
    */
   private isClientSide(): boolean {
-    return typeof window !== 'undefined' && auth !== null;
+    return typeof window !== 'undefined' && auth !== null
   }
 
   /**
@@ -84,25 +86,25 @@ export class AuthService implements IAuthService {
         this.getAuth(),
         data.email,
         data.password
-      );
+      )
 
       // Create session cookie via API route for server-side authentication
       try {
-        const idToken = await userCredential.user.getIdToken();
+        const idToken = await userCredential.user.getIdToken()
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`,
+            Authorization: `Bearer ${idToken}`,
           },
-        });
+        })
 
         if (!response.ok) {
-          console.error('Failed to create session cookie:', response.statusText);
+          console.error('Failed to create session cookie:', response.statusText)
           // Continue anyway - client-side auth still works
         }
       } catch (sessionError) {
-        console.error('Error creating session cookie:', sessionError);
+        console.error('Error creating session cookie:', sessionError)
         // Continue anyway - client-side auth still works
       }
 
@@ -110,9 +112,9 @@ export class AuthService implements IAuthService {
         success: true,
         data: this.mapFirebaseUser(userCredential.user),
         code: 200,
-      };
+      }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
@@ -121,8 +123,10 @@ export class AuthService implements IAuthService {
    * Supports both individual and business registration
    * Uses the new registration API route for proper user profile creation
    */
-  async register(data: IRegisterData | IBusinessRegisterData): Promise<IOperationResult<IFirebaseUser>> {
-    let userCredential: any = null;
+  async register(
+    data: IRegisterData | IBusinessRegisterData
+  ): Promise<IOperationResult<IFirebaseUser>> {
+    let userCredential: any = null
 
     try {
       // Step 1: Create Firebase Auth user
@@ -130,15 +134,15 @@ export class AuthService implements IAuthService {
         this.getAuth(),
         data.email,
         data.password
-      );
+      )
 
       // Step 2: Update the user's display name
       await updateProfile(userCredential.user, {
-        displayName: `${data.firstName} ${data.lastName}`.trim()
-      });
+        displayName: `${data.firstName} ${data.lastName}`.trim(),
+      })
 
       // Step 3: Get ID token for API call
-      const idToken = await userCredential.user.getIdToken();
+      const idToken = await userCredential.user.getIdToken()
 
       // Step 4: Create user profile via API route
       const response = await fetch('/api/auth/register', {
@@ -148,27 +152,30 @@ export class AuthService implements IAuthService {
         },
         body: JSON.stringify({
           userData: data,
-          idToken: idToken
+          idToken: idToken,
         }),
-      });
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok || !result.success) {
         // If profile creation fails, rollback Firebase Auth user
-        console.error('Profile creation failed, rolling back Firebase Auth user:', result.error);
+        console.error(
+          'Profile creation failed, rolling back Firebase Auth user:',
+          result.error
+        )
 
         try {
-          await deleteUser(userCredential.user);
+          await deleteUser(userCredential.user)
         } catch (rollbackError) {
-          console.error('Failed to rollback Firebase Auth user:', rollbackError);
+          console.error('Failed to rollback Firebase Auth user:', rollbackError)
         }
 
         return {
           success: false,
           error: result.error || 'Failed to create user profile',
           code: result.code || 500,
-        };
+        }
       }
 
       // Step 5: Send email verification
@@ -176,10 +183,10 @@ export class AuthService implements IAuthService {
         await sendEmailVerification(userCredential.user, {
           url: `${window.location.origin}/auth/verify-email`,
           handleCodeInApp: false,
-        });
+        })
       } catch (emailError) {
         // Email verification failure shouldn't fail the registration
-        console.warn('Failed to send email verification:', emailError);
+        console.warn('Failed to send email verification:', emailError)
       }
 
       // Session cookie is already set by the API route
@@ -187,21 +194,24 @@ export class AuthService implements IAuthService {
         success: true,
         data: this.mapFirebaseUser(userCredential.user),
         code: 201,
-      };
+      }
     } catch (error: any) {
       // If Firebase Auth creation failed, no cleanup needed
       if (!userCredential) {
-        return this.handleAuthError(error);
+        return this.handleAuthError(error)
       }
 
       // If any other step failed, try to cleanup Firebase Auth user
       try {
-        await deleteUser(userCredential.user);
+        await deleteUser(userCredential.user)
       } catch (rollbackError) {
-        console.error('Failed to rollback Firebase Auth user after error:', rollbackError);
+        console.error(
+          'Failed to rollback Firebase Auth user after error:',
+          rollbackError
+        )
       }
 
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
@@ -214,19 +224,19 @@ export class AuthService implements IAuthService {
       try {
         await fetch('/api/auth/logout', {
           method: 'POST',
-        });
+        })
       } catch (sessionError) {
-        console.error('Error clearing session cookie:', sessionError);
+        console.error('Error clearing session cookie:', sessionError)
         // Continue anyway - client-side logout still works
       }
 
-      await signOut(this.getAuth());
+      await signOut(this.getAuth())
       return {
         success: true,
         code: 200,
-      };
+      }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
@@ -235,51 +245,53 @@ export class AuthService implements IAuthService {
    */
   async loginWithGoogle(): Promise<IOperationResult<IFirebaseUser>> {
     try {
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
+      const provider = new GoogleAuthProvider()
+      provider.addScope('email')
+      provider.addScope('profile')
 
-      let userCredential;
+      let userCredential
 
       try {
         // Try popup first
-        userCredential = await signInWithPopup(this.getAuth(), provider);
+        userCredential = await signInWithPopup(this.getAuth(), provider)
       } catch (popupError: any) {
         // If popup is blocked, fall back to redirect
-        if (popupError.code === 'auth/popup-blocked' ||
-          popupError.code === 'auth/popup-closed-by-user') {
-          console.log('Popup blocked, falling back to redirect...');
-          await signInWithRedirect(this.getAuth(), provider);
+        if (
+          popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/popup-closed-by-user'
+        ) {
+          console.log('Popup blocked, falling back to redirect...')
+          await signInWithRedirect(this.getAuth(), provider)
           // signInWithRedirect doesn't return a result directly
           // The user will be redirected and we'll handle the result in getRedirectResult
           return {
             success: true,
             data: null as any, // Will be handled by redirect result
             code: 200,
-          };
+          }
         } else {
           // Re-throw other errors
-          throw popupError;
+          throw popupError
         }
       }
 
       // Create session cookie via API route for server-side authentication
       try {
-        const idToken = await userCredential.user.getIdToken();
+        const idToken = await userCredential.user.getIdToken()
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`,
+            Authorization: `Bearer ${idToken}`,
           },
-        });
+        })
 
         if (!response.ok) {
-          console.error('Failed to create session cookie:', response.statusText);
+          console.error('Failed to create session cookie:', response.statusText)
           // Continue anyway - client-side auth still works
         }
       } catch (sessionError) {
-        console.error('Error creating session cookie:', sessionError);
+        console.error('Error creating session cookie:', sessionError)
         // Continue anyway - client-side auth still works
       }
 
@@ -287,9 +299,9 @@ export class AuthService implements IAuthService {
         success: true,
         data: this.mapFirebaseUser(userCredential.user),
         code: 200,
-      };
+      }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
@@ -298,31 +310,33 @@ export class AuthService implements IAuthService {
    */
   async registerWithGoogle(): Promise<IOperationResult<IFirebaseUser>> {
     try {
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
+      const provider = new GoogleAuthProvider()
+      provider.addScope('email')
+      provider.addScope('profile')
 
-      let userCredential;
+      let userCredential
 
       try {
         // Try popup first
-        userCredential = await signInWithPopup(this.getAuth(), provider);
+        userCredential = await signInWithPopup(this.getAuth(), provider)
       } catch (popupError: any) {
         // If popup is blocked, fall back to redirect
-        if (popupError.code === 'auth/popup-blocked' ||
-          popupError.code === 'auth/popup-closed-by-user') {
-          console.log('Popup blocked, falling back to redirect...');
-          await signInWithRedirect(this.getAuth(), provider);
+        if (
+          popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/popup-closed-by-user'
+        ) {
+          console.log('Popup blocked, falling back to redirect...')
+          await signInWithRedirect(this.getAuth(), provider)
           // signInWithRedirect doesn't return a result directly
           // The user will be redirected and we'll handle the result in getRedirectResult
           return {
             success: true,
             data: null as any, // Will be handled by redirect result
             code: 201,
-          };
+          }
         } else {
           // Re-throw other errors
-          throw popupError;
+          throw popupError
         }
       }
 
@@ -330,28 +344,31 @@ export class AuthService implements IAuthService {
         success: true,
         data: this.mapFirebaseUser(userCredential.user),
         code: 201,
-      };
+      }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
   /**
    * Send password reset email
    */
-  async resetPassword(email: string, continueUrl: string): Promise<IOperationResult<void>> {
+  async resetPassword(
+    email: string,
+    continueUrl: string
+  ): Promise<IOperationResult<void>> {
     try {
       await sendPasswordResetEmail(this.getAuth(), email, {
         url: continueUrl,
         handleCodeInApp: false,
-      });
+      })
 
       return {
         success: true,
         code: 200,
-      };
+      }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
@@ -359,31 +376,36 @@ export class AuthService implements IAuthService {
    * Handle redirect result from Google authentication
    * This should be called on app load to handle redirect results
    */
-  async handleRedirectResult(): Promise<IOperationResult<IFirebaseUser | null>> {
+  async handleRedirectResult(): Promise<
+    IOperationResult<IFirebaseUser | null>
+  > {
     try {
-      const result = await getRedirectResult(this.getAuth());
+      const result = await getRedirectResult(this.getAuth())
 
       if (result) {
         // User signed in via redirect
-        const user = result.user;
+        const user = result.user
 
         // Create session cookie via API route for server-side authentication
         try {
-          const idToken = await user.getIdToken();
+          const idToken = await user.getIdToken()
           const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${idToken}`,
+              Authorization: `Bearer ${idToken}`,
             },
-          });
+          })
 
           if (!response.ok) {
-            console.error('Failed to create session cookie:', response.statusText);
+            console.error(
+              'Failed to create session cookie:',
+              response.statusText
+            )
             // Continue anyway - client-side auth still works
           }
         } catch (sessionError) {
-          console.error('Error creating session cookie:', sessionError);
+          console.error('Error creating session cookie:', sessionError)
           // Continue anyway - client-side auth still works
         }
 
@@ -391,47 +413,52 @@ export class AuthService implements IAuthService {
           success: true,
           data: this.mapFirebaseUser(user),
           code: 200,
-        };
+        }
       } else {
         // No redirect result (normal app load)
         return {
           success: true,
           data: null,
           code: 200,
-        };
+        }
       }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
   /**
    * Change user password (requires current password)
    */
-  async changePassword(data: IPasswordChangeData): Promise<IOperationResult<void>> {
+  async changePassword(
+    data: IPasswordChangeData
+  ): Promise<IOperationResult<void>> {
     try {
-      const user = this.getAuth().currentUser;
+      const user = this.getAuth().currentUser
       if (!user || !user.email) {
         return {
           success: false,
           error: 'Kimlik doğrulanmış kullanıcı bulunamadı',
           code: 401,
-        };
+        }
       }
 
       // Re-authenticate user with current password
-      const credential = EmailAuthProvider.credential(user.email, data.currentPassword);
-      await reauthenticateWithCredential(user, credential);
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        data.currentPassword
+      )
+      await reauthenticateWithCredential(user, credential)
 
       // Update to new password
-      await updatePassword(user, data.newPassword);
+      await updatePassword(user, data.newPassword)
 
       return {
         success: true,
         code: 200,
-      };
+      }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
@@ -440,26 +467,26 @@ export class AuthService implements IAuthService {
    */
   async sendEmailVerification(url?: string): Promise<IOperationResult<void>> {
     try {
-      const user = this.getAuth().currentUser;
+      const user = this.getAuth().currentUser
       if (!user) {
         return {
           success: false,
           error: 'Kimlik doğrulanmış kullanıcı bulunamadı',
           code: 401,
-        };
+        }
       }
 
       await sendEmailVerification(user, {
         url: url || `/auth/verify-email`,
         handleCodeInApp: false,
-      });
+      })
 
       return {
         success: true,
         code: 200,
-      };
+      }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
@@ -468,33 +495,35 @@ export class AuthService implements IAuthService {
    */
   async deleteAccount(): Promise<IOperationResult<void>> {
     try {
-      const user = this.getAuth().currentUser;
+      const user = this.getAuth().currentUser
       if (!user) {
         return {
           success: false,
           error: 'Kimlik doğrulanmış kullanıcı bulunamadı',
           code: 401,
-        };
+        }
       }
 
-      await deleteUser(user);
+      await deleteUser(user)
 
       return {
         success: true,
         code: 200,
-      };
+      }
     } catch (error: any) {
-      return this.handleAuthError(error);
+      return this.handleAuthError(error)
     }
   }
 
   /**
    * Listen to authentication state changes
    */
-  onAuthStateChanged(callback: (user: IFirebaseUser | null) => void): () => void {
-    return onAuthStateChanged(this.getAuth(), (user) => {
-      callback(user ? this.mapFirebaseUser(user) : null);
-    });
+  onAuthStateChanged(
+    callback: (user: IFirebaseUser | null) => void
+  ): () => void {
+    return onAuthStateChanged(this.getAuth(), user => {
+      callback(user ? this.mapFirebaseUser(user) : null)
+    })
   }
 
   /**
@@ -502,10 +531,10 @@ export class AuthService implements IAuthService {
    */
   getCurrentUser(): IFirebaseUser | null {
     if (!this.isClientSide()) {
-      return null;
+      return null
     }
-    const user = this.getAuth().currentUser;
-    return user ? this.mapFirebaseUser(user) : null;
+    const user = this.getAuth().currentUser
+    return user ? this.mapFirebaseUser(user) : null
   }
 
   /**
@@ -513,16 +542,16 @@ export class AuthService implements IAuthService {
    */
   async getIdToken(forceRefresh: boolean = false): Promise<string | null> {
     try {
-      const user = this.getAuth().currentUser;
-      if (!user) return null;
+      const user = this.getAuth().currentUser
+      if (!user) return null
 
       // Optionally reload user to ensure latest token/claims
-      await user.reload();
+      await user.reload()
 
-      return await getIdToken(user, forceRefresh);
+      return await getIdToken(user, forceRefresh)
     } catch (error) {
-      console.error('Error getting ID token:', error);
-      return null;
+      console.error('Error getting ID token:', error)
+      return null
     }
   }
 
@@ -530,7 +559,7 @@ export class AuthService implements IAuthService {
    * Refresh user token
    */
   async refreshToken(): Promise<string | null> {
-    return this.getIdToken(true);
+    return this.getIdToken(true)
   }
 
   /**
@@ -538,9 +567,9 @@ export class AuthService implements IAuthService {
    */
   isEmailVerified(): boolean {
     if (!this.isClientSide()) {
-      return false;
+      return false
     }
-    return this.getAuth().currentUser?.emailVerified ?? false;
+    return this.getAuth().currentUser?.emailVerified ?? false
   }
 
   /**
@@ -548,14 +577,14 @@ export class AuthService implements IAuthService {
    */
   async getUserClaims(): Promise<any> {
     try {
-      const user = this.getAuth().currentUser;
-      if (!user) return {};
+      const user = this.getAuth().currentUser
+      if (!user) return {}
 
-      const idTokenResult = await user.getIdTokenResult();
-      return idTokenResult.claims;
+      const idTokenResult = await user.getIdTokenResult()
+      return idTokenResult.claims
     } catch (error) {
-      console.error('Error getting user claims:', error);
-      return {};
+      console.error('Error getting user claims:', error)
+      return {}
     }
   }
 
@@ -563,46 +592,48 @@ export class AuthService implements IAuthService {
    * Handle Firebase Auth errors and convert to standardized format
    */
   private handleAuthError(error: any): IOperationResult<never> {
-    console.error('Auth Error:', error);
+    console.error('Auth Error:', error)
 
     // Use our centralized error message mapping
-    const userFriendlyMessage = getAuthErrorMessage(error.code || error.message || 'default');
+    const userFriendlyMessage = getAuthErrorMessage(
+      error.code || error.message || 'default'
+    )
 
     // Determine error code based on Firebase auth error type
-    let errorCode = 500;
+    let errorCode = 500
 
     switch (error.code) {
       case AuthErrorCode.EMAIL_ALREADY_IN_USE:
-        errorCode = 409;
-        break;
+        errorCode = 409
+        break
       case AuthErrorCode.INVALID_EMAIL:
-        errorCode = 400;
-        break;
+        errorCode = 400
+        break
       case AuthErrorCode.WEAK_PASSWORD:
-        errorCode = 400;
-        break;
+        errorCode = 400
+        break
       case AuthErrorCode.USER_DISABLED:
-        errorCode = 403;
-        break;
+        errorCode = 403
+        break
       case AuthErrorCode.USER_NOT_FOUND:
-        errorCode = 404;
-        break;
+        errorCode = 404
+        break
       case AuthErrorCode.WRONG_PASSWORD:
-        errorCode = 401;
-        break;
+        errorCode = 401
+        break
       case AuthErrorCode.TOO_MANY_REQUESTS:
-        errorCode = 429;
-        break;
+        errorCode = 429
+        break
       case AuthErrorCode.NETWORK_REQUEST_FAILED:
-        errorCode = 503;
-        break;
+        errorCode = 503
+        break
       case 'auth/popup-closed-by-user':
       case 'auth/popup-blocked':
-        errorCode = 400;
-        break;
+        errorCode = 400
+        break
       default:
-        errorCode = 500;
-        break;
+        errorCode = 500
+        break
     }
 
     return {
@@ -610,8 +641,8 @@ export class AuthService implements IAuthService {
       error: userFriendlyMessage,
       details: error.code,
       code: errorCode,
-    };
+    }
   }
 }
 
-export const authService = new AuthService();
+export const authService = new AuthService()

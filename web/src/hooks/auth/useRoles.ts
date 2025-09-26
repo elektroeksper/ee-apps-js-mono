@@ -1,16 +1,19 @@
 'use client'
 
-import { IAppUser } from '@/shared-generated';
-import { useMemo } from 'react';
+import { IAppUser } from '@/shared-generated'
+import { useMemo } from 'react'
 
 interface RoleState {
-  roles: string[];
-  isAdmin: boolean;
-  hasRole: (role: string) => boolean;
-  hasAnyRole: (roles: string[]) => boolean;
+  roles: string[]
+  isAdmin: boolean
+  hasRole: (role: string) => boolean
+  hasAnyRole: (roles: string[]) => boolean
 }
 
-export function useRoles(claims: Record<string, any> | null, appUser: IAppUser | null): RoleState {
+export function useRoles(
+  claims: Record<string, any> | null,
+  appUser: IAppUser | null
+): RoleState {
   return useMemo(() => {
     const claimRolesRaw = claims?.roles
     let claimRoles: string[] = []
@@ -48,7 +51,7 @@ export function useRoles(claims: Record<string, any> | null, appUser: IAppUser |
         docRoles,
         merged,
         isAdmin,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
     }
 

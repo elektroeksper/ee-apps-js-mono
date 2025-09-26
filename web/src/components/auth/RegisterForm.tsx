@@ -3,24 +3,24 @@
  * This is a simplified version that redirects to the main registration pages
  */
 
-import { Button } from "@/components/ui";
-import { useRouter } from "next/navigation";
+import { Button } from '@/components/ui'
+import { useRouter } from 'next/navigation'
 
 interface RegisterFormProps {
-  onSuccess?: () => void;
-  onLoginClick?: () => void;
+  onSuccess?: () => void
+  onLoginClick?: () => void
 }
 
 export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
-  const router = useRouter();
+  const router = useRouter()
 
   const handleIndividualRegister = () => {
-    router.push("/register?type=individual");
-  };
+    router.push('/register?type=individual')
+  }
 
   const handleBusinessRegister = () => {
-    router.push("/register?type=business");
-  };
+    router.push('/register?type=business')
+  }
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -31,10 +31,7 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
         </div>
 
         <div className="space-y-4">
-          <Button
-            onClick={handleIndividualRegister}
-            className="w-full"
-          >
+          <Button onClick={handleIndividualRegister} className="w-full">
             Bireysel Hesap
           </Button>
 
@@ -49,7 +46,7 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Zaten hesabınız var mı?{" "}
+            Zaten hesabınız var mı?{' '}
             <button
               type="button"
               onClick={onLoginClick}
@@ -61,5 +58,5 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

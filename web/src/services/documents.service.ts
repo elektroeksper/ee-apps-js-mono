@@ -4,12 +4,20 @@
  * Uses Next.js API routes for server-side operations
  */
 
-import { DocumentCategory, IDocument, IOperationResult, } from '@/shared-generated';
+import {
+  DocumentCategory,
+  IDocument,
+  IOperationResult,
+} from '@/shared-generated'
 
 export interface BusinessDocumentService {
-  getDocuments(): Promise<IOperationResult<IDocument[]>>;
-  uploadDocument(file: File, category: DocumentCategory, metadata?: any): Promise<IOperationResult<IDocument>>;
-  deleteDocument(documentId: string): Promise<IOperationResult<void>>;
+  getDocuments(): Promise<IOperationResult<IDocument[]>>
+  uploadDocument(
+    file: File,
+    category: DocumentCategory,
+    metadata?: any
+  ): Promise<IOperationResult<IDocument>>
+  deleteDocument(documentId: string): Promise<IOperationResult<void>>
 }
 
 class BusinessDocumentServiceImpl implements BusinessDocumentService {
@@ -21,30 +29,30 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
       const response = await fetch('/api/business/documents', {
         method: 'GET',
         credentials: 'include',
-      });
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
         return {
           success: false,
           error: result.error || 'Failed to fetch documents',
-          code: response.status
-        };
+          code: response.status,
+        }
       }
 
       return {
         success: true,
         data: result.data || [],
-        code: 200
-      };
+        code: 200,
+      }
     } catch (error: any) {
-      console.error('Error fetching business documents:', error);
+      console.error('Error fetching business documents:', error)
       return {
         success: false,
         error: error.message || 'Failed to fetch documents',
-        code: 500
-      };
+        code: 500,
+      }
     }
   }
 
@@ -62,29 +70,29 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
         return {
           success: false,
           error: 'File is required',
-          code: 400
-        };
+          code: 400,
+        }
       }
 
       // Check file size (10MB limit)
-      const maxSize = 10 * 1024 * 1024; // 10MB
+      const maxSize = 10 * 1024 * 1024 // 10MB
       if (file.size > maxSize) {
         return {
           success: false,
           error: 'File size exceeds 10MB limit',
-          code: 413
-        };
+          code: 413,
+        }
       }
 
       // Convert file to base64
-      const fileData = await this.fileToBase64(file);
+      const fileData = await this.fileToBase64(file)
 
       const requestBody = {
         fileName: file.name,
         category,
         fileData,
-        metadata
-      };
+        metadata,
+      }
 
       const response = await fetch('/api/business/documents', {
         method: 'POST',
@@ -93,30 +101,30 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
         },
         credentials: 'include',
         body: JSON.stringify(requestBody),
-      });
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
         return {
           success: false,
           error: result.error || 'Failed to upload document',
-          code: response.status
-        };
+          code: response.status,
+        }
       }
 
       return {
         success: true,
         data: result.data,
-        code: 201
-      };
+        code: 201,
+      }
     } catch (error: any) {
-      console.error('Error uploading business document:', error);
+      console.error('Error uploading business document:', error)
       return {
         success: false,
         error: error.message || 'Failed to upload document',
-        code: 500
-      };
+        code: 500,
+      }
     }
   }
 
@@ -129,36 +137,39 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
         return {
           success: false,
           error: 'Document ID is required',
-          code: 400
-        };
+          code: 400,
+        }
       }
 
-      const response = await fetch(`/api/business/documents?documentId=${documentId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `/api/business/documents?documentId=${documentId}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      )
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
         return {
           success: false,
           error: result.error || 'Failed to delete document',
-          code: response.status
-        };
+          code: response.status,
+        }
       }
 
       return {
         success: true,
-        code: 200
-      };
+        code: 200,
+      }
     } catch (error: any) {
-      console.error('Error deleting business document:', error);
+      console.error('Error deleting business document:', error)
       return {
         success: false,
         error: error.message || 'Failed to delete document',
-        code: 500
-      };
+        code: 500,
+      }
     }
   }
 
@@ -167,17 +178,17 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
    */
   private fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
       reader.onload = () => {
         if (typeof reader.result === 'string') {
-          resolve(reader.result);
+          resolve(reader.result)
         } else {
-          reject(new Error('Failed to convert file to base64'));
+          reject(new Error('Failed to convert file to base64'))
         }
-      };
-      reader.onerror = error => reject(error);
-    });
+      }
+      reader.onerror = error => reject(error)
+    })
   }
 
   /**
@@ -190,56 +201,56 @@ class BusinessDocumentServiceImpl implements BusinessDocumentService {
       'place-photos': 'İşyeri Fotoğrafları',
       'identity-documents': 'Kimlik Belgeleri',
       'content-uploads': 'İçerik Yüklemeleri',
-      'other': 'Diğer Belgeler'
-    };
+      other: 'Diğer Belgeler',
+    }
 
-    return categoryMap[category] || category;
+    return categoryMap[category] || category
   }
 
   /**
    * Get file type from file name
    */
   getFileType(fileName: string): 'pdf' | 'image' | 'other' {
-    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    const extension = fileName.split('.').pop()?.toLowerCase() || ''
 
     if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension)) {
-      return 'image';
+      return 'image'
     }
 
     if (extension === 'pdf') {
-      return 'pdf';
+      return 'pdf'
     }
 
-    return 'other';
+    return 'other'
   }
 
   /**
    * Check if file is an image
    */
   isImageFile(fileName: string): boolean {
-    return this.getFileType(fileName) === 'image';
+    return this.getFileType(fileName) === 'image'
   }
 
   /**
    * Check if file is a PDF
    */
   isPdfFile(fileName: string): boolean {
-    return this.getFileType(fileName) === 'pdf';
+    return this.getFileType(fileName) === 'pdf'
   }
 
   /**
    * Format file size for display
    */
   formatFileSize(size: number): string {
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let i = 0;
+    const units = ['B', 'KB', 'MB', 'GB']
+    let i = 0
     while (size >= 1024 && i < units.length - 1) {
-      size /= 1024;
-      i++;
+      size /= 1024
+      i++
     }
-    return `${size.toFixed(1)} ${units[i]}`;
+    return `${size.toFixed(1)} ${units[i]}`
   }
 }
 
 // Export singleton instance
-export const businessDocumentService = new BusinessDocumentServiceImpl();
+export const businessDocumentService = new BusinessDocumentServiceImpl()

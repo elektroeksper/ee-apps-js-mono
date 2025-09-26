@@ -3,38 +3,42 @@
  * This script can be used to manually test the email functionality
  */
 
-import { BusinessVerificationStatus } from '../shared-generated';
-import { sendBusinessApprovalEmail, sendBusinessRejectionEmail, sendEmail } from '../utils/email.service';
+import { BusinessVerificationStatus } from '../shared-generated'
+import {
+  sendBusinessApprovalEmail,
+  sendBusinessRejectionEmail,
+  sendEmail,
+} from '../utils/email.service'
 
 // Test configuration
 const TEST_CONFIG = {
   email: 'test@example.com', // Replace with your test email
   businessName: 'Test Business Ltd.',
-  ownerName: 'John Doe'
-};
+  ownerName: 'John Doe',
+}
 
 /**
  * Test the approval email
  */
 async function testApprovalEmail() {
-  console.log('🧪 Testing approval email...');
+  console.log('🧪 Testing approval email...')
 
   try {
     const result = await sendBusinessApprovalEmail(
       TEST_CONFIG.email,
       TEST_CONFIG.businessName,
       TEST_CONFIG.ownerName
-    );
+    )
 
     if (result.success) {
       console.log('✅ Approval email sent successfully!', {
-        messageId: result.messageId
-      });
+        messageId: result.messageId,
+      })
     } else {
-      console.error('❌ Failed to send approval email:', result.error);
+      console.error('❌ Failed to send approval email:', result.error)
     }
   } catch (error) {
-    console.error('❌ Error testing approval email:', error);
+    console.error('❌ Error testing approval email:', error)
   }
 }
 
@@ -42,9 +46,10 @@ async function testApprovalEmail() {
  * Test the rejection email
  */
 async function testRejectionEmail() {
-  console.log('🧪 Testing rejection email...');
+  console.log('🧪 Testing rejection email...')
 
-  const rejectionReason = 'Eksik belgeler: Vergi levhası ve imza sirküleri gerekli.';
+  const rejectionReason =
+    'Eksik belgeler: Vergi levhası ve imza sirküleri gerekli.'
 
   try {
     const result = await sendBusinessRejectionEmail(
@@ -52,17 +57,17 @@ async function testRejectionEmail() {
       TEST_CONFIG.businessName,
       TEST_CONFIG.ownerName,
       rejectionReason
-    );
+    )
 
     if (result.success) {
       console.log('✅ Rejection email sent successfully!', {
-        messageId: result.messageId
-      });
+        messageId: result.messageId,
+      })
     } else {
-      console.error('❌ Failed to send rejection email:', result.error);
+      console.error('❌ Failed to send rejection email:', result.error)
     }
   } catch (error) {
-    console.error('❌ Error testing rejection email:', error);
+    console.error('❌ Error testing rejection email:', error)
   }
 }
 
@@ -70,9 +75,9 @@ async function testRejectionEmail() {
  * Test the pending email
  */
 async function testPendingEmail() {
-  console.log('🧪 Testing pending email...');
+  console.log('🧪 Testing pending email...')
 
-  const subject = '📋 İşletme Hesabı İncelemeye Alındı - ElektroExpert';
+  const subject = '📋 İşletme Hesabı İncelemeye Alındı - ElektroExpert'
 
   const htmlTemplate = `
     <!DOCTYPE html>
@@ -123,25 +128,25 @@ async function testPendingEmail() {
       </div>
     </body>
     </html>
-  `;
+  `
 
   try {
     const result = await sendEmail({
       to: TEST_CONFIG.email,
       subject,
       html: htmlTemplate,
-      text: `Test pending email for ${TEST_CONFIG.businessName} sent to ${TEST_CONFIG.ownerName}`
-    });
+      text: `Test pending email for ${TEST_CONFIG.businessName} sent to ${TEST_CONFIG.ownerName}`,
+    })
 
     if (result.success) {
       console.log('✅ Pending email sent successfully!', {
-        messageId: result.messageId
-      });
+        messageId: result.messageId,
+      })
     } else {
-      console.error('❌ Failed to send pending email:', result.error);
+      console.error('❌ Failed to send pending email:', result.error)
     }
   } catch (error) {
-    console.error('❌ Error testing pending email:', error);
+    console.error('❌ Error testing pending email:', error)
   }
 }
 
@@ -149,96 +154,101 @@ async function testPendingEmail() {
  * Run all tests
  */
 async function runAllTests() {
-  console.log('🚀 Starting business verification email tests...\n');
+  console.log('🚀 Starting business verification email tests...\n')
 
   // Test each email type
-  await testApprovalEmail();
-  console.log('');
+  await testApprovalEmail()
+  console.log('')
 
-  await testRejectionEmail();
-  console.log('');
+  await testRejectionEmail()
+  console.log('')
 
-  await testPendingEmail();
+  await testPendingEmail()
 
-  console.log('\n✨ All tests completed!');
+  console.log('\n✨ All tests completed!')
 }
 
 /**
  * Simulate business verification status changes
  */
 function simulateStatusChanges() {
-  console.log('📝 Business Verification Status Change Scenarios:\n');
+  console.log('📝 Business Verification Status Change Scenarios:\n')
 
   const scenarios = [
     {
       from: BusinessVerificationStatus.UNVERIFIED,
       to: BusinessVerificationStatus.PENDING,
       action: 'User completes business setup and submits documents',
-      emailExpected: 'Pending Review Email'
+      emailExpected: 'Pending Review Email',
     },
     {
       from: BusinessVerificationStatus.PENDING,
       to: BusinessVerificationStatus.VERIFIED,
       action: 'Admin approves the business',
-      emailExpected: 'Approval Email'
+      emailExpected: 'Approval Email',
     },
     {
       from: BusinessVerificationStatus.PENDING,
       to: BusinessVerificationStatus.REJECTED,
       action: 'Admin rejects the business (with reason)',
-      emailExpected: 'Rejection Email'
+      emailExpected: 'Rejection Email',
     },
     {
       from: BusinessVerificationStatus.REJECTED,
       to: BusinessVerificationStatus.PENDING,
       action: 'Admin clears rejection or user resubmits',
-      emailExpected: 'Pending Review Email'
-    }
-  ];
+      emailExpected: 'Pending Review Email',
+    },
+  ]
 
   scenarios.forEach((scenario, index) => {
-    console.log(`${index + 1}. ${scenario.from} → ${scenario.to}`);
-    console.log(`   Action: ${scenario.action}`);
-    console.log(`   Email: ${scenario.emailExpected}\n`);
-  });
+    console.log(`${index + 1}. ${scenario.from} → ${scenario.to}`)
+    console.log(`   Action: ${scenario.action}`)
+    console.log(`   Email: ${scenario.emailExpected}\n`)
+  })
 }
 
 // Main execution
 if (require.main === module) {
-  const command = process.argv[2];
+  const command = process.argv[2]
 
   switch (command) {
     case 'approval':
-      testApprovalEmail();
-      break;
+      testApprovalEmail()
+      break
     case 'rejection':
-      testRejectionEmail();
-      break;
+      testRejectionEmail()
+      break
     case 'pending':
-      testPendingEmail();
-      break;
+      testPendingEmail()
+      break
     case 'all':
-      runAllTests();
-      break;
+      runAllTests()
+      break
     case 'scenarios':
-      simulateStatusChanges();
-      break;
+      simulateStatusChanges()
+      break
     default:
-      console.log('📧 Business Verification Email Test Script\n');
-      console.log('Usage:');
-      console.log('  npm run test-emails approval   - Test approval email');
-      console.log('  npm run test-emails rejection   - Test rejection email');
-      console.log('  npm run test-emails pending     - Test pending email');
-      console.log('  npm run test-emails all         - Test all emails');
-      console.log('  npm run test-emails scenarios   - Show status change scenarios');
-      console.log('\nBefore running tests, make sure to:');
-      console.log('1. Update TEST_CONFIG.email with your test email address');
-      console.log('2. Configure your email service settings in .env');
-      break;
+      console.log('📧 Business Verification Email Test Script\n')
+      console.log('Usage:')
+      console.log('  npm run test-emails approval   - Test approval email')
+      console.log('  npm run test-emails rejection   - Test rejection email')
+      console.log('  npm run test-emails pending     - Test pending email')
+      console.log('  npm run test-emails all         - Test all emails')
+      console.log(
+        '  npm run test-emails scenarios   - Show status change scenarios'
+      )
+      console.log('\nBefore running tests, make sure to:')
+      console.log('1. Update TEST_CONFIG.email with your test email address')
+      console.log('2. Configure your email service settings in .env')
+      break
   }
 }
 
 export {
   runAllTests,
-  simulateStatusChanges, testApprovalEmail, testPendingEmail, testRejectionEmail
-};
+  simulateStatusChanges,
+  testApprovalEmail,
+  testPendingEmail,
+  testRejectionEmail,
+}

@@ -1,19 +1,30 @@
-import { FileMetadata } from '@/shared-generated/types';
+import { FileMetadata } from '@/shared-generated/types'
 
-type UploadCategory = 'general' | 'sliders' | 'services' | 'branding' | 'content' | 'logos' | 'banners';
+type UploadCategory =
+  | 'general'
+  | 'sliders'
+  | 'services'
+  | 'branding'
+  | 'content'
+  | 'logos'
+  | 'banners'
 
 interface UploadFilter {
-  category?: UploadCategory;
-  search?: string;
+  category?: UploadCategory
+  search?: string
 }
 
 export class UploadsService {
-  private readonly apiUrl = '/api/admin/uploads';
+  private readonly apiUrl = '/api/admin/uploads'
 
-  async upload(files: File[], category: string, authToken?: string): Promise<FileMetadata[]> {
+  async upload(
+    files: File[],
+    category: string,
+    authToken?: string
+  ): Promise<FileMetadata[]> {
     const formData = new FormData()
 
-    files.forEach((file) => {
+    files.forEach(file => {
       formData.append('files', file)
     })
     formData.append('category', category)
@@ -59,10 +70,13 @@ export class UploadsService {
       headers.Authorization = `Bearer ${authToken}`
     }
 
-    const response = await fetch(`${this.apiUrl}?id=${encodeURIComponent(fileId)}`, {
-      method: 'DELETE',
-      headers,
-    })
+    const response = await fetch(
+      `${this.apiUrl}?id=${encodeURIComponent(fileId)}`,
+      {
+        method: 'DELETE',
+        headers,
+      }
+    )
 
     if (!response.ok) {
       throw new Error(`Failed to delete file: ${response.statusText}`)
@@ -83,7 +97,14 @@ export class UploadsService {
   }
 
   isImageFile(file: FileMetadata): boolean {
-    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+    const imageTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+    ]
     return imageTypes.includes(file.contentType)
   }
 
@@ -95,23 +116,27 @@ export class UploadsService {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  async listUploads(category?: UploadCategory): Promise<{ success: boolean; data?: FileMetadata[]; error?: string }> {
+  async listUploads(
+    category?: UploadCategory
+  ): Promise<{ success: boolean; data?: FileMetadata[]; error?: string }> {
     try {
-      const files = await this.getAll({ category });
-      return { success: true, data: files };
+      const files = await this.getAll({ category })
+      return { success: true, data: files }
     } catch (error) {
-      return { success: false, error: 'Failed to fetch uploads' };
+      return { success: false, error: 'Failed to fetch uploads' }
     }
   }
 
-  async deleteUpload(fileId: string): Promise<{ success: boolean; error?: string }> {
+  async deleteUpload(
+    fileId: string
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      await this.delete(fileId);
-      return { success: true };
+      await this.delete(fileId)
+      return { success: true }
     } catch (error) {
-      return { success: false, error: 'Delete failed' };
+      return { success: false, error: 'Delete failed' }
     }
   }
 }
 
-export default new UploadsService();
+export default new UploadsService()

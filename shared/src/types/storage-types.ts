@@ -4,10 +4,18 @@
  */
 import { Timestamp } from 'firebase/firestore'
 
-import { BusinessVerificationStatus, StorageDocumentStatus, StorageDocumentType } from '../enums'
+import {
+  BusinessVerificationStatus,
+  StorageDocumentStatus,
+  StorageDocumentType,
+} from '../enums'
 
 // Re-export document-related enums for consistency
-export { BusinessVerificationStatus, StorageDocumentStatus, StorageDocumentType }
+export {
+  BusinessVerificationStatus,
+  StorageDocumentStatus,
+  StorageDocumentType,
+}
 
 /**
  * User document interface for storage operations
@@ -52,7 +60,11 @@ export interface DocumentMetadata {
 export interface IStorageService {
   // Document operations (supports both user docs and admin content)
   getDocuments(userId?: string): Promise<IDocument[]>
-  uploadDocument(userId: string, file: File, category: DocumentCategory): Promise<IDocument>
+  uploadDocument(
+    userId: string,
+    file: File,
+    category: DocumentCategory
+  ): Promise<IDocument>
   deleteDocument(userId: string, documentId: string): Promise<boolean>
 
   // Document display helpers
@@ -60,29 +72,35 @@ export interface IStorageService {
   getFileDisplayName(fileName: string): string
 
   // Document verification operations (admin only)
-  verifyDocument?(documentPath: string, status: StorageDocumentStatus, notes?: string): Promise<boolean>
+  verifyDocument?(
+    documentPath: string,
+    status: StorageDocumentStatus,
+    notes?: string
+  ): Promise<boolean>
 
   // Validation helpers
-  validateFile(file: File, category: DocumentCategory): { valid: boolean; error?: string }
+  validateFile(
+    file: File,
+    category: DocumentCategory
+  ): { valid: boolean; error?: string }
   fileToBase64(file: File): Promise<string>
 }
 
-
 export interface IDocument {
-  type: StorageDocumentType;
-  name?: string; // Original file name
-  url: string; // Storage URL or public URL
-  uploadedAt: Timestamp | Date | string;
-  uploadedBy: string; // User ID who uploaded
-  status: StorageDocumentStatus;
-  fullPath?: string; // Full storage path
-  fileType: DocumentFileType; // e.g. 'pdf', 'image', 'other'
-  category: DocumentCategory; // e.g. 'business-documents', 'identity-documents'
-  metadata?: DocumentMetadata; // Additional metadata
-  reviewedAt?: Timestamp | Date | string;
-  reviewedBy?: string; // Admin user ID who reviewed
-  rejectionReason?: string; // Reason if rejected
-  expiresAt?: Timestamp; // Optional expiration date
+  type: StorageDocumentType
+  name?: string // Original file name
+  url: string // Storage URL or public URL
+  uploadedAt: Timestamp | Date | string
+  uploadedBy: string // User ID who uploaded
+  status: StorageDocumentStatus
+  fullPath?: string // Full storage path
+  fileType: DocumentFileType // e.g. 'pdf', 'image', 'other'
+  category: DocumentCategory // e.g. 'business-documents', 'identity-documents'
+  metadata?: DocumentMetadata // Additional metadata
+  reviewedAt?: Timestamp | Date | string
+  reviewedBy?: string // Admin user ID who reviewed
+  rejectionReason?: string // Reason if rejected
+  expiresAt?: Timestamp // Optional expiration date
 }
 
 /**
@@ -138,12 +156,12 @@ export interface DocumentOperation {
  * Used by upload manager and content management
  */
 export interface FileMetadata {
-  id: string           // File path or unique identifier
-  name: string         // Display name
-  url: string          // Public download URL
-  size: number         // File size in bytes
-  contentType: string  // MIME type
-  category: string     // Storage category (folder)
-  createdAt: string    // ISO date string
-  isImage: boolean     // True if it's an image file
+  id: string // File path or unique identifier
+  name: string // Display name
+  url: string // Public download URL
+  size: number // File size in bytes
+  contentType: string // MIME type
+  category: string // Storage category (folder)
+  createdAt: string // ISO date string
+  isImage: boolean // True if it's an image file
 }

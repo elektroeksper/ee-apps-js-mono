@@ -33,7 +33,9 @@ export interface IAppContextType {
 
   // Notifications
   notifications: INotification[]
-  addNotification: (notification: Omit<INotification, 'id' | 'createdAt'>) => void
+  addNotification: (
+    notification: Omit<INotification, 'id' | 'createdAt'>
+  ) => void
   removeNotification: (id: string) => void
   clearAllNotifications: () => void
 }

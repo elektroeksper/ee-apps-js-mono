@@ -4,11 +4,15 @@
  * when verification status changes
  */
 
-import * as functions from 'firebase-functions';
-import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import { BusinessVerificationStatus, IBusiness } from '../shared-generated';
-import { sendBusinessApprovalEmail, sendBusinessRejectionEmail, sendEmail } from '../utils/email.service';
-import { auth } from '../utils/firebase-admin';
+import * as functions from 'firebase-functions'
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
+import { BusinessVerificationStatus, IBusiness } from '../shared-generated'
+import {
+  sendBusinessApprovalEmail,
+  sendBusinessRejectionEmail,
+  sendEmail,
+} from '../utils/email.service'
+import { auth } from '../utils/firebase-admin'
 
 /**
  * Firebase Function that triggers on business document updates
@@ -17,142 +21,182 @@ import { auth } from '../utils/firebase-admin';
 export const onBusinessVerificationStatusChange = onDocumentUpdated(
   {
     document: 'businesses/{businessId}',
-    database: 'native-db'  // Use the Native mode database
+    database: 'native-db', // Use the Native mode database
   },
-  async (event) => {
-    const beforeData = event.data?.before?.data() as IBusiness | undefined;
-    const afterData = event.data?.after?.data() as IBusiness | undefined;
+  async event => {
+    const beforeData = event.data?.before?.data() as IBusiness | undefined
+    const afterData = event.data?.after?.data() as IBusiness | undefined
 
     if (!beforeData || !afterData) {
-      functions.logger.warn('Missing before or after data in business update trigger');
-      return;
+      functions.logger.warn(
+        'Missing before or after data in business update trigger'
+      )
+      return
     }
 
-    const businessId = event.params.businessId;
-    const businessName = afterData.businessName;
-    const ownerId = afterData.ownerId;
+    const businessId = event.params.businessId
+    const businessName = afterData.businessName
+    const ownerId = afterData.ownerId
 
     // Extract verification statuses
-    const beforeStatus = beforeData.verification?.status || BusinessVerificationStatus.UNVERIFIED;
-    const afterStatus = afterData.verification?.status || BusinessVerificationStatus.UNVERIFIED;
+    const beforeStatus =
+      beforeData.verification?.status || BusinessVerificationStatus.UNVERIFIED
+    const afterStatus =
+      afterData.verification?.status || BusinessVerificationStatus.UNVERIFIED
 
     // Only proceed if verification status actually changed
     if (beforeStatus === afterStatus) {
-      functions.logger.info(`No verification status change for business ${businessId}`, {
-        businessId,
-        businessName,
-        status: afterStatus
-      });
-      return;
+      functions.logger.info(
+        `No verification status change for business ${businessId}`,
+        {
+          businessId,
+          businessName,
+          status: afterStatus,
+        }
+      )
+      return
     }
 
-    functions.logger.info(`Business verification status changed: ${beforeStatus} → ${afterStatus}`, {
-      businessId,
-      businessName,
-      ownerId,
-      beforeStatus,
-      afterStatus
-    });
+    functions.logger.info(
+      `Business verification status changed: ${beforeStatus} → ${afterStatus}`,
+      {
+        businessId,
+        businessName,
+        ownerId,
+        beforeStatus,
+        afterStatus,
+      }
+    )
 
     try {
       // Get owner's user information
-      const ownerUser = await auth.getUser(ownerId);
+      const ownerUser = await auth.getUser(ownerId)
 
       if (!ownerUser.email) {
-        functions.logger.error(`Owner user ${ownerId} does not have an email address`, {
-          businessId,
-          ownerId
-        });
-        return;
+        functions.logger.error(
+          `Owner user ${ownerId} does not have an email address`,
+          {
+            businessId,
+            ownerId,
+          }
+        )
+        return
       }
 
-      const ownerEmail = ownerUser.email;
-      const ownerName = ownerUser.displayName || ownerEmail.split('@')[0];
+      const ownerEmail = ownerUser.email
+      const ownerName = ownerUser.displayName || ownerEmail.split('@')[0]
 
       functions.logger.info(`Preparing to send email notification`, {
         businessId,
         businessName,
         ownerEmail,
         ownerName,
-        newStatus: afterStatus
-      });
+        newStatus: afterStatus,
+      })
 
       // Send appropriate email based on new status
-      let emailResult;
+      let emailResult
 
       switch (afterStatus) {
         case BusinessVerificationStatus.VERIFIED:
-          functions.logger.info(`Sending approval email for business ${businessId}`);
-          emailResult = await sendBusinessApprovalEmail(ownerEmail, businessName, ownerName);
-          break;
+          functions.logger.info(
+            `Sending approval email for business ${businessId}`
+          )
+          emailResult = await sendBusinessApprovalEmail(
+            ownerEmail,
+            businessName,
+            ownerName
+          )
+          break
 
         case BusinessVerificationStatus.REJECTED: {
           // Get the latest rejection reason from verification history
           const latestRejection = afterData.verification.history
             ?.slice()
             .reverse()
-            .find(entry => entry.rejectedAt && entry.rejectionReason);
+            .find(entry => entry.rejectedAt && entry.rejectionReason)
 
-          const rejectionReason = latestRejection?.rejectionReason || undefined;
+          const rejectionReason = latestRejection?.rejectionReason || undefined
 
-          functions.logger.info(`Sending rejection email for business ${businessId}`, {
-            hasReason: !!rejectionReason,
-            reasonLength: rejectionReason?.length || 0
-          });
+          functions.logger.info(
+            `Sending rejection email for business ${businessId}`,
+            {
+              hasReason: !!rejectionReason,
+              reasonLength: rejectionReason?.length || 0,
+            }
+          )
 
-          emailResult = await sendBusinessRejectionEmail(ownerEmail, businessName, ownerName, rejectionReason);
-          break;
+          emailResult = await sendBusinessRejectionEmail(
+            ownerEmail,
+            businessName,
+            ownerName,
+            rejectionReason
+          )
+          break
         }
 
         case BusinessVerificationStatus.PENDING: {
           // Send pending notification email
-          functions.logger.info(`Sending pending review email for business ${businessId}`);
-          emailResult = await sendBusinessPendingEmail(ownerEmail, businessName, ownerName);
-          break;
+          functions.logger.info(
+            `Sending pending review email for business ${businessId}`
+          )
+          emailResult = await sendBusinessPendingEmail(
+            ownerEmail,
+            businessName,
+            ownerName
+          )
+          break
         }
 
         case BusinessVerificationStatus.UNVERIFIED:
           // Typically this shouldn't happen in normal flow, but we can log it
-          functions.logger.info(`Business ${businessId} status changed to UNVERIFIED - no email sent`);
-          return;
+          functions.logger.info(
+            `Business ${businessId} status changed to UNVERIFIED - no email sent`
+          )
+          return
 
         default:
           functions.logger.warn(`Unknown verification status: ${afterStatus}`, {
             businessId,
-            afterStatus
-          });
-          return;
+            afterStatus,
+          })
+          return
       }
 
       // Log email sending result
       if (emailResult?.success) {
-        functions.logger.info(`Email sent successfully for business verification status change`, {
-          businessId,
-          businessName,
-          ownerEmail,
-          newStatus: afterStatus,
-          messageId: emailResult.messageId
-        });
+        functions.logger.info(
+          `Email sent successfully for business verification status change`,
+          {
+            businessId,
+            businessName,
+            ownerEmail,
+            newStatus: afterStatus,
+            messageId: emailResult.messageId,
+          }
+        )
       } else {
-        functions.logger.error(`Failed to send email for business verification status change`, {
-          businessId,
-          businessName,
-          ownerEmail,
-          newStatus: afterStatus,
-          error: emailResult?.error
-        });
+        functions.logger.error(
+          `Failed to send email for business verification status change`,
+          {
+            businessId,
+            businessName,
+            ownerEmail,
+            newStatus: afterStatus,
+            error: emailResult?.error,
+          }
+        )
       }
-
     } catch (error) {
       functions.logger.error(`Error in business verification email trigger`, {
         businessId,
         businessName,
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      });
+        stack: error instanceof Error ? error.stack : undefined,
+      })
     }
   }
-);
+)
 
 /**
  * Send pending review notification email
@@ -162,8 +206,7 @@ async function sendBusinessPendingEmail(
   businessName: string,
   ownerName: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-
-  const subject = '📋 İşletme Hesabı İncelemeye Alındı - ElektroExpert';
+  const subject = '📋 İşletme Hesabı İncelemeye Alındı - ElektroExpert'
 
   const htmlTemplate = `
     <!DOCTYPE html>
@@ -225,7 +268,7 @@ async function sendBusinessPendingEmail(
       </div>
     </body>
     </html>
-  `;
+  `
 
   const textTemplate = `
     Merhaba ${ownerName},
@@ -250,12 +293,12 @@ async function sendBusinessPendingEmail(
 
     Teşekkürler,
     ElektroExpert Ekibi
-  `;
+  `
 
   return sendEmail({
     to: email,
     subject,
     html: htmlTemplate,
     text: textTemplate,
-  });
+  })
 }

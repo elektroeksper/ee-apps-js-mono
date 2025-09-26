@@ -10,6 +10,8 @@
     "build:robust": "node build-robust.js",
     "build:force": "npm run clean && npm run build:robust",
     "dev": "tsc --watch",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
     "clean": "rimraf dist",
     "type:check": "tsc --noEmit"
   },

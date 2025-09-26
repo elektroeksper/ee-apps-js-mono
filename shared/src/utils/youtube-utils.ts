@@ -3,9 +3,7 @@
  * Helpers for working with YouTube videos in the admin panel
  */
 
-import { YouTubeVideoMetadata } from "../types"
-
-
+import { YouTubeVideoMetadata } from '../types'
 
 /**
  * Extract video ID from various YouTube URL formats
@@ -23,7 +21,7 @@ export const extractYouTubeVideoId = (input: string): string => {
     // youtube.com/v/VIDEO_ID
     /(?:youtube\.com\/v\/)([^&\n?#]+)/,
     // Direct video ID (11 characters)
-    /^([a-zA-Z0-9_-]{11})$/
+    /^([a-zA-Z0-9_-]{11})$/,
   ]
 
   for (const pattern of urlPatterns) {
@@ -34,7 +32,10 @@ export const extractYouTubeVideoId = (input: string): string => {
   }
 
   // If no pattern matches, return the input cleaned up
-  return input.trim().replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 11)
+  return input
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .substring(0, 11)
 }
 
 /**
@@ -47,13 +48,16 @@ export const isValidYouTubeVideoId = (videoId: string): boolean => {
 /**
  * Get YouTube video thumbnail URL
  */
-export const getYouTubeThumbnailUrl = (videoId: string, quality: 'default' | 'medium' | 'high' | 'standard' | 'maxres' = 'medium'): string => {
+export const getYouTubeThumbnailUrl = (
+  videoId: string,
+  quality: 'default' | 'medium' | 'high' | 'standard' | 'maxres' = 'medium'
+): string => {
   const qualityMap = {
     default: 'default',
     medium: 'mqdefault',
     high: 'hqdefault',
     standard: 'sddefault',
-    maxres: 'maxresdefault'
+    maxres: 'maxresdefault',
   }
 
   return `https://img.youtube.com/vi/${videoId}/${qualityMap[quality]}.jpg`
@@ -62,7 +66,9 @@ export const getYouTubeThumbnailUrl = (videoId: string, quality: 'default' | 'me
 /**
  * Fetch video metadata from YouTube oEmbed API
  */
-export const fetchYouTubeMetadata = async (videoId: string): Promise<YouTubeVideoMetadata | null> => {
+export const fetchYouTubeMetadata = async (
+  videoId: string
+): Promise<YouTubeVideoMetadata | null> => {
   if (!isValidYouTubeVideoId(videoId)) {
     throw new Error('Invalid YouTube video ID')
   }
@@ -75,7 +81,7 @@ export const fetchYouTubeMetadata = async (videoId: string): Promise<YouTubeVide
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    const data = await response.json() as YouTubeVideoMetadata
+    const data = (await response.json()) as YouTubeVideoMetadata
     return data
   } catch (error) {
     console.error('Failed to fetch YouTube metadata:', error)
@@ -86,15 +92,18 @@ export const fetchYouTubeMetadata = async (videoId: string): Promise<YouTubeVide
 /**
  * Generate YouTube embed URL with options
  */
-export const getYouTubeEmbedUrl = (videoId: string, options: {
-  autoplay?: boolean
-  loop?: boolean
-  controls?: boolean
-  modestbranding?: boolean
-  rel?: boolean
-  start?: number
-  end?: number
-} = {}): string => {
+export const getYouTubeEmbedUrl = (
+  videoId: string,
+  options: {
+    autoplay?: boolean
+    loop?: boolean
+    controls?: boolean
+    modestbranding?: boolean
+    rel?: boolean
+    start?: number
+    end?: number
+  } = {}
+): string => {
   const params = new URLSearchParams()
 
   if (options.autoplay) params.set('autoplay', '1')
@@ -115,7 +124,10 @@ export const getYouTubeEmbedUrl = (videoId: string, options: {
 /**
  * Get YouTube watch URL
  */
-export const getYouTubeWatchUrl = (videoId: string, startTime?: number): string => {
+export const getYouTubeWatchUrl = (
+  videoId: string,
+  startTime?: number
+): string => {
   const url = `https://www.youtube.com/watch?v=${videoId}`
   return startTime ? `${url}&t=${startTime}s` : url
 }
@@ -123,7 +135,9 @@ export const getYouTubeWatchUrl = (videoId: string, startTime?: number): string 
 /**
  * Check if video exists and is accessible
  */
-export const checkYouTubeVideoExists = async (videoId: string): Promise<boolean> => {
+export const checkYouTubeVideoExists = async (
+  videoId: string
+): Promise<boolean> => {
   try {
     await fetchYouTubeMetadata(videoId)
     return true

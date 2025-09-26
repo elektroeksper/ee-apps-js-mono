@@ -5,15 +5,15 @@
  * Optimized for monorepo with smart caching and dependency management
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+const fs = require('fs')
+const path = require('path')
+const { execSync } = require('child_process')
 
 // Paths
-const ROOT_DIR = path.join(__dirname, '..');
-const SHARED_DIR = path.join(ROOT_DIR, 'shared');
-const SHARED_SRC_DIR = path.join(SHARED_DIR, 'src');
-const SHARED_DIST_DIR = path.join(SHARED_DIR, 'dist');
+const ROOT_DIR = path.join(__dirname, '..')
+const SHARED_DIR = path.join(ROOT_DIR, 'shared')
+const SHARED_SRC_DIR = path.join(SHARED_DIR, 'src')
+const SHARED_DIST_DIR = path.join(SHARED_DIR, 'dist')
 
 // Package configurations
 const PACKAGES = {
@@ -28,45 +28,45 @@ const PACKAGES = {
     srcTarget: path.join(ROOT_DIR, 'web/src/shared-generated'),
     libTarget: null, // Web doesn't need lib copy (handled by bundler)
     needsLibCopy: false,
-  }
-};
+  },
+}
 
 /**
  * Get file modification time for cache checking
  */
 function getLastModified(dirPath) {
-  if (!fs.existsSync(dirPath)) return 0;
+  if (!fs.existsSync(dirPath)) return 0
 
-  let latestTime = 0;
+  let latestTime = 0
 
   function checkDir(currentDir) {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true })
 
     for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
+      const fullPath = path.join(currentDir, entry.name)
 
       if (entry.isDirectory()) {
-        checkDir(fullPath);
+        checkDir(fullPath)
       } else {
-        const stat = fs.statSync(fullPath);
-        latestTime = Math.max(latestTime, stat.mtime.getTime());
+        const stat = fs.statSync(fullPath)
+        latestTime = Math.max(latestTime, stat.mtime.getTime())
       }
     }
   }
 
-  checkDir(dirPath);
-  return latestTime;
+  checkDir(dirPath)
+  return latestTime
 }
 
 /**
  * Check if shared types need to be rebuilt
  */
 function needsRebuild() {
-  const srcModified = getLastModified(SHARED_SRC_DIR);
-  const distModified = getLastModified(SHARED_DIST_DIR);
+  const srcModified = getLastModified(SHARED_SRC_DIR)
+  const distModified = getLastModified(SHARED_DIST_DIR)
 
   // If dist doesn't exist or src is newer than dist, rebuild needed
-  return !fs.existsSync(SHARED_DIST_DIR) || srcModified > distModified;
+  return !fs.existsSync(SHARED_DIST_DIR) || srcModified > distModified
 }
 
 /**
@@ -74,50 +74,57 @@ function needsRebuild() {
  */
 function buildSharedTypes() {
   if (!needsRebuild()) {
-    console.log('📦 Shared types are up to date, skipping build');
-    return false;
+    console.log('📦 Shared types are up to date, skipping build')
+    return false
   }
 
-  console.log('🔨 Building shared types...');
+  console.log('🔨 Building shared types...')
 
   try {
     // First try the standard build
     try {
       execSync('pnpm shared:build', {
         cwd: ROOT_DIR,
-        stdio: 'inherit'
-      });
+        stdio: 'inherit',
+      })
 
       // Verify output was generated
-      if (fs.existsSync(SHARED_DIST_DIR) && fs.readdirSync(SHARED_DIST_DIR).length > 0) {
-        console.log('✅ Shared types built successfully');
-        return true;
+      if (
+        fs.existsSync(SHARED_DIST_DIR) &&
+        fs.readdirSync(SHARED_DIST_DIR).length > 0
+      ) {
+        console.log('✅ Shared types built successfully')
+        return true
       } else {
-        console.log('⚠️  Standard build completed but no output generated, trying robust build...');
+        console.log(
+          '⚠️  Standard build completed but no output generated, trying robust build...'
+        )
       }
     } catch (standardError) {
-      console.log('⚠️  Standard build failed, trying robust build...');
+      console.log('⚠️  Standard build failed, trying robust build...')
     }
 
     // Fallback to robust build script
-    const robustBuildPath = path.join(SHARED_DIR, 'build-robust.js');
+    const robustBuildPath = path.join(SHARED_DIR, 'build-robust.js')
     if (fs.existsSync(robustBuildPath)) {
       execSync(`node "${robustBuildPath}"`, {
         cwd: SHARED_DIR,
-        stdio: 'inherit'
-      });
+        stdio: 'inherit',
+      })
 
-      if (fs.existsSync(SHARED_DIST_DIR) && fs.readdirSync(SHARED_DIST_DIR).length > 0) {
-        console.log('✅ Shared types built successfully using robust method');
-        return true;
+      if (
+        fs.existsSync(SHARED_DIST_DIR) &&
+        fs.readdirSync(SHARED_DIST_DIR).length > 0
+      ) {
+        console.log('✅ Shared types built successfully using robust method')
+        return true
       }
     }
 
-    throw new Error('Both standard and robust build methods failed');
-
+    throw new Error('Both standard and robust build methods failed')
   } catch (error) {
-    console.error('❌ Failed to build shared types:', error.message);
-    process.exit(1);
+    console.error('❌ Failed to build shared types:', error.message)
+    process.exit(1)
   }
 }
 
@@ -126,29 +133,29 @@ function buildSharedTypes() {
  */
 function copyDirectory(src, dest) {
   if (!fs.existsSync(src)) {
-    console.error(`❌ Source directory does not exist: ${src}`);
-    return false;
+    console.error(`❌ Source directory does not exist: ${src}`)
+    return false
   }
 
   // Create destination directory if it doesn't exist
   if (!fs.existsSync(dest)) {
-    fs.mkdirSync(dest, { recursive: true });
+    fs.mkdirSync(dest, { recursive: true })
   }
 
-  const entries = fs.readdirSync(src, { withFileTypes: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true })
 
   for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
 
     if (entry.isDirectory()) {
-      copyDirectory(srcPath, destPath);
+      copyDirectory(srcPath, destPath)
     } else {
-      fs.copyFileSync(srcPath, destPath);
+      fs.copyFileSync(srcPath, destPath)
     }
   }
 
-  return true;
+  return true
 }
 
 /**
@@ -164,7 +171,7 @@ function generateHelperFiles(packageName, targetDir) {
  */
 
 module.exports = require('./index');
-`;
+`
 
   // Generate shared.d.ts for TypeScript
   const sharedDtsContent = `/**
@@ -195,10 +202,10 @@ export {
   NotificationType,
   OperationStatus,
 } from './index';
-`;
+`
 
-  fs.writeFileSync(path.join(targetDir, 'shared.js'), sharedJsContent);
-  fs.writeFileSync(path.join(targetDir, 'shared.d.ts'), sharedDtsContent);
+  fs.writeFileSync(path.join(targetDir, 'shared.js'), sharedJsContent)
+  fs.writeFileSync(path.join(targetDir, 'shared.d.ts'), sharedDtsContent)
 }
 
 /**
@@ -206,66 +213,68 @@ export {
  */
 function copyToPackage(packageName, config) {
   if (!fs.existsSync(config.dir)) {
-    console.log(`⚠️  Package ${packageName} directory not found, skipping`);
-    return false;
+    console.log(`⚠️  Package ${packageName} directory not found, skipping`)
+    return false
   }
 
-  console.log(`📂 Copying shared types to ${packageName}...`);
+  console.log(`📂 Copying shared types to ${packageName}...`)
 
   // Clean old files
   if (fs.existsSync(config.srcTarget)) {
-    fs.rmSync(config.srcTarget, { recursive: true, force: true });
+    fs.rmSync(config.srcTarget, { recursive: true, force: true })
   }
   if (config.libTarget && fs.existsSync(config.libTarget)) {
-    fs.rmSync(config.libTarget, { recursive: true, force: true });
+    fs.rmSync(config.libTarget, { recursive: true, force: true })
   }
 
   // Copy to src directory
   if (copyDirectory(SHARED_DIST_DIR, config.srcTarget)) {
-    generateHelperFiles(packageName, config.srcTarget);
+    generateHelperFiles(packageName, config.srcTarget)
 
     // Copy to lib directory if needed (for Firebase Functions)
     if (config.needsLibCopy && config.libTarget) {
-      copyDirectory(config.srcTarget, config.libTarget);
+      copyDirectory(config.srcTarget, config.libTarget)
     }
 
-    console.log(`✅ Shared types copied to ${packageName}`);
-    return true;
+    console.log(`✅ Shared types copied to ${packageName}`)
+    return true
   }
 
-  return false;
+  return false
 }
 
 /**
  * Main execution
  */
 function main() {
-  const args = process.argv.slice(2);
-  const targetPackages = args.length > 0 ? args : Object.keys(PACKAGES);
+  const args = process.argv.slice(2)
+  const targetPackages = args.length > 0 ? args : Object.keys(PACKAGES)
 
-  console.log('🚀 Optimized shared types build starting...');
-  console.log(`📋 Target packages: ${targetPackages.join(', ')}`);
+  console.log('🚀 Optimized shared types build starting...')
+  console.log(`📋 Target packages: ${targetPackages.join(', ')}`)
 
   // Step 1: Build shared types (only if needed)
-  const wasRebuilt = buildSharedTypes();
+  const wasRebuilt = buildSharedTypes()
 
   // Step 2: Copy to target packages
-  let successCount = 0;
+  let successCount = 0
   for (const packageName of targetPackages) {
-    const config = PACKAGES[packageName];
+    const config = PACKAGES[packageName]
     if (!config) {
-      console.warn(`⚠️  Unknown package: ${packageName}`);
-      continue;
+      console.warn(`⚠️  Unknown package: ${packageName}`)
+      continue
     }
 
     if (copyToPackage(packageName, config)) {
-      successCount++;
+      successCount++
     }
   }
 
-  console.log(`\n🎉 Build completed successfully!`);
-  console.log(`   📦 Shared types ${wasRebuilt ? 'rebuilt' : 'up to date'}`);
-  console.log(`   📂 Copied to ${successCount}/${targetPackages.length} packages`);
+  console.log(`\n🎉 Build completed successfully!`)
+  console.log(`   📦 Shared types ${wasRebuilt ? 'rebuilt' : 'up to date'}`)
+  console.log(
+    `   📂 Copied to ${successCount}/${targetPackages.length} packages`
+  )
 }
 
 // Export for programmatic use
@@ -274,10 +283,10 @@ module.exports = {
   copyToPackage,
   needsRebuild,
   PACKAGES,
-  main
-};
+  main,
+}
 
 // Run if called directly
 if (require.main === module) {
-  main();
+  main()
 }

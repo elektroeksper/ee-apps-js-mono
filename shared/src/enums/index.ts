@@ -2,19 +2,19 @@
 
 enum AccountType {
   INDIVIDUAL = 'individual',
-  BUSINESS = 'business'
+  BUSINESS = 'business',
 }
 
 enum BusinessUserRole {
   OWNER = 'owner',
   MANAGER = 'manager',
   TECHNICIAN = 'technician',
-  SUPPORT = 'support'
+  SUPPORT = 'support',
 }
 
 enum TaxNumberType {
   TAX = 'tax',
-  IDENTITY = 'identity'
+  IDENTITY = 'identity',
 }
 
 enum OrderStatus {
@@ -24,14 +24,14 @@ enum OrderStatus {
   SHIPPED = 'shipped',
   DELIVERED = 'delivered',
   CANCELLED = 'cancelled',
-  REFUNDED = 'refunded'
+  REFUNDED = 'refunded',
 }
 
 enum PaymentStatus {
   PENDING = 'pending',
   COMPLETED = 'completed',
   FAILED = 'failed',
-  REFUNDED = 'refunded'
+  REFUNDED = 'refunded',
 }
 
 enum ProductCategory {
@@ -42,7 +42,7 @@ enum ProductCategory {
   AUDIO = 'audio',
   WEARABLES = 'wearables',
   GAMING = 'gaming',
-  HOME_APPLIANCES = 'home_appliances'
+  HOME_APPLIANCES = 'home_appliances',
 }
 
 enum NotificationType {
@@ -50,7 +50,7 @@ enum NotificationType {
   PRODUCT_BACK_IN_STOCK = 'product_back_in_stock',
   PRICE_DROP = 'price_drop',
   PROMOTIONAL = 'promotional',
-  SYSTEM = 'system'
+  SYSTEM = 'system',
 }
 
 enum OperationStatus {
@@ -58,7 +58,7 @@ enum OperationStatus {
   ERROR = 'error',
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 // Authentication States
@@ -66,16 +66,15 @@ enum AuthState {
   LOADING = 'loading',
   AUTHENTICATED = 'authenticated',
   UNAUTHENTICATED = 'unauthenticated',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 // Authentication Roles (system-level roles)
 enum AuthRole {
   ADMIN = 'admin',
   USER = 'user',
-  MODERATOR = 'moderator'
+  MODERATOR = 'moderator',
 }
-
 
 // Common Auth Error Codes
 enum AuthErrorCode {
@@ -92,9 +91,8 @@ enum AuthErrorCode {
   EMAIL_NOT_VERIFIED = 'app/email-not-verified',
   INSUFFICIENT_PERMISSIONS = 'app/insufficient-permissions',
   INVALID_ACCOUNT_TYPE = 'app/invalid-account-type',
-  BUSINESS_VERIFICATION_REQUIRED = 'app/business-verification-required'
-};
-
+  BUSINESS_VERIFICATION_REQUIRED = 'app/business-verification-required',
+}
 
 // Company Size Enum
 enum CompanySize {
@@ -102,9 +100,8 @@ enum CompanySize {
   SMALL = '11-50',
   MEDIUM = '51-200',
   LARGE = '201-1000',
-  ENTERPRISE = '1000+'
+  ENTERPRISE = '1000+',
 }
-
 
 // Document Types
 enum StorageDocumentType {
@@ -112,7 +109,7 @@ enum StorageDocumentType {
   TAX_CERTIFICATE = 'tax_certificate',
   ARTICLES_OF_INCORPORATION = 'articles_of_incorporation',
   UTILITY_BILL = 'utility_bill',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 // Document Status
@@ -120,7 +117,7 @@ enum StorageDocumentStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  EXPIRED = 'expired'
+  EXPIRED = 'expired',
 }
 
 // Business Verification Status
@@ -128,14 +125,23 @@ enum BusinessVerificationStatus {
   UNVERIFIED = 'unverified',
   PENDING = 'pending',
   VERIFIED = 'verified',
-  REJECTED = 'rejected'
+  REJECTED = 'rejected',
 }
 
-
 export {
-  AccountType, AuthErrorCode, AuthRole, AuthState, BusinessUserRole, BusinessVerificationStatus,
-  CompanySize, NotificationType,
-  OperationStatus, OrderStatus,
-  PaymentStatus, ProductCategory, StorageDocumentStatus, StorageDocumentType, TaxNumberType
-};
-
+  AccountType,
+  AuthErrorCode,
+  AuthRole,
+  AuthState,
+  BusinessUserRole,
+  BusinessVerificationStatus,
+  CompanySize,
+  NotificationType,
+  OperationStatus,
+  OrderStatus,
+  PaymentStatus,
+  ProductCategory,
+  StorageDocumentStatus,
+  StorageDocumentType,
+  TaxNumberType,
+}

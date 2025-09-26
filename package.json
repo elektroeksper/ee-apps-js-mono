@@ -12,6 +12,8 @@
     "dev": "npm run dev --workspaces",
     "build": "node scripts/build-shared-types.js && npm run build --workspaces",
     "lint": "npm run lint --workspaces",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md,html,yaml,yml}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md,html,yaml,yml}\"",
     "clean": "npm run clean --workspaces && rm -rf node_modules",
     "type:check": "npm run type:check --workspaces",
     "build:shared": "node scripts/build-shared-types.js",

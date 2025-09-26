@@ -4,10 +4,12 @@ import type { IVideoItem } from '@/shared-generated/types/content-types'
  * Type guard function to ensure video has required properties
  */
 export const isValidVideo = (video: any): video is IVideoItem => {
-  return video &&
+  return (
+    video &&
     typeof video.youtubeVideoId === 'string' &&
     video.youtubeVideoId.length > 0 &&
     typeof video.isActive === 'boolean'
+  )
 }
 
 /**
@@ -30,9 +32,10 @@ export const generateYouTubeEmbedUrl = (video: any): string | null => {
   }
 
   const autoplayParam = safeVideo.autoStart ? '?autoplay=1' : ''
-  const loopParam = safeVideo.loop ?
-    (autoplayParam ? '&loop=1&playlist=' : '?loop=1&playlist=') + safeVideo.youtubeVideoId :
-    ''
+  const loopParam = safeVideo.loop
+    ? (autoplayParam ? '&loop=1&playlist=' : '?loop=1&playlist=') +
+      safeVideo.youtubeVideoId
+    : ''
 
   return `https://www.youtube.com/embed/${safeVideo.youtubeVideoId}${autoplayParam}${loopParam}`
 }

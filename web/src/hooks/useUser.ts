@@ -3,6 +3,5 @@
 // Any attempt to use will throw to surface lingering references quickly.
 
 export function useUser(): never {
-  throw new Error('useUser is removed. Use useAuth() from AuthContext instead.');
+  throw new Error('useUser is removed. Use useAuth() from AuthContext instead.')
 }
-

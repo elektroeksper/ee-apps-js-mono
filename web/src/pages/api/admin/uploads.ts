@@ -27,7 +27,10 @@ export const config = {
     bodyParser: false,
   },
 }
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     // Authentication check for POST and DELETE operations
     if (req.method === 'POST' || req.method === 'DELETE') {
@@ -39,7 +42,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const token = authHeader.split('Bearer ')[1]
       try {
         const decodedToken = await adminAuth.verifyIdToken(token)
-        console.log('Token verified for user:', decodedToken.email, 'Admin:', decodedToken.admin)
+        console.log(
+          'Token verified for user:',
+          decodedToken.email,
+          'Admin:',
+          decodedToken.admin
+        )
         // Temporarily allow all authenticated users (remove this in production)
         // if (!decodedToken.admin) {
         //   return res.status(403).json({ error: 'Admin privileges required' })
@@ -77,12 +85,19 @@ async function handleUpload(req: NextApiRequest, res: NextApiResponse) {
 
     console.log('Parsing form data...')
     const [fields, files] = await form.parse(req)
-    const category = Array.isArray(fields.category) ? fields.category[0] : fields.category || 'general'
+    const category = Array.isArray(fields.category)
+      ? fields.category[0]
+      : fields.category || 'general'
 
-    console.log('Form parsed:', { category, filesCount: Object.keys(files).length })
+    console.log('Form parsed:', {
+      category,
+      filesCount: Object.keys(files).length,
+    })
 
     const uploadedFiles: FileMetadata[] = []
-    const fileArray = Array.isArray(files.files) ? files.files : [files.files].filter(Boolean)
+    const fileArray = Array.isArray(files.files)
+      ? files.files
+      : [files.files].filter(Boolean)
 
     console.log('Processing files:', fileArray.length)
 
@@ -100,7 +115,9 @@ async function handleUpload(req: NextApiRequest, res: NextApiResponse) {
       console.log('Storage path:', storagePath)
 
       // Upload to Firebase Storage
-      const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
+      const bucket = adminStorage.bucket(
+        process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+      )
       const fileUpload = bucket.file(storagePath)
 
       const fileBuffer = fs.readFileSync(file.filepath)
@@ -114,8 +131,8 @@ async function handleUpload(req: NextApiRequest, res: NextApiResponse) {
             category: category,
             uploadedAt: new Date().toISOString(),
             uniqueId: uniqueId,
-          }
-        }
+          },
+        },
       })
 
       console.log('File uploaded to storage, making public...')
@@ -148,8 +165,11 @@ async function handleUpload(req: NextApiRequest, res: NextApiResponse) {
     return res.status(200).json(uploadedFiles)
   } catch (error) {
     console.error('Upload error details:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    return res.status(500).json({ error: 'Upload failed', details: errorMessage })
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error'
+    return res
+      .status(500)
+      .json({ error: 'Upload failed', details: errorMessage })
   }
 }
 
@@ -157,10 +177,11 @@ async function handleList(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { category, search } = req.query
 
-    const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
-    const prefix = category && category !== 'general'
-      ? `uploads/${category}/`
-      : 'uploads/'
+    const bucket = adminStorage.bucket(
+      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    )
+    const prefix =
+      category && category !== 'general' ? `uploads/${category}/` : 'uploads/'
 
     const [files] = await bucket.getFiles({ prefix })
 
@@ -176,17 +197,25 @@ async function handleList(req: NextApiRequest, res: NextApiResponse) {
 
         // Extract category from path if not in metadata
         const pathParts = file.name.split('/')
-        const fileCategory = String(customMetadata.category || (pathParts.length > 1 ? pathParts[1] : 'general'))
+        const fileCategory = String(
+          customMetadata.category ||
+            (pathParts.length > 1 ? pathParts[1] : 'general')
+        )
 
         // Filter by category if specified
         if (category && category !== 'general' && fileCategory !== category) {
           continue
         }
 
-        const fileName = String(customMetadata.originalName || path.basename(file.name))
+        const fileName = String(
+          customMetadata.originalName || path.basename(file.name)
+        )
 
         // Filter by search if specified
-        if (search && !fileName.toLowerCase().includes(String(search).toLowerCase())) {
+        if (
+          search &&
+          !fileName.toLowerCase().includes(String(search).toLowerCase())
+        ) {
           continue
         }
 
@@ -197,14 +226,23 @@ async function handleList(req: NextApiRequest, res: NextApiResponse) {
         }
 
         fileList.push({
-          id: String(customMetadata.uniqueId || path.basename(file.name, path.extname(file.name))),
+          id: String(
+            customMetadata.uniqueId ||
+              path.basename(file.name, path.extname(file.name))
+          ),
           name: fileName,
           url: publicUrl,
           size: parseInt(String(metadata.size || '0')),
           contentType: metadata.contentType || 'application/octet-stream',
           category: String(fileCategory),
-          createdAt: String(customMetadata.uploadedAt || metadata.timeCreated || new Date().toISOString()),
-          isImage: isImageFile(metadata.contentType || 'application/octet-stream'),
+          createdAt: String(
+            customMetadata.uploadedAt ||
+              metadata.timeCreated ||
+              new Date().toISOString()
+          ),
+          isImage: isImageFile(
+            metadata.contentType || 'application/octet-stream'
+          ),
         })
       } catch (error) {
         console.error('Error processing file:', file.name, error)
@@ -213,7 +251,10 @@ async function handleList(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Sort by upload date (newest first)
-    fileList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    fileList.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
 
     return res.status(200).json(fileList)
   } catch (error) {
@@ -230,7 +271,9 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error: 'File ID is required' })
     }
 
-    const bucket = adminStorage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
+    const bucket = adminStorage.bucket(
+      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    )
 
     // Find file by ID in metadata
     const [files] = await bucket.getFiles({ prefix: 'uploads/' })

@@ -29,7 +29,7 @@ interface IAddress {
   apartment?: string
   neighborhood?: string
   district?: string
-  postalCode?: string  // This maps to zipCode
+  postalCode?: string // This maps to zipCode
   coordinates?: ICoordinates
   phone?: string
   type?: 'home' | 'business'
@@ -52,13 +52,13 @@ interface IMarkerData {
 
 enum AddressComponent {
   // Turkey specific address components
-  city = 'administrative_area_level_1',           // İl (Province/City)
-  district = 'administrative_area_level_2',       // İlçe (District)
-  neighborhood = 'sublocality_level_1',           // Mahalle (Neighborhood)
-  street = 'route',                               // Sokak/Cadde (Street)
-  streetNumber = 'street_number',                 // Kapı No (Street Number)
-  postalCode = 'postal_code',                     // Posta Kodu (Postal Code)
-  country = 'country'                             // Ülke (Country)
+  city = 'administrative_area_level_1', // İl (Province/City)
+  district = 'administrative_area_level_2', // İlçe (District)
+  neighborhood = 'sublocality_level_1', // Mahalle (Neighborhood)
+  street = 'route', // Sokak/Cadde (Street)
+  streetNumber = 'street_number', // Kapı No (Street Number)
+  postalCode = 'postal_code', // Posta Kodu (Postal Code)
+  country = 'country', // Ülke (Country)
 }
 
 interface IAddressComponentItem {
@@ -110,5 +110,14 @@ interface IDealerInfo {
 }
 export { AddressComponent }
 
-export type { IAddress, IAddressComponentItem, IAppUserFilter, ICoordinates, IDealerInfo, IGoogleMapsConfig, IMapBounds, IMarkerData, IPlaceResult }
-
+export type {
+  IAddress,
+  IAddressComponentItem,
+  IAppUserFilter,
+  ICoordinates,
+  IDealerInfo,
+  IGoogleMapsConfig,
+  IMapBounds,
+  IMarkerData,
+  IPlaceResult,
+}

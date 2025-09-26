@@ -3,14 +3,18 @@
  * Implements the IStorageService interface for consistent API
  */
 
-import { DocumentCategory, DocumentFileType, IDocument, IStorageService } from '@/shared-generated/types'
+import {
+  DocumentCategory,
+  DocumentFileType,
+  IDocument,
+  IStorageService,
+} from '@/shared-generated/types'
 import { authService } from './auth.service'
 
 /**
  * Client storage service implementation using API routes
  */
 export class StorageClientService implements IStorageService {
-
   /**
    * Get all documents for a specific user
    */
@@ -35,7 +39,10 @@ export class StorageClientService implements IStorageService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch documents`)
+        throw new Error(
+          errorData.error ||
+            `HTTP ${response.status}: Failed to fetch documents`
+        )
       }
 
       const result = await response.json()
@@ -47,14 +54,20 @@ export class StorageClientService implements IStorageService {
       }
     } catch (error) {
       console.error('Error fetching user documents:', error)
-      throw error instanceof Error ? error : new Error('Failed to fetch user documents')
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to fetch user documents')
     }
   }
 
   /**
    * Upload a new document for a user
    */
-  async uploadUserDocument(userId: string, file: File, category: DocumentCategory): Promise<IDocument> {
+  async uploadUserDocument(
+    userId: string,
+    file: File,
+    category: DocumentCategory
+  ): Promise<IDocument> {
     try {
       // Convert file to base64 for transmission
       const fileData = await this.fileToBase64(file)
@@ -82,14 +95,17 @@ export class StorageClientService implements IStorageService {
             originalName: file.name,
             uploadedBy: userId,
             size: file.size,
-            type: file.type
-          }
-        })
+            type: file.type,
+          },
+        }),
       })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to upload document`)
+        throw new Error(
+          errorData.error ||
+            `HTTP ${response.status}: Failed to upload document`
+        )
       }
 
       const result = await response.json()
@@ -100,14 +116,19 @@ export class StorageClientService implements IStorageService {
       }
     } catch (error) {
       console.error('Error uploading document:', error)
-      throw error instanceof Error ? error : new Error('Failed to upload document')
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to upload document')
     }
   }
 
   /**
    * Delete a user document
    */
-  async deleteUserDocument(userId: string, documentPath: string): Promise<boolean> {
+  async deleteUserDocument(
+    userId: string,
+    documentPath: string
+  ): Promise<boolean> {
     try {
       // Get ID token for authentication
       const idToken = await authService.getIdToken(true)
@@ -120,15 +141,21 @@ export class StorageClientService implements IStorageService {
         headers.Authorization = `Bearer ${idToken}`
       }
 
-      const response = await fetch(`/api/business/documents?documentPath=${encodeURIComponent(documentPath)}`, {
-        method: 'DELETE',
-        headers,
-        credentials: 'include', // Include session cookies
-      })
+      const response = await fetch(
+        `/api/business/documents?documentPath=${encodeURIComponent(documentPath)}`,
+        {
+          method: 'DELETE',
+          headers,
+          credentials: 'include', // Include session cookies
+        }
+      )
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to delete document`)
+        throw new Error(
+          errorData.error ||
+            `HTTP ${response.status}: Failed to delete document`
+        )
       }
 
       const result = await response.json()
@@ -139,7 +166,9 @@ export class StorageClientService implements IStorageService {
       }
     } catch (error) {
       console.error('Error deleting document:', error)
-      throw error instanceof Error ? error : new Error('Failed to delete document')
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to delete document')
     }
   }
 
@@ -176,7 +205,7 @@ export class StorageClientService implements IStorageService {
       { pattern: /license/i, replacement: 'Ruhsat Belgesi' },
       { pattern: /authority/i, replacement: 'Yetki Belgesi' },
       { pattern: /photo/i, replacement: 'Fotoğraf' },
-      { pattern: /document/i, replacement: 'Belge' }
+      { pattern: /document/i, replacement: 'Belge' },
     ]
 
     for (const { pattern, replacement } of patterns) {
@@ -198,7 +227,8 @@ export class StorageClientService implements IStorageService {
     const extension = fileName.toLowerCase().split('.').pop()
 
     if (extension === 'pdf') return 'pdf'
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension || '')) return 'image'
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension || ''))
+      return 'image'
     return 'other'
   }
 
@@ -234,11 +264,14 @@ export class StorageClientService implements IStorageService {
   /**
    * Validate file for upload
    */
-  validateFile(file: File, category: DocumentCategory): { valid: boolean; error?: string } {
+  validateFile(
+    file: File,
+    category: DocumentCategory
+  ): { valid: boolean; error?: string } {
     // Check file size (max 10MB)
     const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
-      return { valid: false, error: 'Dosya boyutu 10MB\'ı geçemez' }
+      return { valid: false, error: "Dosya boyutu 10MB'ı geçemez" }
     }
 
     // Check file type
@@ -258,7 +291,10 @@ export class StorageClientService implements IStorageService {
       case 'place-photos':
         // These should be images
         if (this.getFileType(file.name) !== 'image') {
-          return { valid: false, error: 'İşyeri fotoğrafları resim formatında olmalıdır' }
+          return {
+            valid: false,
+            error: 'İşyeri fotoğrafları resim formatında olmalıdır',
+          }
         }
         break
     }
@@ -271,7 +307,10 @@ export class StorageClientService implements IStorageService {
    */
   async fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
-      if (typeof window !== 'undefined' && typeof window.FileReader !== 'undefined') {
+      if (
+        typeof window !== 'undefined' &&
+        typeof window.FileReader !== 'undefined'
+      ) {
         const reader = new window.FileReader()
         reader.readAsDataURL(file)
         reader.onload = () => resolve(reader.result as string)
@@ -288,7 +327,11 @@ export class StorageClientService implements IStorageService {
     return this.getUserDocuments(userId)
   }
 
-  async uploadDocument(userId: string, file: File, category: DocumentCategory): Promise<IDocument> {
+  async uploadDocument(
+    userId: string,
+    file: File,
+    category: DocumentCategory
+  ): Promise<IDocument> {
     return this.uploadUserDocument(userId, file, category)
   }
 
@@ -301,8 +344,5 @@ export class StorageClientService implements IStorageService {
 export const storageClientService = new StorageClientService()
 
 // Export convenience functions
-export const {
-  getUserDocuments,
-  getCategoryDisplayName,
-  getFileDisplayName
-} = storageClientService
+export const { getUserDocuments, getCategoryDisplayName, getFileDisplayName } =
+  storageClientService
