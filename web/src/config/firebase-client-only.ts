@@ -6,9 +6,10 @@
 
 import { getAnalytics } from 'firebase/analytics'
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
-import { getFunctions } from 'firebase/functions'
+import { connectAuthEmulator, getAuth } from 'firebase/auth'
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore'
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions'
+import { connectStorageEmulator, getStorage } from 'firebase/storage'
 
 // Strict client-only guard
 const isClientSide =
@@ -53,6 +54,57 @@ let _auth: any = null
 let _db: any = null
 let _functions: any = null
 let _analytics: any = null
+let _storage: any = null
+
+// Emulator connection state tracking
+let emulatorsConnected = false
+
+// Helper function to connect to emulators
+const connectToEmulators = () => {
+  if (emulatorsConnected || !isClientSide || !app) return
+
+  const useEmulator = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === 'true'
+
+  if (!useEmulator) return
+
+  console.log('🔧 Connecting to Firebase emulators...')
+
+  try {
+    // Connect Auth emulator - create fresh instance
+    if (!_auth) {
+      _auth = getAuth(app)
+      const authHost = process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099'
+      connectAuthEmulator(_auth, `http://${authHost}`, { disableWarnings: true })
+      console.log(`✅ Auth emulator connected to ${authHost}`)
+    }
+
+    // Connect Firestore emulator - create fresh instance
+    if (!_db) {
+      _db = getFirestore(app, 'native-db')
+      connectFirestoreEmulator(_db, '127.0.0.1', 8080)
+      console.log('✅ Firestore emulator connected to 127.0.0.1:8080')
+    }
+
+    // Connect Functions emulator - create fresh instance
+    if (!_functions) {
+      _functions = getFunctions(app, process.env.NEXT_PUBLIC_FIREBASE_REGION || 'europe-west1')
+      connectFunctionsEmulator(_functions, '127.0.0.1', 5001)
+      console.log('✅ Functions emulator connected to 127.0.0.1:5001')
+    }
+
+    // Connect Storage emulator - create fresh instance
+    if (!_storage) {
+      _storage = getStorage(app)
+      connectStorageEmulator(_storage, '127.0.0.1', 9199)
+      console.log('✅ Storage emulator connected to 127.0.0.1:9199')
+    }
+
+    emulatorsConnected = true
+    console.log('✅ All Firebase emulators connected successfully')
+  } catch (error) {
+    console.warn('⚠️ Error connecting to emulators:', error)
+  }
+}
 
 // Client-only Firebase app
 export const getFirebaseApp = () => {
@@ -62,6 +114,8 @@ export const getFirebaseApp = () => {
 
   if (!app) {
     app = initializeApp(getFirebaseConfig())
+    // Connect to emulators after app initialization
+    connectToEmulators()
   }
   return app
 }
@@ -73,7 +127,11 @@ export const getFirebaseAuth = () => {
   }
 
   if (!_auth) {
-    _auth = getAuth(getFirebaseApp())
+    // Ensure app is initialized and emulators connected first
+    getFirebaseApp()
+    if (!_auth) {
+      _auth = getAuth(app)
+    }
   }
   return _auth
 }
@@ -84,8 +142,11 @@ export const getFirebaseFirestore = () => {
   }
 
   if (!_db) {
-    // Configure Firestore to use the native-db database
-    _db = getFirestore(getFirebaseApp(), 'native-db')
+    // Ensure app is initialized and emulators connected first
+    getFirebaseApp()
+    if (!_db) {
+      _db = getFirestore(app, 'native-db')
+    }
   }
   return _db
 }
@@ -96,12 +157,28 @@ export const getFirebaseFunctions = () => {
   }
 
   if (!_functions) {
-    _functions = getFunctions(
-      getFirebaseApp(),
-      process.env.NEXT_PUBLIC_FIREBASE_REGION || 'europe-west1'
-    )
+    // Ensure app is initialized and emulators connected first
+    getFirebaseApp()
+    if (!_functions) {
+      _functions = getFunctions(app, process.env.NEXT_PUBLIC_FIREBASE_REGION || 'europe-west1')
+    }
   }
   return _functions
+}
+
+export const getFirebaseStorage = () => {
+  if (!isClientSide) {
+    throw new Error('Firebase storage should only be accessed on client side')
+  }
+
+  if (!_storage) {
+    // Ensure app is initialized and emulators connected first
+    getFirebaseApp()
+    if (!_storage) {
+      _storage = getStorage(app)
+    }
+  }
+  return _storage
 }
 
 export const getFirebaseAnalytics = () => {
@@ -119,6 +196,7 @@ export const getFirebaseAnalytics = () => {
 export const auth = isClientSide ? getFirebaseAuth() : null
 export const db = isClientSide ? getFirebaseFirestore() : null
 export const functions = isClientSide ? getFirebaseFunctions() : null
+export const storage = isClientSide ? getFirebaseStorage() : null
 export const analytics = isClientSide ? getFirebaseAnalytics() : null
 
 // Export utility functions

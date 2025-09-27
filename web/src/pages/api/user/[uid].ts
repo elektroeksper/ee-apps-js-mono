@@ -86,27 +86,66 @@ async function handleUpdate(
 
     console.log('✅ Session verified for user:', decodedResult.user.uid)
 
+    // Check if we're using Firebase emulators
+    const usingEmulators = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === 'true'
+
+    console.log('🔍 Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      NEXT_PUBLIC_FIREBASE_EMULATOR: process.env.NEXT_PUBLIC_FIREBASE_EMULATOR,
+      usingEmulators
+    })
+
+    // Determine which UID to use for the update
+    let targetUid = uid
+
     // Users can only update their own data
     if (decodedResult.user.uid !== uid) {
       console.log('❌ User mismatch:', {
         sessionUid: decodedResult.user.uid,
         requestUid: uid,
+        usingEmulators,
       })
 
-      // Clear invalid session cookies to force re-authentication
-      const isProduction = process.env.NODE_ENV === 'production'
-      const secureFlag = isProduction ? '; Secure' : ''
+      let allowUpdate = false
 
-      res.setHeader('Set-Cookie', [
-        `session=; Max-Age=0; HttpOnly${secureFlag}; SameSite=Lax; Path=/`,
-        `user-id=; Max-Age=0${secureFlag}; SameSite=Lax; Path=/`,
-      ])
+      // In emulator mode, be more lenient - allow updates if the email matches
+      if (usingEmulators && decodedResult.user.email) {
+        console.log('🧪 Emulator mode: Checking if this is the same user by email...')
 
-      return res.status(403).json({
-        error: 'Session user mismatch - please re-authenticate',
-        code: 'USER_MISMATCH',
-        shouldLogout: true,
-      })
+        try {
+          // Check if the requested UID exists and belongs to the same email
+          const requestedUserDoc = await adminDb.collection('users').doc(uid).get()
+          if (requestedUserDoc.exists) {
+            const requestedUserData = requestedUserDoc.data()
+            if (requestedUserData?.email === decodedResult.user.email) {
+              console.log('✅ Emulator mode: Email match confirmed, using session UID for update')
+              allowUpdate = true
+              // Use the session UID for the actual update
+              targetUid = decodedResult.user.uid
+            }
+          }
+        } catch (emulatorError) {
+          console.log('⚠️ Emulator mode: Could not verify email match, proceeding with strict check')
+        }
+      }
+
+      // If still not allowed, clear session and require re-auth
+      if (!allowUpdate) {
+        // Clear invalid session cookies to force re-authentication
+        const isProduction = process.env.NODE_ENV === 'production'
+        const secureFlag = isProduction ? '; Secure' : ''
+
+        res.setHeader('Set-Cookie', [
+          `session=; Max-Age=0; HttpOnly${secureFlag}; SameSite=Lax; Path=/`,
+          `user-id=; Max-Age=0${secureFlag}; SameSite=Lax; Path=/`,
+        ])
+
+        return res.status(403).json({
+          error: 'Session user mismatch - please re-authenticate',
+          code: 'USER_MISMATCH',
+          shouldLogout: true,
+        })
+      }
     }
 
     const updateData = req.body
@@ -127,7 +166,7 @@ async function handleUpdate(
     // Create or update the user document (use set with merge to handle both cases)
     await adminDb
       .collection('users')
-      .doc(uid)
+      .doc(targetUid)
       .set(
         {
           ...cleanedData,
@@ -139,7 +178,7 @@ async function handleUpdate(
     console.log('✅ User document updated successfully')
 
     // Fetch and return updated document
-    const updatedDoc = await adminDb.collection('users').doc(uid).get()
+    const updatedDoc = await adminDb.collection('users').doc(targetUid).get()
     const updatedData = updatedDoc.data() as IAppUser
 
     console.log('✅ Returning updated data for user:', updatedData?.id)

@@ -10,8 +10,25 @@ import * as admin from 'firebase-admin'
 let app: admin.app.App
 
 if (!admin.apps.length) {
-  // Initialize with service account key or default credentials
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+  // Check if we should use emulators (for local development)
+  const useEmulators = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === 'true'
+
+  if (useEmulators) {
+    // Use emulators for local development - use actual project ID, not demo-project
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ee-dev-apps'
+    console.log(`🧪 Initializing Firebase Admin with emulators for project: ${projectId}`)
+
+    // Set emulator hosts before initializing
+    process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080'
+    process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099'
+    process.env.FIREBASE_STORAGE_EMULATOR_HOST = '127.0.0.1:9199'
+
+    app = admin.initializeApp({
+      projectId: projectId,
+      storageBucket: `${projectId}.appspot.com`,
+    })
+
+  } else if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     // Use service account key from environment (for production)
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
     app = admin.initializeApp({
@@ -22,8 +39,8 @@ if (!admin.apps.length) {
     // Use environment-specific service account file (for development)
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ee-prod-apps'
     const serviceAccountFile = projectId === 'ee-dev-apps'
-      ? './admin-service-account-dev.json'
-      : './admin-service-account-prod.json'
+      ? './src/lib/admin-service-account-dev.json'
+      : './src/lib/admin-service-account-prod.json'
 
     try {
       const serviceAccount = require(serviceAccountFile)

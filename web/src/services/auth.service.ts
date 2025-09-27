@@ -283,30 +283,68 @@ export class AuthService implements IAuthService {
         }
       }
 
-      // Create session cookie via API route for server-side authentication
+      // Handle Google OAuth via new API route that creates user profile if needed
       try {
         const idToken = await userCredential.user.getIdToken()
-        const response = await fetch('/api/auth/login', {
+        const response = await fetch('/api/auth/google-oauth', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${idToken}`,
           },
+          body: JSON.stringify({
+            idToken: idToken,
+          }),
         })
 
-        if (!response.ok) {
-          console.error('Failed to create session cookie:', response.statusText)
-          // Continue anyway - client-side auth still works
-        }
-      } catch (sessionError) {
-        console.error('Error creating session cookie:', sessionError)
-        // Continue anyway - client-side auth still works
-      }
+        const result = await response.json()
 
-      return {
-        success: true,
-        data: this.mapFirebaseUser(userCredential.user),
-        code: 200,
+        if (!response.ok || !result.success) {
+          console.error('Google OAuth API error:', result.error)
+          return {
+            success: false,
+            error: result.error || 'Failed to process Google authentication',
+            code: result.code || 500,
+          }
+        }
+
+        // Log if this was a new user for potential UI feedback
+        if (result.data?.isNewUser) {
+          console.log('New user created via Google OAuth:', result.data.userId)
+        }
+
+        // Success - return immediately
+        return {
+          success: true,
+          data: this.mapFirebaseUser(userCredential.user),
+          code: 200,
+        }
+
+      } catch (apiError) {
+        console.error('Error calling Google OAuth API:', apiError)
+        // Fall back to the old login API if the new one fails
+        try {
+          const idToken = await userCredential.user.getIdToken()
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+          })
+
+          if (!response.ok) {
+            console.error('Failed to create session cookie:', response.statusText)
+          }
+        } catch (sessionError) {
+          console.error('Error creating session cookie:', sessionError)
+        }
+
+        // Return success even if session creation failed (client-side auth still works)
+        return {
+          success: true,
+          data: this.mapFirebaseUser(userCredential.user),
+          code: 200,
+        }
       }
     } catch (error: any) {
       return this.handleAuthError(error)

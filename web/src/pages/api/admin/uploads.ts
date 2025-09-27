@@ -4,6 +4,7 @@
  */
 
 import { adminAuth, adminStorage } from '@/lib/firebase-admin'
+import { getStorageBucketName } from '@/lib/storage-config'
 import { randomUUID } from 'crypto'
 import formidable from 'formidable'
 import fs from 'fs'
@@ -115,9 +116,7 @@ async function handleUpload(req: NextApiRequest, res: NextApiResponse) {
       console.log('Storage path:', storagePath)
 
       // Upload to Firebase Storage
-      const bucket = adminStorage.bucket(
-        process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      )
+      const bucket = adminStorage.bucket(getStorageBucketName())
       const fileUpload = bucket.file(storagePath)
 
       const fileBuffer = fs.readFileSync(file.filepath)
@@ -177,9 +176,7 @@ async function handleList(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { category, search } = req.query
 
-    const bucket = adminStorage.bucket(
-      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    )
+    const bucket = adminStorage.bucket(getStorageBucketName())
     const prefix =
       category && category !== 'general' ? `uploads/${category}/` : 'uploads/'
 
@@ -199,7 +196,7 @@ async function handleList(req: NextApiRequest, res: NextApiResponse) {
         const pathParts = file.name.split('/')
         const fileCategory = String(
           customMetadata.category ||
-            (pathParts.length > 1 ? pathParts[1] : 'general')
+          (pathParts.length > 1 ? pathParts[1] : 'general')
         )
 
         // Filter by category if specified
@@ -228,7 +225,7 @@ async function handleList(req: NextApiRequest, res: NextApiResponse) {
         fileList.push({
           id: String(
             customMetadata.uniqueId ||
-              path.basename(file.name, path.extname(file.name))
+            path.basename(file.name, path.extname(file.name))
           ),
           name: fileName,
           url: publicUrl,
@@ -237,8 +234,8 @@ async function handleList(req: NextApiRequest, res: NextApiResponse) {
           category: String(fileCategory),
           createdAt: String(
             customMetadata.uploadedAt ||
-              metadata.timeCreated ||
-              new Date().toISOString()
+            metadata.timeCreated ||
+            new Date().toISOString()
           ),
           isImage: isImageFile(
             metadata.contentType || 'application/octet-stream'
@@ -271,9 +268,7 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error: 'File ID is required' })
     }
 
-    const bucket = adminStorage.bucket(
-      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    )
+    const bucket = adminStorage.bucket(getStorageBucketName())
 
     // Find file by ID in metadata
     const [files] = await bucket.getFiles({ prefix: 'uploads/' })

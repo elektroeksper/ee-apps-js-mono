@@ -5,6 +5,7 @@
  */
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
+import { getStorageBucketName } from '@/lib/storage-config'
 import {
   BusinessVerificationStatus,
   DocumentCategory,
@@ -127,14 +128,21 @@ export default async function handler(
       })
     }
 
+    console.log('🔄 About to handle request method:', req.method)
+    console.log('🔄 Request body keys:', Object.keys(req.body || {}))
+
     switch (req.method) {
       case 'GET':
+        console.log('➡️ Handling GET request')
         return await getDocuments(req, res, userId)
       case 'POST':
+        console.log('➡️ Handling POST request - calling uploadDocument')
         return await uploadDocument(req, res, userId)
       case 'DELETE':
+        console.log('➡️ Handling DELETE request')
         return await deleteDocument(req, res, userId)
       default:
+        console.log('❌ Unsupported method:', req.method)
         res.setHeader('Allow', ['GET', 'POST', 'DELETE'])
         return res.status(405).json({
           success: false,
@@ -143,6 +151,12 @@ export default async function handler(
     }
   } catch (error: any) {
     console.error('Business documents API error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      name: error.name
+    })
 
     if (error.code === 'auth/session-cookie-expired') {
       return res.status(401).json({
@@ -154,7 +168,7 @@ export default async function handler(
 
     return res.status(500).json({
       success: false,
-      error: 'Internal server error',
+      error: error.message || 'Internal server error',
       code: 500,
     })
   }
@@ -167,9 +181,7 @@ async function getDocuments(
 ) {
   try {
     const storage = getStorage()
-    const bucketName =
-      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-      'ee-prod-apps.firebasestorage.app'
+    const bucketName = getStorageBucketName()
     const bucket = storage.bucket(bucketName)
 
     // Get files from storage that belong to this user
@@ -343,12 +355,15 @@ async function uploadDocument(
     const storagePath = `${category}/${userId}/${uniqueFileName}`
 
     // Upload to Firebase Storage
+    console.log('🔄 Initializing storage...')
     const storage = getStorage()
-    const bucketName =
-      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-      'ee-prod-apps.firebasestorage.app'
-    const bucket = storage.bucket(bucketName)
+    const bucketName = getStorageBucketName()
     console.log('🪣 Using storage bucket:', bucketName)
+    console.log('🌍 Environment variables:', {
+      PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    })
+    const bucket = storage.bucket(bucketName)
     const file = bucket.file(storagePath)
 
     const contentType = getContentTypeFromFileName(fileName)
@@ -399,11 +414,17 @@ async function uploadDocument(
       data: document,
       code: 201,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading business document:', error)
+    console.error('Upload error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      name: error.name
+    })
     return res.status(500).json({
       success: false,
-      error: 'Failed to upload document',
+      error: error.message || 'Failed to upload document',
     })
   }
 }
@@ -435,9 +456,7 @@ async function deleteDocument(
 
     // Delete from Firebase Storage
     const storage = getStorage()
-    const bucketName =
-      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-      'ee-prod-apps.firebasestorage.app'
+    const bucketName = getStorageBucketName()
     const bucket = storage.bucket(bucketName)
     const file = bucket.file(documentPath)
 
