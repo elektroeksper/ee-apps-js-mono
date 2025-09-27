@@ -125,3 +125,10 @@ const ActionHandler = () => {
 }
 
 export default ActionHandler
+
+// This page requires query parameters, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

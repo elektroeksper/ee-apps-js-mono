@@ -306,3 +306,10 @@ export default function HomePage() {
     </AuthGuard>
   )
 }
+
+// This page requires authentication and dynamic content, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

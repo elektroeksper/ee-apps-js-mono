@@ -51,3 +51,10 @@ export default function WelcomePage() {
     </AuthGuard>
   )
 }
+
+// This page requires authentication and uses useRouter, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

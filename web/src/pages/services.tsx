@@ -230,3 +230,10 @@ export default function ServicesPage() {
     </div>
   )
 }
+
+// Prevent static generation to avoid potential NextRouter issues
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

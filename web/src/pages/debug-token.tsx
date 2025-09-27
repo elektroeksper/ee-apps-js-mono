@@ -7,6 +7,13 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useState } from 'react'
 
+// This page requires authentication and dynamic content, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}
+
 export default function DebugTokenPage() {
   const { fireUser, isAuthLoading } = useAuth()
   const [results, setResults] = useState<any>(null)

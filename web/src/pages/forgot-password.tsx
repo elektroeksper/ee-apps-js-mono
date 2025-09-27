@@ -56,3 +56,10 @@ export default function ForgotPasswordPage() {
     </PublicRoute>
   )
 }
+
+// This page uses useRouter for navigation, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

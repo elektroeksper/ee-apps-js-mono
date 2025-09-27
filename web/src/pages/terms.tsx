@@ -51,3 +51,10 @@ export default function () {
     </div>
   )
 }
+
+// Prevent static generation to avoid potential NextRouter issues
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

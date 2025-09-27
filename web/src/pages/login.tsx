@@ -74,3 +74,10 @@ export default function LoginPage() {
     </PublicRoute>
   )
 }
+
+// This page uses query parameters for type and redirect, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

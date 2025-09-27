@@ -25,3 +25,10 @@ export default function LegacyVerifyEmailPage() {
     </div>
   )
 }
+
+// This page uses useRouter for redirection, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import Navbar from './Navbar'
 
 interface LayoutProps {
@@ -8,6 +8,11 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const router = useRouter()
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Define auth pages that should not have the navbar
   const authPages = [
@@ -21,11 +26,14 @@ export default function Layout({ children }: LayoutProps) {
     '/action', // Firebase auth action page
   ]
 
-  // Check if current route is an auth page
-  const isAuthPage = authPages.some(
-    authPage =>
-      router.pathname === authPage || router.pathname.startsWith(authPage)
-  )
+  // Only check auth pages after component is mounted and router is ready
+  const isAuthPage =
+    isMounted && router.pathname
+      ? authPages.some(
+          authPage =>
+            router.pathname === authPage || router.pathname.startsWith(authPage)
+        )
+      : false
 
   return (
     <>

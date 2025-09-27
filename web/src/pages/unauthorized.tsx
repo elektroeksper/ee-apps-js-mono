@@ -64,3 +64,10 @@ export default function UnauthorizedPage() {
     </div>
   )
 }
+
+// This page uses useRouter for navigation, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

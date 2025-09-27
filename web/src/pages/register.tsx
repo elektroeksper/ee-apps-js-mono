@@ -68,3 +68,10 @@ const RegisterPage: React.FC = () => {
 }
 
 export default RegisterPage
+
+// This page uses query parameters for type, so it should not be statically generated
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
+}

@@ -104,7 +104,7 @@ env:
       - RUNTIME
   # Google Maps API Key
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    value: AIzaSyC06eYgOwcqm-CodnC_-jkilscQ7cLDQoQ
+    value: AIzaSyAu5DyNA6axIBr8BFb3NrOmO8VM_WZa5VM
     availability:
       - BUILD
       - RUNTIME
