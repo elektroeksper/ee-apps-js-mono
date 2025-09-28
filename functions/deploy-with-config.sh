@@ -76,26 +76,27 @@ if [ ! -f "$SERVICE_ACCOUNT_FILE" ]; then
 fi
 
 # Set environment-specific variables
-export FIREBASE_PROJECT_ENV=$([ "$SELECTED_ENV" == "DEV" ] && echo "dev" || echo "prod")
+export PROJECT_ENV=$([ "$SELECTED_ENV" == "DEV" ] && echo "dev" || echo "prod")
 export GOOGLE_APPLICATION_CREDENTIALS="$PWD/$SERVICE_ACCOUNT_FILE"
 
 echo "📝 Using service account: $SERVICE_ACCOUNT_FILE"
-echo "📝 Project environment: $FIREBASE_PROJECT_ENV"
+echo "📝 Project environment: $PROJECT_ENV"
 
-# Set environment variables for the selected environment
-firebase functions:config:set \
-  email.provider="smtp" \
-  email.default_from="info@elektroeksper.com" \
-  email.smtp.host="smtp.gmail.com" \
-  email.smtp.port="587" \
-  email.smtp.secure="false" \
-  email.smtp.user="elektroeksper@gmail.com" \
-  email.smtp.pass="dchz xmxl ofwy nafg" \
-  --project=$SELECTED_PROJECT
+# Copy the appropriate .env file for deployment BEFORE building
+ENV_FILE=".env.$([ "$SELECTED_ENV" == "DEV" ] && echo "dev" || echo "prod")"
+if [ -f "$ENV_FILE" ]; then
+    echo "📝 Using environment file: $ENV_FILE"
+    cp "$ENV_FILE" ".env"
+    echo "✅ Environment file copied successfully"
+else
+    echo "❌ Error: Environment file '$ENV_FILE' not found"
+    exit 1
+fi
 
-echo "✅ Environment variables set for $SELECTED_PROJECT. Now building and deploying functions..."
+echo "✅ Environment configuration prepared for $SELECTED_PROJECT."
 
-# Build the functions
+# Build the functions with the correct environment
+echo "🔨 Building functions with environment: $PROJECT_ENV"
 npm run build
 
 # Deploy functions to the selected project
