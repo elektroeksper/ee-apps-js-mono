@@ -2,4 +2,4 @@ export const FUNCTION_OPTIONS = {
   maxInstances: 10,
 }
 
-export const ADMIN_USERS = ['gltknky@gmail.com']
+export const ADMIN_USERS = ['elektroeksper@gmail.com']
