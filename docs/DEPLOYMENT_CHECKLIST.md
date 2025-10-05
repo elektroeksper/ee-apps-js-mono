@@ -4,14 +4,23 @@ Use this checklist before deploying to Firebase App Hosting to ensure success.
 
 ## ✅ Pre-Deployment Checklist
 
-### 1. Dependencies & Lockfile
+### 1. Firebase Functions Deployment
+
+- [ ] All imports use relative paths (`../shared-generated`)
+- [ ] No reserved environment variables in `.env` files
+- [ ] Shared types built: `npm run build:shared:functions`
+- [ ] Web environment matches target: `./web/scripts/switch-to-dev.sh`
+- [ ] Service account files present for target environment
+- [ ] Functions build locally: `cd functions && npm run build`
+
+### 2. Web App Dependencies & Lockfile
 
 - [ ] All new dependencies added to `web/package.json`
 - [ ] Standalone lockfile updated: `cd web && pnpm install --ignore-workspace`
 - [ ] Verify formidable in lockfile: `grep "formidable" web/pnpm-lock.yaml`
 - [ ] No workspace references in `web/pnpm-lock.yaml`
 
-### 2. Shared Types
+### 3. Shared Types
 
 - [ ] Built shared types: `npm run build:shared:web`
 - [ ] Verify copied: `ls web/src/shared-generated/`
@@ -38,7 +47,19 @@ Use this checklist before deploying to Firebase App Hosting to ensure success.
 - [ ] API endpoints point to correct URLs
 - [ ] No sensitive data in environment config
 
-## 🔥 Deployment Command
+## 🔥 Deployment Commands
+
+### Firebase Functions
+
+```bash
+# Deploy functions to dev environment
+cd functions && ./deploy-dev.sh
+
+# Deploy functions to prod environment  
+cd functions && ./deploy-prod.sh
+```
+
+### Web App (Firebase App Hosting)
 
 ```bash
 # From project root
@@ -51,8 +72,14 @@ Use this checklist before deploying to Firebase App Hosting to ensure success.
 
 ## 📊 Success Indicators
 
-During deployment, watch for:
+### Firebase Functions Deployment
+- ✅ Web environment switched successfully
+- ✅ Shared types built and copied
+- ✅ Functions source uploaded successfully
+- ✅ All functions show "Successful create/update operation"
+- ✅ Functions list shows correct trigger types
 
+### Web App Deployment
 - ✅ "Source code uploaded" - Upload completed
 - ✅ Build starts without lockfile errors
 - ✅ "DONE" status in build logs
@@ -97,6 +124,7 @@ After successful deployment:
 
 ---
 
-**Last Updated:** September 22, 2025  
-**Deployment Script:** `./deploy-apphosting.sh`  
-**Successful Build Reference:** a33fe6a9-79e3-4a0e-b1ce-e9d3bdeedd41
+**Last Updated:** October 5, 2025  
+**Functions Deployment:** `./functions/deploy-dev.sh` | `./functions/deploy-prod.sh`  
+**Web Deployment:** `./deploy-apphosting.sh`  
+**Detailed Guides:** [Firebase Functions Guide](./FIREBASE_FUNCTIONS_DEPLOYMENT_GUIDE.md) | [Web App Guide](./DEPLOYMENT_GUIDE.md)
