@@ -1,11 +1,9 @@
-import { StorageDocumentStatus } from '@electro-expert/shared'
 import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import {
   DocumentCategory,
   DocumentFileType,
-  IDocument,
-  StorageDocumentType,
+  IDocument, StorageDocumentStatus, StorageDocumentType
 } from '../shared-generated'
 
 // Initialize Firebase Admin Storage (bucket configured in firebase-admin.ts)

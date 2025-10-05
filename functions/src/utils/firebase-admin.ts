@@ -1,12 +1,19 @@
 import * as admin from 'firebase-admin'
-import { readFileSync } from 'fs'
-import { join } from 'path'
 
 // Determine project configuration based on environment
 const getProjectConfig = () => {
-  // Check for explicit project environment variable
-  // Default to production project unless explicitly set to dev
-  const projectEnv = process.env.PROJECT_ENV || 'prod'
+  // Check for explicit project environment variable first
+  let projectEnv = process.env.PROJECT_ENV
+
+  // If not set, try to detect from Firebase project ID environment
+  if (!projectEnv) {
+    const firebaseProjectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT
+    if (firebaseProjectId === 'ee-dev-apps') {
+      projectEnv = 'dev'
+    } else {
+      projectEnv = 'prod'
+    }
+  }
 
   if (projectEnv === 'dev') {
     return {
@@ -25,28 +32,15 @@ const getProjectConfig = () => {
 
 // Lazy initialization function
 const initializeFirebaseAdmin = () => {
-  if (!admin.apps.length) {
+  if (admin.apps.length === 0) {
     const config = getProjectConfig()
 
-    try {
-      // Try to use environment-specific service account file
-      const serviceAccountPath = join(__dirname, '../../', config.serviceAccountFile)
-      const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'))
-
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: config.projectId,
-        storageBucket: config.storageBucket,
-      })
-      console.log(`🔥 Firebase Admin initialized for project: ${config.projectId} using ${config.serviceAccountFile}`)
-    } catch (error) {
-      console.log(`⚠️ Could not load service account file, using default credentials for ${config.projectId}`, error)
-      // Fallback to Application Default Credentials
-      // Production (Cloud Functions) automatically injects a service account.
-      // Local/CI: export GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
-      admin.initializeApp(config)
-      console.log(`🔥 Firebase Admin initialized for project: ${config.projectId} using default credentials`)
-    }
+    // Use Application Default Credentials in Cloud Functions
+    // This is the recommended approach for Firebase Functions
+    admin.initializeApp({
+      projectId: config.projectId,
+      storageBucket: config.storageBucket,
+    })
   }
 }
 
@@ -67,14 +61,17 @@ export const getMessaging = () => {
 }
 
 // Configure Firestore to use the native-db database
+let _firestoreInstance: admin.firestore.Firestore | null = null
 export const getFirestore = () => {
-  initializeFirebaseAdmin()
-  const db = admin.firestore()
-  db.settings({ databaseId: 'native-db' })
-  return db
+  if (!_firestoreInstance) {
+    initializeFirebaseAdmin()
+    _firestoreInstance = admin.firestore()
+    _firestoreInstance.settings({ databaseId: 'native-db' })
+  }
+  return _firestoreInstance
 }
 
-// Legacy exports for backward compatibility
+// Lazy initialization - these will only be created when first accessed
 export const auth = getAuth()
 export const storage = getStorage()
 export const messaging = getMessaging()
@@ -87,7 +84,7 @@ export const createResult = <T>(
   error = '',
   code = 200,
   details?: string
-): any => {
+) => {
   return {
     success,
     data,

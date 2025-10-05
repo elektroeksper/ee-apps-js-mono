@@ -93,7 +93,29 @@ else
     exit 1
 fi
 
+# Switch web environment to match deployment target
+echo "🔄 Switching web environment to match deployment target..."
+cd ../web
+if [ "$SELECTED_ENV" == "DEV" ]; then
+    ./scripts/switch-to-dev.sh
+else
+    ./scripts/switch-to-prod.sh
+fi
+cd ../functions
+
+# Ensure shared types are built and available
+echo "🔧 Building shared types for functions..."
+cd ..
+npm run build:shared:functions
+cd functions
+
 echo "✅ Environment configuration prepared for $SELECTED_PROJECT."
+
+# Install dependencies if node_modules is missing
+if [ ! -d "node_modules" ]; then
+    echo "📦 Installing function dependencies..."
+    npm install
+fi
 
 # Build the functions with the correct environment
 echo "🔨 Building functions with environment: $PROJECT_ENV"
