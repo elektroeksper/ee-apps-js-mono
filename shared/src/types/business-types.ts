@@ -70,16 +70,13 @@ interface IBusinessService {
 }
 
 interface IBusinessUserInfo {
-  businessStatus?: BusinessVerificationStatus // Optional business status for quick reference
-  businessId: string // Reference to the business this user is associated with
-  userId: string // Redundant but useful for iteration
-  businessTitle: string // e.g., Owner, Manager
+  firstName?: string // Optional first name
+  lastName?: string // Optional last name
   displayName: string // Display name for quick access
   email: string // Email for quick access
   role: BusinessUserRole // User's role in this business
-  permissions: IBusinessPermissions // Specific permissions array
   isActive: boolean // Whether user is active in this business
-  addedAt?: Timestamp | Date // When the user was added
+  joinedAt?: Timestamp | Date // When the user was added to the business
   lastActiveAt?: Timestamp | Date // Last activity timestamp
 }
 

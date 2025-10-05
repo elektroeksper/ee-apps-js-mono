@@ -60,5 +60,6 @@ export type {
   IOperationResult,
   ISettingItem,
   ISystemSettingsService,
-  SystemSettingsKey,
+  SystemSettingsKey
 }
+

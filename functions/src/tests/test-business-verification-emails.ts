@@ -8,7 +8,7 @@ import {
   sendBusinessApprovalEmail,
   sendBusinessRejectionEmail,
   sendEmail,
-} from '../utils/email.service'
+} from '../utils/email-utils'
 
 // Test configuration
 const TEST_CONFIG = {
@@ -250,5 +250,6 @@ export {
   simulateStatusChanges,
   testApprovalEmail,
   testPendingEmail,
-  testRejectionEmail,
+  testRejectionEmail
 }
+

@@ -1,3 +1,4 @@
+import { FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
   BusinessUserRole,
@@ -19,19 +20,17 @@ export class BusinessService {
       let query:
         | FirebaseFirestore.Query
         | FirebaseFirestore.CollectionReference = db.collection(
-        this.collectionName
-      )
+          this.collectionName
+        )
 
       if (filter) {
-        if (filter.status) {
-          query = query.where('verification.status', '==', filter.status)
-        }
+        // preceedence: ownerId > userIds > status
         if (filter.ownerId) {
           query = query.where('ownerId', '==', filter.ownerId)
-        }
-        if (filter.userIds && filter.userIds.length > 0) {
-          // For user filtering, we'll need to check if any of the userIds exist in the users map
-          // This is complex with Firestore, so we'll fetch all and filter in memory for now
+        } else if (filter.userIds && filter.userIds.length > 0) {
+          query = query.where(`users.${filter.userIds[0]}`, "!=", null)
+        } else if (filter.status) {
+          query = query.where('verification.status', '==', filter.status)
         }
       }
 
@@ -103,7 +102,7 @@ export class BusinessService {
 
       await docRef.update({
         ...data,
-        updatedAt: new Date(),
+        updatedAt: FieldValue.serverTimestamp(),
       })
 
       const updatedDoc = await docRef.get()
@@ -198,14 +197,14 @@ export class BusinessService {
           {
             ...(approve
               ? {
-                  approvedAt: new Date(),
-                  approvedBy: adminId,
-                }
+                approvedAt: new Date(),
+                approvedBy: adminId,
+              }
               : {
-                  rejectedAt: new Date(),
-                  rejectedBy: adminId,
-                  rejectionReason: reason || null,
-                }),
+                rejectedAt: new Date(),
+                rejectedBy: adminId,
+                rejectionReason: reason || null,
+              }),
           },
         ],
       }

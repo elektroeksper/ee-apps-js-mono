@@ -4,19 +4,17 @@ import { IOperationResult } from './common-types'
 import { IAddress } from './map-types'
 
 interface IUserBusinessInfo {
+  ownerId?: string
   businessId: string
-  userId?: string
   businessTitle?: string
-  displayName?: string
-  email?: string
   role: BusinessUserRole
-  permissions?: any
   isActive: boolean
   status?: BusinessVerificationStatus
-  addedAt?: Date
+  joinedAt?: Date | Timestamp
 }
 
 interface IAppUser {
+  [key: string]: any // Index signature for dynamic properties
   id: string
   firstName: string
   lastName: string

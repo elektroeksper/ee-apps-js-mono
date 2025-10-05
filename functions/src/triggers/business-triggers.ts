@@ -11,7 +11,7 @@ import {
   sendBusinessApprovalEmail,
   sendBusinessRejectionEmail,
   sendEmail,
-} from '../utils/email.service'
+} from '../utils/email-utils'
 import { auth } from '../utils/firebase-admin'
 
 /**
