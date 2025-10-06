@@ -3,7 +3,7 @@
  * This script can be used to manually test the email functionality
  */
 
-import { BusinessVerificationStatus } from '../shared-generated'
+import { BusinessVerificationStatus } from '@shared'
 import {
   sendBusinessApprovalEmail,
   sendBusinessRejectionEmail,

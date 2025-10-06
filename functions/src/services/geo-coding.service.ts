@@ -1,7 +1,7 @@
+import { IAddress, IOperationResult } from '@shared'
 import { logger } from 'firebase-functions/v2'
 import https from 'node:https'
 import { URL } from 'node:url'
-import { IAddress, IOperationResult } from '../shared-generated'
 
 class GeocodingService {
   private apiKey: string | undefined

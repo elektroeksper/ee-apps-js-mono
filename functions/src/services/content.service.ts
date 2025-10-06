@@ -3,8 +3,6 @@
  * Handles content management operations server-side using Firebase Admin SDK
  */
 
-import { FieldValue } from 'firebase-admin/firestore'
-import { logger } from 'firebase-functions/v2'
 import {
   IAboutInfo,
   IBrandingInfo,
@@ -15,7 +13,9 @@ import {
   IVideoItem,
   IVideoSettings,
   VideoLocation,
-} from '../shared-generated'
+} from '@shared'
+import { FieldValue } from 'firebase-admin/firestore'
+import { logger } from 'firebase-functions/v2'
 import { db } from '../utils/firebase-admin'
 
 export class ContentService {

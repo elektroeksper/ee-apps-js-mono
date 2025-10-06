@@ -1,7 +1,7 @@
+import { IOperationResult } from "@shared"
 import { logger } from "firebase-functions/v2"
 import { onCall } from "firebase-functions/v2/https"
 import { ADMIN_USERS } from "../configs/constant"
-import { IOperationResult } from "../shared-generated"
 import { auth } from "../utils/firebase-admin"
 
 // Set admin claims for predefined admin users

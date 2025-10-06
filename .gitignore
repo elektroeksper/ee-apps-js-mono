@@ -145,6 +145,7 @@ web/firebase.json
 shared-generated/
 */shared-generated/
 
+
 # Lock files (keep pnpm-lock.yaml but ignore others)
 package-lock.json
 yarn.lock

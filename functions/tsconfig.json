@@ -14,8 +14,13 @@
     "declaration": true,
     "baseUrl": ".",
     "paths": {
-      "@electro-expert/shared": ["../shared/src"],
-      "@electro-expert/shared/*": ["../shared/src/*"]
+      "@configs/*": ["./src/configs/*"],
+      "@triggers/*": ["./src/triggers/*"],
+      "@functions/*": ["./src/functions/*"],
+      "@services/*": ["./src/services/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@shared": ["./src/shared-generated"],
+      "@shared/*": ["./src/shared-generated/*"]
     }
   },
   "compileOnSave": true,

@@ -1,8 +1,8 @@
 import * as admin from 'firebase-admin'
 import { db } from '../utils/firebase-admin'
 // Import types from shared-generated (will be copied at build time)
+import { IOperationResult, IOrder, OrderStatus } from '@shared'
 import { logger } from 'firebase-functions/v2'
-import { IOperationResult, IOrder, OrderStatus } from '../shared-generated'
 
 // Get user orders
 export async function getUserOrders(

@@ -1,7 +1,7 @@
+import { FB_COLL_NAMES, IAppUser, IBusinessFilter, IBusinessUserInfo } from '@shared'
 import { logger } from 'firebase-functions/v2'
 import { Change, FirestoreEvent, onDocumentUpdated, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore'
 import { businessService } from '../services/business.service'
-import { FB_COLL_NAMES, IAppUser, IBusinessFilter, IBusinessUserInfo } from '../shared-generated'
 import { db } from '../utils/firebase-admin'
 
 // Type definitions for better type safety

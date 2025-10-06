@@ -2,7 +2,6 @@ import * as admin from 'firebase-admin'
 import { auth, db } from '../utils/firebase-admin'
 // Import types from shared-generated (will be copied at build time)
 
-import { logger } from 'firebase-functions/v2'
 import {
   DocumentFileType,
   FB_COLL_NAMES,
@@ -10,7 +9,8 @@ import {
   IDocument,
   IOperationResult,
   StorageDocumentStatus,
-} from '../shared-generated'
+} from '@shared'
+import { logger } from 'firebase-functions/v2'
 
 
 export class UserService { }

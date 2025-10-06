@@ -1,5 +1,3 @@
-import { FieldValue } from 'firebase-admin/firestore'
-import { logger } from 'firebase-functions/v2'
 import {
   BusinessUserRole,
   BusinessVerificationStatus,
@@ -7,7 +5,9 @@ import {
   IBusinessFilter,
   IBusinessUserInfo,
   IOperationResult,
-} from '../shared-generated'
+} from '@shared'
+import { FieldValue } from 'firebase-admin/firestore'
+import { logger } from 'firebase-functions/v2'
 import { db } from '../utils/firebase-admin'
 
 export class BusinessService {

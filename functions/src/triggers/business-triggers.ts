@@ -4,9 +4,9 @@
  * when verification status changes
  */
 
+import { BusinessVerificationStatus, IBusiness } from '@shared'
 import { logger } from 'firebase-functions/v2'
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
-import { BusinessVerificationStatus, IBusiness } from '../shared-generated'
 import {
   sendBusinessApprovalEmail,
   sendBusinessRejectionEmail,

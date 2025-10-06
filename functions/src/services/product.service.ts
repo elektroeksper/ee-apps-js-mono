@@ -2,7 +2,7 @@ import * as admin from 'firebase-admin'
 import { logger } from 'firebase-functions/v2'
 import { db } from '../utils/firebase-admin'
 // Import types from shared-generated (will be copied at build time)
-import { IOperationResult, IProduct } from '../shared-generated'
+import { IOperationResult, IProduct } from '@shared'
 
 // Get all products
 export async function getProducts(): Promise<IOperationResult<IProduct[]>> {
