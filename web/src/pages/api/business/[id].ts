@@ -5,13 +5,14 @@
 
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import {
+  BusinessUserRole,
   DocumentCategory,
   DocumentFileType,
   IBusiness,
   IDocument,
   StorageDocumentStatus,
   StorageDocumentType,
-} from '@/shared-generated'
+} from '@/shared'
 import { Timestamp } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -208,7 +209,7 @@ async function handleUpdateBusiness(
     // Check permissions: Only owner or users with edit permissions can update
     const userInfo = businessData.users?.[userId]
     const isOwner = businessData.ownerId === userId
-    const hasEditPermission = userInfo?.permissions?.canEditBusinessInfo
+    const hasEditPermission = userInfo?.role === BusinessUserRole.OWNER || userInfo?.role === BusinessUserRole.MANAGER
 
     if (!isOwner && !hasEditPermission) {
       return res
@@ -241,8 +242,8 @@ async function handleUpdateBusiness(
       }
     })
 
-    // Add update metadata
-    ;(filteredUpdateData as any).updatedAt = Timestamp.now()
+      // Add update metadata
+      ; (filteredUpdateData as any).updatedAt = Timestamp.now()
 
     // Update business document
     await adminDb
@@ -307,7 +308,7 @@ async function handleDeleteBusiness(
     // Check permissions: Only admin or owner with delete permissions can delete
     const userInfo = businessData.users?.[userId]
     const isOwner = businessData.ownerId === userId
-    const hasDeletePermission = userInfo?.permissions?.canDeleteBusiness
+    const hasDeletePermission = userInfo?.role === BusinessUserRole.OWNER
 
     if (!isAdmin && !isOwner && !hasDeletePermission) {
       return res

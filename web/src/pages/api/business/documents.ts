@@ -13,7 +13,7 @@ import {
   IDocument,
   StorageDocumentStatus,
   StorageDocumentType,
-} from '@/shared-generated'
+} from '@/shared'
 import { randomUUID } from 'crypto'
 import { Timestamp } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'

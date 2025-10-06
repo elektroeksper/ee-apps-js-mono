@@ -1,6 +1,6 @@
 import * as admin from 'firebase-admin'
 import { auth, db } from '../utils/firebase-admin'
-// Import types from shared-generated (will be copied at build time)
+// Import types from @shared (resolved via path mapping)
 
 import {
   DocumentFileType,

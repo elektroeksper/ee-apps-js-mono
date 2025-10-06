@@ -10,7 +10,7 @@ import {
   BusinessVerificationStatus,
   IBusiness,
   IBusinessUserInfo,
-} from '@/shared-generated'
+} from '@/shared'
 import { Timestamp } from 'firebase/firestore'
 import { NextApiRequest, NextApiResponse } from 'next'
 
@@ -191,33 +191,11 @@ async function handleCreateBusiness(req: NextApiRequest, res: NextApiResponse) {
       ownerId: userId,
       users: {
         [userId]: {
-          businessId,
-          userId: userId,
-          businessTitle: 'Owner',
           displayName: user.displayName || user.email || 'Unknown',
           email: user.email || '',
           role: BusinessUserRole.OWNER,
-          permissions: {
-            canEditBusinessInfo: true,
-            canDeleteBusiness: true,
-            canManageDocuments: true,
-            canInviteUsers: true,
-            canApproveInvitations: true,
-            canRemoveUsers: true,
-            canChangeUserRoles: true,
-            canInviteOwners: false, // Only system can create owners
-            canInviteManagers: true,
-            canInviteTechnicians: true,
-            canInviteSupport: true,
-            canViewOrders: true,
-            canManageOrders: true,
-            canViewAnalytics: true,
-            canManageInventory: true,
-            canViewFinancials: true,
-            canManagePayments: true,
-          },
           isActive: true,
-          addedAt: Timestamp.now(),
+          joinedAt: Timestamp.now(),
           lastActiveAt: Timestamp.now(),
         },
       },
@@ -232,33 +210,11 @@ async function handleCreateBusiness(req: NextApiRequest, res: NextApiResponse) {
     // Update user document to link to business
     const userRef = adminDb.collection('users').doc(userId)
     const businessUserInfo: IBusinessUserInfo = {
-      businessId: businessId,
-      userId: userId,
-      businessTitle: 'Owner',
       displayName: user.displayName || user.email || 'Unknown',
       email: user.email || '',
       role: BusinessUserRole.OWNER,
-      permissions: {
-        canEditBusinessInfo: true,
-        canDeleteBusiness: true,
-        canManageDocuments: true,
-        canInviteUsers: true,
-        canApproveInvitations: true,
-        canRemoveUsers: true,
-        canChangeUserRoles: true,
-        canInviteOwners: false,
-        canInviteManagers: true,
-        canInviteTechnicians: true,
-        canInviteSupport: true,
-        canViewOrders: true,
-        canManageOrders: true,
-        canViewAnalytics: true,
-        canManageInventory: true,
-        canViewFinancials: true,
-        canManagePayments: true,
-      },
       isActive: true,
-      addedAt: Timestamp.now(),
+      joinedAt: Timestamp.now(),
       lastActiveAt: Timestamp.now(),
     }
 

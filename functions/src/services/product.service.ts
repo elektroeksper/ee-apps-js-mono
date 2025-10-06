@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin'
 import { logger } from 'firebase-functions/v2'
 import { db } from '../utils/firebase-admin'
-// Import types from shared-generated (will be copied at build time)
+// Import types from @shared (resolved via path mapping)
 import { IOperationResult, IProduct } from '@shared'
 
 // Get all products

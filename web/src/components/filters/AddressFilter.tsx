@@ -3,7 +3,7 @@
  * Provides hierarchical address filtering for dealer search
  */
 
-import { BUSINESS_CATEGORIES } from '@/shared-generated/configs/contants'
+import { BUSINESS_CATEGORIES } from '@/shared'
 import type {
   AddressComponent,
   IAddressComponentItem,
@@ -275,9 +275,8 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
                       }
                       className="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                     />
-                    <span className="text-2xl mr-2">{category.icon}</span>
                     <span className="text-sm text-gray-700">
-                      {category.label}
+                      {category.name}
                     </span>
                   </label>
                 ))}
@@ -340,7 +339,7 @@ const AddressFilter: React.FC<AddressFilterProps> = ({
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                 {
                   BUSINESS_CATEGORIES.find(c => c.id === selectedCategoryId)
-                    ?.label
+                    ?.name
                 }
                 <button
                   onClick={() =>
