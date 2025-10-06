@@ -3,6 +3,7 @@
 import { LoginForm } from '@/components/auth'
 import { PublicRoute } from '@/components/auth/AuthGuard'
 import { useRouter } from 'next/router'
+import { FaTimes } from 'react-icons/fa'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,6 +25,10 @@ export default function LoginPage() {
     router.push('/forgot-password')
   }
 
+  const handleClose = () => {
+    router.push('/')
+  }
+
   return (
     <PublicRoute redirectTo="/home">
       <div className="min-h-screen flex items-center justify-center bg-gradient-auth py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -35,7 +40,16 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 max-w-md w-full space-y-8">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+          <div className="bg-white backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20 relative">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={handleClose}
+              className="absolute top-4 right-4 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-sm hover:shadow-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center z-10"
+            >
+              <FaTimes className="w-4 h-4 text-gray-500 hover:text-gray-700" />
+            </button>
+
             {/* Logo */}
             <div className="flex justify-center items-center mb-8">
               <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-4 rounded-xl shadow-lg">

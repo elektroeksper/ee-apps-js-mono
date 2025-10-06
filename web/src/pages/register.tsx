@@ -4,6 +4,7 @@ import IndividualRegisterForm from '@/components/IndividualRegisterForm'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
+import { FaTimes } from 'react-icons/fa'
 
 type AccountType = 'individual' | 'business'
 
@@ -13,6 +14,10 @@ const RegisterPage: React.FC = () => {
   const [accountType, setAccountType] = useState<AccountType | undefined>(
     undefined
   )
+
+  const handleClose = () => {
+    router.push('/')
+  }
 
   useEffect(() => {
     if (!router.isReady) return
@@ -52,12 +57,20 @@ const RegisterPage: React.FC = () => {
 
         <div className="relative z-10 w-full max-w-2xl mx-auto space-y-8">
           <div
-            className={`bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20 mx-auto ${
+            className={`bg-white backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20 mx-auto relative ${
               accountType === 'business'
                 ? 'w-full max-w-4xl'
                 : 'w-full max-w-md'
             }`}
           >
+            <button
+              onClick={handleClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              aria-label="Close"
+              type="button"
+            >
+              <FaTimes size={20} />
+            </button>
             {accountType === 'business' && <BusinessRegisterForm />}
             {accountType === 'individual' && <IndividualRegisterForm />}
           </div>

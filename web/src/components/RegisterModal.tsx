@@ -23,22 +23,15 @@ interface RegisterModalProps {
   isOpen: boolean
   onClose: () => void
   onSwitchToLogin?: () => void
-  defaultAccountType?: 'individual' | 'business'
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
   isOpen,
   onClose,
   onSwitchToLogin,
-  defaultAccountType = 'individual',
 }) => {
-  const [accountType, setAccountType] = useState<'individual' | 'business'>(
-    defaultAccountType
-  )
-
   const handleClose = () => {
     onClose()
-    setAccountType(defaultAccountType)
   }
 
   const handleSwitchToLogin = () => {
@@ -49,49 +42,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      maxWidth={accountType === 'business' ? 'lg' : 'md'}
-    >
+    <Modal isOpen={isOpen} onClose={handleClose} maxWidth={'md'}>
       <div className="space-y-4">
-        {/* Account Type Selector */}
-        <div className="flex justify-center space-x-2 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setAccountType('individual')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              accountType === 'individual'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-blue-600'
-            }`}
-          >
-            Bireysel Hesap
-          </button>
-          <button
-            onClick={() => setAccountType('business')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              accountType === 'business'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-blue-600'
-            }`}
-          >
-            İşletme Hesabı
-          </button>
-        </div>
-
-        {/* Form Content - Reduced max height for better fit */}
         <div className="max-h-[60vh] overflow-y-auto">
-          {accountType === 'individual' ? (
-            <IndividualRegisterFormModal
-              onClose={handleClose}
-              onSwitchToLogin={handleSwitchToLogin}
-            />
-          ) : (
-            <BusinessRegisterFormModal
-              onClose={handleClose}
-              onSwitchToLogin={handleSwitchToLogin}
-            />
-          )}
+          <IndividualRegisterFormModal
+            onClose={handleClose}
+            onSwitchToLogin={handleSwitchToLogin}
+          />
         </div>
       </div>
     </Modal>
@@ -194,9 +151,8 @@ const IndividualRegisterFormModal: React.FC<{
     <div className="space-y-3">
       <div className="text-center">
         <h2 className="text-lg font-bold text-gray-900 mb-1">
-          Bireysel Hesap Oluştur
+          Platformumuza katılın
         </h2>
-        <p className="text-sm text-gray-600">Platformumuza katılın</p>
       </div>
 
       {/* Google Registration Button */}

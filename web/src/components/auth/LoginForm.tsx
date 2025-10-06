@@ -120,7 +120,6 @@ export function LoginForm({
           <h2 className="text-2xl font-bold text-gray-900">
             Tekrar Hoş Geldiniz
           </h2>
-          <p className="text-gray-600 mt-2">Hesabınıza giriş yapın</p>
         </div>
 
         {/* Google Login Button - Only for Individual accounts */}
