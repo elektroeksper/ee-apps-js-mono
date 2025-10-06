@@ -4,7 +4,7 @@
  */
 
 import { adminDb } from '@/lib/firebase-admin'
-import { ISliderItem } from '@/shared-generated'
+import { ISliderItem } from '@/shared'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 interface SlidersResponse {

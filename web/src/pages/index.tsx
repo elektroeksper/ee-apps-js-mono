@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/Button'
 import IndexVideoAndLoginSection from '@/components/ui/IndexVideoAndLoginSection'
 import { useAuth } from '@/contexts/AuthContext'
-import { IVideoItem } from '@/shared-generated'
+import { IVideoItem } from '@/shared'
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'

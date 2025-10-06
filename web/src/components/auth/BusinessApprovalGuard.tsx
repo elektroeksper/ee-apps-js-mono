@@ -5,8 +5,8 @@
  */
 
 import { useAuth } from '@/contexts/AuthContext'
-import { AccountType, BusinessVerificationStatus } from '@/shared-generated'
-import type { IAppUser } from '@/shared-generated/types/user-types'
+import { AccountType, BusinessVerificationStatus } from '@/shared'
+import type { IAppUser } from '@/shared/types/user-types'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { LoadingSpinner } from '../ui/LoadingSpinner'

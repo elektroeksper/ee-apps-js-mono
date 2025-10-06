@@ -1,4 +1,4 @@
-import type { IVideoItem } from '@/shared-generated/types/content-types'
+import type { IVideoItem } from '@/shared/types/content-types'
 
 /**
  * Type guard function to ensure video has required properties
@@ -34,7 +34,7 @@ export const generateYouTubeEmbedUrl = (video: any): string | null => {
   const autoplayParam = safeVideo.autoStart ? '?autoplay=1' : ''
   const loopParam = safeVideo.loop
     ? (autoplayParam ? '&loop=1&playlist=' : '?loop=1&playlist=') +
-      safeVideo.youtubeVideoId
+    safeVideo.youtubeVideoId
     : ''
 
   return `https://www.youtube.com/embed/${safeVideo.youtubeVideoId}${autoplayParam}${loopParam}`

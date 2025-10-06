@@ -1,6 +1,6 @@
 'use client'
 
-import { extractYouTubeVideoId } from '@/shared-generated/utils/youtube-utils'
+import { extractYouTubeVideoId } from '@/shared/utils'
 import { useEffect, useState } from 'react'
 import { FiSave, FiX } from 'react-icons/fi'
 import { VideoPreview } from './VideoPreview'

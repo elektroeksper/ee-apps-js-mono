@@ -9,7 +9,7 @@ import {
   BusinessVerificationStatus,
   IAppUser,
   IBusiness,
-} from '@/shared-generated'
+} from '@/shared'
 import { GetServerSideProps } from 'next'
 import { useCallback, useEffect, useState } from 'react'
 import {

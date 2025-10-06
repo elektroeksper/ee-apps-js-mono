@@ -3,4 +3,5 @@
  * Export all configuration modules
  */
 
-export * from './contants'
+export * from './constants';
+

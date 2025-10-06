@@ -3,7 +3,7 @@ import {
   IApiResponse,
   ISettingItem,
   SystemSettingsKey,
-} from '@/shared-generated/types/common-types'
+} from '@/shared/types/common-types'
 import { getFirestore } from 'firebase-admin/firestore'
 import { NextApiRequest, NextApiResponse } from 'next'
 

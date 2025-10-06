@@ -15,7 +15,7 @@ import {
   IOperationResult,
   IPasswordChangeData,
   IRegisterData,
-} from '@/shared-generated'
+} from '@/shared'
 import {
   createUserWithEmailAndPassword,
   deleteUser,

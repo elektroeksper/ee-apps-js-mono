@@ -7,7 +7,7 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import {
   AccountType,
   IAppUser,
-} from '@/shared-generated'
+} from '@/shared'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 interface GoogleOAuthRequest {

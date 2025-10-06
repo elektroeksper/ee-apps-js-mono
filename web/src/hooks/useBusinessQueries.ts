@@ -8,7 +8,7 @@ import {
   IBusiness,
   IBusinessFilter,
   IOperationResult,
-} from '@/shared-generated'
+} from '@/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { businessService } from '../services/business.service'
 

@@ -1,4 +1,4 @@
-import { FileMetadata } from '@/shared-generated/types'
+import { FileMetadata } from '@/shared/types'
 
 type UploadCategory =
   | 'general'

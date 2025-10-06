@@ -4,7 +4,7 @@
  */
 
 import { adminDb, verifyIdToken } from '@/lib/firebase-admin'
-import { BusinessVerificationStatus } from '@/shared-generated'
+import { BusinessVerificationStatus } from '@/shared'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(

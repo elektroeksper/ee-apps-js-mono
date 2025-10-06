@@ -4,7 +4,7 @@
  */
 
 import { adminAuth, adminDb, verifyIdToken } from '@/lib/firebase-admin'
-import { AccountType, BusinessVerificationStatus } from '@/shared-generated'
+import { AccountType, BusinessVerificationStatus } from '@/shared'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 interface IUserStats {
@@ -208,8 +208,8 @@ export default async function handler(
     const monthlyGrowth =
       lastMonthUsers > 0
         ? Math.round(
-            ((currentMonthUsers - lastMonthUsers) / lastMonthUsers) * 100
-          )
+          ((currentMonthUsers - lastMonthUsers) / lastMonthUsers) * 100
+        )
         : currentMonthUsers > 0
           ? 100
           : 0

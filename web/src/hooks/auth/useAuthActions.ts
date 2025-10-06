@@ -8,10 +8,10 @@ import {
   IOperationResult,
   IPasswordChangeData,
   IRegisterData,
-} from '@/shared-generated'
+} from '@/shared'
 import { useCallback } from 'react'
 
-interface ActionResult<T = void> extends IOperationResult<T> {}
+interface ActionResult<T = void> extends IOperationResult<T> { }
 
 export function useAuthActions() {
   const login = useCallback(async (data: ILoginData): Promise<ActionResult> => {

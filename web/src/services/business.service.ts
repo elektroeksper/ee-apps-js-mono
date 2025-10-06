@@ -9,7 +9,7 @@ import {
   IBusiness,
   IBusinessFilter,
   IOperationResult,
-} from '@/shared-generated'
+} from '@/shared'
 
 // Get auth instance safely
 const getAuth = () => {

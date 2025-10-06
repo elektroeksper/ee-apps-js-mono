@@ -1,4 +1,4 @@
-import { AccountType, IRegisterData, TaxNumberType } from '@/shared-generated'
+import { AccountType, IRegisterData, TaxNumberType } from '@/shared'
 import { z } from 'zod'
 
 // Login Schema
@@ -193,7 +193,7 @@ export const businessRegisterSchema = z
 
     // If businessName is not provided, use businessName as default
     if (!data.businessName) {
-      ;(data as any).businessName = data.businessName
+      ; (data as any).businessName = data.businessName
     }
   })
 
@@ -203,7 +203,7 @@ export type BusinessRegisterFormData = z.infer<typeof businessRegisterSchema>
 export const transformToBusinessRegisterData = (
   formData: BusinessRegisterFormData,
   ownerId: string
-): import('@/shared-generated').IBusinessRegisterData => {
+): import('@/shared').IBusinessRegisterData => {
   return {
     // IRegisterData fields
     firstName: formData.firstName,
@@ -235,7 +235,7 @@ export const transformToBusinessRegisterData = (
     website: formData.website,
     industry: formData.industry || '',
     companySize:
-      formData.companySize as import('@/shared-generated').CompanySize,
+      formData.companySize as import('@/shared').CompanySize,
     mainCategoryId: formData.mainCategoryId,
     subCategoryIds: formData.subCategoryIds,
     description: formData.description,

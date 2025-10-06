@@ -8,7 +8,7 @@ import {
   DocumentCategory,
   IDocument,
   IOperationResult,
-} from '@/shared-generated'
+} from '@/shared'
 
 export interface BusinessDocumentService {
   getDocuments(): Promise<IOperationResult<IDocument[]>>

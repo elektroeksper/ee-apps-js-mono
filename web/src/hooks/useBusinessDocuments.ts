@@ -4,7 +4,7 @@
  */
 
 import { businessDocumentService } from '@/services/documents.service'
-import { DocumentCategory, IDocument } from '@/shared-generated'
+import { DocumentCategory, IDocument } from '@/shared'
 import { useCallback, useEffect, useState } from 'react'
 
 export interface UseBusinessDocumentsState {

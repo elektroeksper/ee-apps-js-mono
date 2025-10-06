@@ -4,7 +4,7 @@
  */
 
 import { DEFAULT_MAP_OPTIONS, GOOGLE_MAPS_CONFIG } from '@/config/maps'
-import type { ICoordinates } from '@/shared-generated/types/map-types'
+import type { ICoordinates } from '@/shared/types/map-types'
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 

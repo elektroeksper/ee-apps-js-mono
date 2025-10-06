@@ -8,7 +8,7 @@ import {
   DocumentFileType,
   IDocument,
   IStorageService,
-} from '@/shared-generated/types'
+} from '@/shared/types'
 import { authService } from './auth.service'
 
 /**
@@ -41,7 +41,7 @@ export class StorageClientService implements IStorageService {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(
           errorData.error ||
-            `HTTP ${response.status}: Failed to fetch documents`
+          `HTTP ${response.status}: Failed to fetch documents`
         )
       }
 
@@ -104,7 +104,7 @@ export class StorageClientService implements IStorageService {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(
           errorData.error ||
-            `HTTP ${response.status}: Failed to upload document`
+          `HTTP ${response.status}: Failed to upload document`
         )
       }
 
@@ -154,7 +154,7 @@ export class StorageClientService implements IStorageService {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(
           errorData.error ||
-            `HTTP ${response.status}: Failed to delete document`
+          `HTTP ${response.status}: Failed to delete document`
         )
       }
 

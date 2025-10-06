@@ -4,7 +4,7 @@
  */
 
 import { adminDb, verifyIdToken } from '@/lib/firebase-admin'
-import { IServiceItem } from '@/shared-generated'
+import { IServiceItem } from '@/shared'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(

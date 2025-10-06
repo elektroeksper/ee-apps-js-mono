@@ -1,6 +1,6 @@
 'use client'
 
-import { IAppUser } from '@/shared-generated'
+import { IAppUser } from '@/shared'
 import { useMemo } from 'react'
 
 interface RoleState {

@@ -4,7 +4,7 @@
  */
 
 import { useAuth } from '@/contexts/AuthContext'
-import { AccountType } from '@/shared-generated'
+import { AccountType } from '@/shared'
 import { useRouter } from 'next/router'
 import React from 'react'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useBusiness } from '@/hooks/useBusinessQueries'
-import { AccountType, BusinessUserRole, IAppUser } from '@/shared-generated'
+import { AccountType, BusinessUserRole, IAppUser } from '@/shared'
 import React from 'react'
 import {
   FiCalendar,
@@ -230,11 +230,11 @@ export default function UserDetailModal({
                     </span>
                   </div>
 
-                  {userBusinessInfo?.businessTitle && (
+                  {userBusinessInfo?.role && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Unvan</span>
+                      <span className="text-sm text-gray-500">Rol</span>
                       <span className="font-medium">
-                        {userBusinessInfo.businessTitle}
+                        {userBusinessInfo.role}
                       </span>
                     </div>
                   )}
@@ -252,13 +252,13 @@ export default function UserDetailModal({
                     </span>
                   </div>
 
-                  {userBusinessInfo?.addedAt && (
+                  {userBusinessInfo?.joinedAt && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">
-                        Ekleme Tarihi
+                        Katılım Tarihi
                       </span>
                       <span className="font-medium">
-                        {formatDate(userBusinessInfo.addedAt)}
+                        {formatDate(userBusinessInfo.joinedAt)}
                       </span>
                     </div>
                   )}

@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/Input'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { GOOGLE_MAPS_CONFIG } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
-import { IVideoItem } from '@/shared-generated'
-import type { IAddress, ICoordinates } from '@/shared-generated/types/map-types'
+import { IVideoItem } from '@/shared'
+import type { IAddress, ICoordinates } from '@/shared/types/map-types'
 import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useState } from 'react'
 import GoogleAddressAutocomplete, {
@@ -274,7 +274,7 @@ const IndividualSetup: React.FC<IndividualSetupProps> = ({ videos = [] }) => {
 
     try {
       // Convert local address format to shared address format
-      const sharedAddress: import('@/shared-generated').IAddress = {
+      const sharedAddress: import('@/shared').IAddress = {
         street: formData.address.street,
         city: formData.address.city,
         state: formData.address.state,

@@ -1,4 +1,4 @@
-import { ISettingItem } from '@/shared-generated'
+import { ISettingItem } from '@/shared'
 import { useState } from 'react'
 import { FiCode, FiEyeOff } from 'react-icons/fi'
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { AccountType, IAppUser } from '@/shared-generated'
+import { AccountType, IAppUser } from '@/shared'
 import { useCallback, useEffect, useState } from 'react'
 import { useFirebaseAuth } from './useFirebaseAuth'
 

@@ -8,7 +8,7 @@ import {
   transformToBusinessRegisterData,
   type BusinessRegisterFormData,
 } from '@/lib/validations/auth'
-import { AccountType, ICoordinates, TaxNumberType } from '@/shared-generated'
+import { AccountType, ICoordinates, TaxNumberType } from '@/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useRouter } from 'next/router'

@@ -20,26 +20,20 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@/shared-generated": ["./src/shared-generated"],
-      "@/shared-generated/*": ["./src/shared-generated/*"],
+      "@/shared": ["./src/shared-generated"],
+      "@/shared/*": ["./src/shared-generated/*"],
       "@/components/*": ["./src/components/*"],
       "@/pages/*": ["./src/pages/*"],
+      "@/models/*": ["./src/models/*"],
       "@/styles/*": ["./src/styles/*"],
       "@/utils/*": ["./src/utils/*"],
       "@/hooks/*": ["./src/hooks/*"],
       "@/contexts/*": ["./src/contexts/*"],
       "@/services/*": ["./src/services/*"],
-      "@/config/*": ["./src/config/*"],
-      "@electro-expert/shared": ["../shared/src"],
-      "@electro-expert/shared/*": ["../shared/src/*"]
+      "@/config/*": ["./src/config/*"]
     },
     "target": "ES2017"
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"],
-  "references": [
-    {
-      "path": "../shared"
-    }
-  ]
+  "exclude": ["node_modules"]
 }

@@ -12,7 +12,7 @@ import {
   useUserDoc,
 } from '@/hooks/auth'
 // import { useBusiness } from '@/hooks/useBusiness' // Disabled for Firebase Admin SDK migration
-import type { IAuthContextType } from '@/shared-generated'
+import type { IAuthContextType } from '@/shared'
 import {
   createContext,
   ReactNode,

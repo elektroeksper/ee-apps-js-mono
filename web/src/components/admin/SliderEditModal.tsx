@@ -1,4 +1,4 @@
-import { ISliderItem } from '@/shared-generated'
+import { ISliderItem } from '@/shared'
 import { useEffect, useState } from 'react'
 import { FiFolder, FiX } from 'react-icons/fi'
 import UploadManagerModal from './UploadManagerModal'

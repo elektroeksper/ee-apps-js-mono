@@ -4,7 +4,7 @@
  */
 
 import { userService } from '@/services/user.service'
-import { IAppUser, IBusiness } from '@/shared-generated'
+import { IAppUser, IBusiness } from '@/shared'
 import { useCallback, useEffect, useState } from 'react'
 
 export interface UseUserProfileState {
@@ -22,7 +22,7 @@ export interface UseUserProfileActions {
 
 export interface UseUserProfileReturn
   extends UseUserProfileState,
-    UseUserProfileActions {}
+  UseUserProfileActions { }
 
 /**
  * Hook for managing a specific user's profile

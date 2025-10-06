@@ -3,7 +3,7 @@
  * Handles user profile operations using Next.js API routes
  */
 
-import { IAppUser, IOperationResult, IUserFilter } from '@/shared-generated'
+import { IAppUser, IOperationResult, IUserFilter } from '@/shared'
 
 export class UserService {
   private baseUrl = '/api/user'

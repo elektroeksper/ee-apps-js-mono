@@ -23,12 +23,14 @@ interface RegisterModalProps {
   isOpen: boolean
   onClose: () => void
   onSwitchToLogin?: () => void
+  defaultAccountType?: 'individual' | 'business'
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
   isOpen,
   onClose,
   onSwitchToLogin,
+  defaultAccountType = 'individual',
 }) => {
   const handleClose = () => {
     onClose()
@@ -45,10 +47,17 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     <Modal isOpen={isOpen} onClose={handleClose} maxWidth={'md'}>
       <div className="space-y-4">
         <div className="max-h-[60vh] overflow-y-auto">
-          <IndividualRegisterFormModal
-            onClose={handleClose}
-            onSwitchToLogin={handleSwitchToLogin}
-          />
+          {defaultAccountType === 'business' ? (
+            <BusinessRegisterFormModal
+              onClose={handleClose}
+              onSwitchToLogin={handleSwitchToLogin}
+            />
+          ) : (
+            <IndividualRegisterFormModal
+              onClose={handleClose}
+              onSwitchToLogin={handleSwitchToLogin}
+            />
+          )}
         </div>
       </div>
     </Modal>

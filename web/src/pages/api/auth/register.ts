@@ -12,7 +12,7 @@ import {
   IBusiness,
   IBusinessRegisterData,
   IRegisterData,
-} from '@/shared-generated'
+} from '@/shared'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 interface RegisterRequest {
@@ -183,7 +183,7 @@ export default async function handler(
         businessId: businessId,
         role: BusinessUserRole.OWNER,
         isActive: true,
-        addedAt: new Date(),
+        joinedAt: new Date(),
       }
     }
 

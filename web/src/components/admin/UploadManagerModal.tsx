@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext'
 import adminUploadsService from '@/services/uploads.service'
-import { FileMetadata } from '@/shared-generated/types'
+import { FileMetadata } from '@/shared/types'
 import { useCallback, useEffect, useState } from 'react'
 import {
   FiCheck,

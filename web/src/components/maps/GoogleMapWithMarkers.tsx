@@ -4,10 +4,7 @@
  */
 
 import { DEFAULT_MAP_OPTIONS, GOOGLE_MAPS_CONFIG } from '@/config/maps'
-import type {
-  ICoordinates,
-  IMarkerData,
-} from '@/shared-generated/types/map-types'
+import type { ICoordinates, IMarkerData } from '@/shared/types/map-types'
 import {
   GoogleMap,
   InfoWindow,

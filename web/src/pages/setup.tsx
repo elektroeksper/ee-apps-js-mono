@@ -7,7 +7,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard'
 import BusinessSetup from '@/components/setup/BusinessSetup'
 import IndividualSetup from '@/components/setup/IndividualSetup'
 import { useAuth } from '@/contexts/AuthContext'
-import { AccountType } from '@/shared-generated'
+import { AccountType } from '@/shared'
 
 export default function SetupPage() {
   const { appUser, isLoading } = useAuth()

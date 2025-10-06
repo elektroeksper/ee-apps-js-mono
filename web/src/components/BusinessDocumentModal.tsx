@@ -1,6 +1,6 @@
 'use client'
 
-import { IAppUser, IDocument } from '@/shared-generated'
+import { IAppUser, IDocument } from '@/shared'
 import { useEffect, useState } from 'react'
 import {
   FiCheck,
