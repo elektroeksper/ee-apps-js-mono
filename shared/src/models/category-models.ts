@@ -2,16 +2,17 @@ import { Timestamp } from "firebase/firestore";
 import { ICategory } from "../types";
 
 export class Category implements ICategory {
-  id?: string | undefined;
+  id?: string;
   slug: string;
   name: string;
-  description?: string | undefined;
-  parentCategoryId?: string | undefined;
-  isActive?: boolean | undefined;
-  isDeleted?: boolean | undefined;
-  createdAt?: Date | Timestamp | undefined;
-  updatedAt?: Date | Timestamp | undefined;
-  updatedBy?: string | undefined;
+  description?: string;
+  order?: number;
+  parentCategoryId?: string | null;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  createdAt?: Date | Timestamp;
+  updatedAt?: Date | Timestamp;
+  updatedBy?: string;
 
   constructor(id?: string, data?: ICategory) {
     if (id) this.id = id;
@@ -25,6 +26,7 @@ export class Category implements ICategory {
       this.createdAt = data.createdAt;
       this.updatedAt = data.updatedAt;
       this.updatedBy = data.updatedBy;
+      this.order = data.order;
     } else {
       this.slug = "";
       this.name = "";

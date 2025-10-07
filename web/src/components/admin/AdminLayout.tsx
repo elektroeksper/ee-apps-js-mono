@@ -7,6 +7,7 @@ import { ReactNode, useState } from 'react'
 import {
   FiBarChart,
   FiEdit,
+  FiGrid,
   FiHome,
   FiLogOut,
   FiMenu,
@@ -27,6 +28,8 @@ interface INavItem {
 }
 
 export default function AdminLayout({ children, title }: IAdminLayoutProps) {
+  console.log('🏗️ AdminLayout: Rendering with title:', title)
+
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { logout } = useAuth()
@@ -43,6 +46,12 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
       href: '/admin/users',
       icon: FiUsers,
       description: 'Kullanıcı yönetimi',
+    },
+    {
+      label: 'Kategori Yönetimi',
+      href: '/admin/categories',
+      icon: FiGrid,
+      description: 'Kategori yönetimi',
     },
     {
       label: 'İçerik Yönetimi',

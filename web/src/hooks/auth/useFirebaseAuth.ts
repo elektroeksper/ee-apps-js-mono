@@ -2,7 +2,7 @@
 
 import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { onAuthStateChanged, User } from 'firebase/auth'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface FirebaseAuthState {
   fireUser: User | null
@@ -62,9 +62,11 @@ export function useFirebaseAuth(): FirebaseAuthState {
           // Additional client-side check before importing
           if (typeof window === 'undefined') {
             console.warn('🚨 useFirebaseAuth: Running on server side, skipping initialization')
-            setIsAuthLoading(false)
+            if (mounted.current) setIsAuthLoading(false)
             return
           }
+
+          console.log('✅ useFirebaseAuth: Running on CLIENT side, proceeding with initialization')
 
           const { getFirebaseAuth } = await import('@/config/firebase-client-only')
           const auth = getFirebaseAuth()
@@ -151,6 +153,68 @@ export function useFirebaseAuth(): FirebaseAuthState {
         }
       })()
   }
+
+  // Fallback useEffect for client-side initialization (if direct approach fails)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !initialized.current) {
+      console.log('🔄 useFirebaseAuth: Fallback useEffect initialization...')
+      initialized.current = true
+
+      const initializeAuth = async () => {
+        try {
+          const { getFirebaseAuth } = await import('@/config/firebase-client-only')
+          const auth = getFirebaseAuth()
+
+          if (!auth) {
+            console.warn('🚨 useFirebaseAuth: Firebase Auth not available in fallback')
+            setIsAuthLoading(false)
+            return
+          }
+
+          const currentUser = auth.currentUser
+          console.log('🔄 useFirebaseAuth: Fallback - Current user:', currentUser?.email || 'null')
+
+          if (currentUser) {
+            setFireUser(currentUser)
+            await loadClaims(currentUser, true) // Force refresh claims
+            setIsAuthLoading(false)
+          }
+
+          onAuthStateChanged(auth, async user => {
+            console.log('🔄 useFirebaseAuth: Fallback - Auth state changed to:', user?.email || 'null')
+
+            if (!mounted.current) return
+
+            try {
+              setError(null)
+              if (user) {
+                setFireUser(user)
+                await loadClaims(user, true) // Force refresh
+              } else {
+                setFireUser(null)
+                setClaims(null)
+              }
+            } catch (e: any) {
+              console.error('🚨 useFirebaseAuth: Fallback error:', e)
+              setError(getAuthErrorMessage(e.code || e.message || 'default'))
+            } finally {
+              if (mounted.current) {
+                setIsAuthLoading(false)
+              }
+            }
+          })
+        } catch (e) {
+          console.error('🚨 useFirebaseAuth: Fallback initialization error:', e)
+          if (mounted.current) {
+            setIsAuthLoading(false)
+            setError('Failed to initialize authentication')
+          }
+        }
+      }
+
+      initializeAuth()
+    }
+  }, [loadClaims])
 
   return { fireUser, claims, isAuthLoading, error, refreshClaims }
 }

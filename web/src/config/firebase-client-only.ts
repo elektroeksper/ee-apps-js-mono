@@ -65,7 +65,12 @@ const connectToEmulators = () => {
 
   const useEmulator = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === 'true'
 
-  if (!useEmulator) return
+  console.log('🔧 Firebase Emulator check:', { useEmulator, env: process.env.NEXT_PUBLIC_FIREBASE_EMULATOR })
+
+  if (!useEmulator) {
+    console.log('✅ Using production Firebase, skipping emulators')
+    return
+  }
 
   console.log('🔧 Connecting to Firebase emulators...')
 
@@ -80,7 +85,7 @@ const connectToEmulators = () => {
 
     // Connect Firestore emulator - create fresh instance
     if (!_db) {
-      _db = getFirestore(app, 'native-db')
+      _db = getFirestore(app)
       connectFirestoreEmulator(_db, '127.0.0.1', 8080)
       console.log('✅ Firestore emulator connected to 127.0.0.1:8080')
     }
@@ -145,7 +150,9 @@ export const getFirebaseFirestore = () => {
     // Ensure app is initialized and emulators connected first
     getFirebaseApp()
     if (!_db) {
-      _db = getFirestore(app, 'native-db')
+      console.log('🔥 Initializing Firestore with default database')
+      _db = getFirestore(app)
+      console.log('🔥 Firestore initialized:', _db)
     }
   }
   return _db
@@ -194,7 +201,12 @@ export const getFirebaseAnalytics = () => {
 
 // Safe accessors that won't break during build
 export const auth = isClientSide ? getFirebaseAuth() : null
-export const db = isClientSide ? getFirebaseFirestore() : null
+export const db = isClientSide ? (() => {
+  console.log('🔥 Getting Firestore db reference, isClientSide:', isClientSide)
+  const dbRef = getFirebaseFirestore()
+  console.log('🔥 DB reference obtained:', dbRef)
+  return dbRef
+})() : null
 export const functions = isClientSide ? getFirebaseFunctions() : null
 export const storage = isClientSide ? getFirebaseStorage() : null
 export const analytics = isClientSide ? getFirebaseAnalytics() : null

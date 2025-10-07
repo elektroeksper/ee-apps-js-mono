@@ -2,10 +2,11 @@ import { IEntity } from "./common-types";
 
 interface ICategory extends IEntity {
   id?: string;
+  order?: number;
   slug: string;
   name: string;
   description?: string;
-  parentCategoryId?: string;
+  parentCategoryId?: string | null;
   isActive?: boolean;
 }
 

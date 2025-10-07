@@ -8,7 +8,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const categoriesResult = await categoriesService.getAll();
+    // For public API, return active main categories only
+    const categoriesResult = await categoriesService.getAll({
+      isActive: true,
+      parentCategoryId: null
+    });
 
     if (categoriesResult.success) {
       return res.status(200).json({

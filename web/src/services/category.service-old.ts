@@ -1,6 +1,6 @@
 
-import { db } from '@/config/firebase-client-only';
 import { adminDb } from '@/lib/firebase-admin';
+import { db } from '@/config/firebase-client-only';
 import {
   FB_COLL_NAMES,
   ICategory,
@@ -8,11 +8,16 @@ import {
   IOperationResult
 } from '@/shared';
 import { Category } from '@/shared-generated/models';
-import {
-  collection,
-  getDocs,
-  query,
-  where
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc,
+  DocumentReference 
 } from 'firebase/firestore';
 
 
@@ -66,7 +71,7 @@ export class CategoriesService {
   async getAll(filter: ICategoryFilter): Promise<IOperationResult<ICategory[]>> {
     try {
       console.log('🔥 CategoriesService.getAll (Admin): Starting query with filter', filter);
-
+      
       let query: FirebaseFirestore.Query = adminDb.collection(FB_COLL_NAMES.categories);
 
       if (filter.isActive !== undefined) {
@@ -100,10 +105,10 @@ export class CategoriesService {
   async create(category: ICategory): Promise<IOperationResult<ICategory>> {
     try {
       console.log('🔥 CategoriesService.create (Admin): Creating category', category);
-
+      
       const docRef = await adminDb.collection(FB_COLL_NAMES.categories).add(category);
       const newCategory = new Category(docRef.id, category);
-
+      
       console.log('🔥 CategoriesService.create (Admin): Category created', newCategory);
       return { success: true, data: newCategory };
     } catch (error) {
@@ -115,16 +120,16 @@ export class CategoriesService {
   async update(categoryId: string, category: Partial<ICategory>): Promise<IOperationResult<ICategory>> {
     try {
       console.log('🔥 CategoriesService.update (Admin): Updating category', categoryId, category);
-
+      
       await adminDb.collection(FB_COLL_NAMES.categories).doc(categoryId).update(category);
       const updatedDoc = await adminDb.collection(FB_COLL_NAMES.categories).doc(categoryId).get();
-
+      
       if (!updatedDoc.exists) {
         return { success: false, error: 'Category not found', code: 404 };
       }
-
+      
       const updatedCategory = new Category(updatedDoc.id, updatedDoc.data() as ICategory);
-
+      
       console.log('🔥 CategoriesService.update (Admin): Category updated', updatedCategory);
       return { success: true, data: updatedCategory };
     } catch (error) {
@@ -136,7 +141,7 @@ export class CategoriesService {
   async updateWithParentChildLogic(categoryId: string, category: Partial<ICategory>): Promise<IOperationResult<ICategory>> {
     try {
       console.log('🔥 CategoriesService.updateWithParentChildLogic (Admin): Updating category', categoryId, category);
-
+      
       const categoriesRef = adminDb.collection(FB_COLL_NAMES.categories);
 
       // Get the current category first
@@ -196,7 +201,7 @@ export class CategoriesService {
   async delete(categoryId: string): Promise<IOperationResult<void>> {
     try {
       console.log('🔥 CategoriesService.delete (Admin): Deleting category', categoryId);
-
+      
       const categoriesRef = adminDb.collection(FB_COLL_NAMES.categories);
 
       // Find subcategories with parentCategoryId === categoryId
@@ -220,12 +225,12 @@ export class CategoriesService {
   async checkHasSubCategories(categoryId: string): Promise<IOperationResult<boolean>> {
     try {
       console.log('🔥 CategoriesService.checkHasSubCategories (Admin): Checking for subcategories', categoryId);
-
+      
       const snapshot = await adminDb.collection(FB_COLL_NAMES.categories)
         .where('parentCategoryId', '==', categoryId)
         .limit(1)
         .get();
-
+      
       console.log('🔥 CategoriesService.checkHasSubCategories (Admin): Has subcategories:', !snapshot.empty);
       return { success: true, data: !snapshot.empty };
     } catch (error) {
@@ -237,7 +242,7 @@ export class CategoriesService {
   async validateSubCategoryActivation(categoryId: string): Promise<IOperationResult<{ canActivate: boolean; parentName?: string }>> {
     try {
       console.log('🔥 CategoriesService.validateSubCategoryActivation (Admin): Validating activation', categoryId);
-
+      
       const categoryDoc = await adminDb.collection(FB_COLL_NAMES.categories).doc(categoryId).get();
       if (!categoryDoc.exists) {
         return { success: false, error: 'Category not found', code: 404 };
@@ -261,7 +266,7 @@ export class CategoriesService {
         canActivate: parentData.isActive ?? false,
         parentName: parentData.name
       };
-
+      
       console.log('🔥 CategoriesService.validateSubCategoryActivation (Admin): Validation result', result);
       return { success: true, data: result };
     } catch (error: any) {

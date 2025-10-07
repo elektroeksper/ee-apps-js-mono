@@ -42,12 +42,25 @@ export function AuthGuard({
   const [mounted, setMounted] = useState(false)
 
   // Direct consumption of AuthContext - Firebase listener is in AuthProvider
-  const { appUser, isLoading, error, isAdmin, isProfileComplete } = useAuth()
+  const {
+    appUser,
+    isLoading,
+    error,
+    isAdmin,
+    isProfileComplete,
+    refreshAuthToken,
+  } = useAuth()
 
   // Ensure we only run on client side
   useEffect(() => {
     setMounted(true)
-  }, [])
+
+    // Force refresh of auth token to ensure claims are loaded
+    if (requireAdmin) {
+      console.log('🔄 AuthGuard: Forcing auth token refresh for admin check...')
+      refreshAuthToken?.()
+    }
+  }, [requireAdmin, refreshAuthToken])
 
   const loading = isLoading
 

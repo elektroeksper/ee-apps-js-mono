@@ -3,12 +3,19 @@
 import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { GOOGLE_MAPS_CONFIG } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePublicMainCategories } from '@/hooks/useCategoryQueries'
 import {
   businessRegisterSchema,
   transformToBusinessRegisterData,
   type BusinessRegisterFormData,
 } from '@/lib/validations/auth'
-import { AccountType, ICoordinates, TaxNumberType } from '@/shared'
+import {
+  AccountType,
+  BUSINESS_CATEGORY_ICONS,
+  ICategory,
+  ICoordinates,
+  TaxNumberType,
+} from '@/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -23,14 +30,6 @@ import { Button } from './ui/Button'
 import { Checkbox } from './ui/Checkbox'
 import { Input } from './ui/Input'
 import { LoadingSpinner } from './ui/LoadingSpinner'
-
-// Mock categories - these should come from a proper data source
-const BUSINESS_CATEGORIES = [
-  { id: '1', key: 'pc', name: 'Bilgisayar' },
-  { id: '2', key: 'console', name: 'Oyun Konsolu' },
-  { id: '3', key: 'camera', name: 'Fotoğraf Makinası' },
-  { id: '4', key: 'phone', name: 'Telefon' },
-]
 
 export const BusinessRegisterForm: React.FC = () => {
   const { register: registerUser, isLoading, error, clearError } = useAuth()
@@ -99,6 +98,24 @@ export const BusinessRegisterForm: React.FC = () => {
     setError,
     setValue,
   } = form
+
+  // Fetch categories using React Query
+  const {
+    data: categoriesResult,
+    isLoading: categoriesLoading,
+    error: categoriesQueryError,
+    isError: categoriesHasError,
+  } = usePublicMainCategories()
+
+  // Extract categories and error from the query result
+  const categories =
+    (categoriesResult?.success ? categoriesResult.data : []) || []
+  const categoriesError = categoriesHasError
+    ? (categoriesQueryError as Error)?.message ||
+      'Kategoriler yüklenirken hata oluştu'
+    : categoriesResult?.success === false
+      ? categoriesResult.error || 'Kategoriler yüklenemedi'
+      : ''
 
   const onSubmit = async (data: BusinessRegisterFormData) => {
     try {
@@ -465,39 +482,97 @@ export const BusinessRegisterForm: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               İşletme Kategorisi
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {BUSINESS_CATEGORIES.map(category => (
-                <label
-                  key={category.id}
-                  className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                    selectedCategory === category.id
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+
+            {categoriesLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <LoadingSpinner size="small" />
+                <span className="ml-2 text-sm text-gray-600">
+                  Kategoriler yükleniyor...
+                </span>
+              </div>
+            ) : categoriesError ? (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-sm text-red-600">{categoriesError}</p>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="mt-2 text-xs text-red-700 underline hover:no-underline"
                 >
-                  <input
-                    type="radio"
-                    name="category"
-                    value={category.id}
-                    checked={selectedCategory === category.id}
-                    onChange={() => handleCategorySelect(category.id)}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-4 h-4 border-2 rounded-full mr-3 ${
-                      selectedCategory === category.id
-                        ? 'bg-indigo-600 border-indigo-600'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    {selectedCategory === category.id && (
-                      <div className="w-full h-full rounded-full bg-white transform scale-50"></div>
-                    )}
-                  </div>
-                  <span className="text-sm text-gray-700">{category.name}</span>
-                </label>
-              ))}
-            </div>
+                  Sayfayı yenile
+                </button>
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                <p className="text-sm text-gray-600">
+                  Henüz kategori bulunmuyor.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {categories.map((category: ICategory) => {
+                  const categoryIcon =
+                    BUSINESS_CATEGORY_ICONS[category.slug] || '📂'
+
+                  return (
+                    <label
+                      key={category.id}
+                      className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+                        selectedCategory === category.id
+                          ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+                          : 'border-gray-300 hover:bg-gray-50 hover:shadow-sm'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="category"
+                        value={category.id}
+                        checked={selectedCategory === category.id}
+                        onChange={() => handleCategorySelect(category.id || '')}
+                        className="sr-only"
+                      />
+
+                      {/* Category Icon */}
+                      <div className="text-2xl mr-3">{categoryIcon}</div>
+
+                      {/* Category Info */}
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <span
+                            className={`text-sm font-medium ${
+                              selectedCategory === category.id
+                                ? 'text-indigo-700'
+                                : 'text-gray-900'
+                            }`}
+                          >
+                            {category.name}
+                          </span>
+                        </div>
+
+                        {category.description && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {category.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Radio button visual indicator */}
+                      <div
+                        className={`w-5 h-5 border-2 rounded-full ml-3 flex items-center justify-center ${
+                          selectedCategory === category.id
+                            ? 'bg-indigo-600 border-indigo-600'
+                            : 'border-gray-300'
+                        }`}
+                      >
+                        {selectedCategory === category.id && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+
             {errors.mainCategoryId && (
               <p className="mt-1 text-sm text-red-600">
                 {errors.mainCategoryId.message}
