@@ -13,5 +13,11 @@ interface ICategoryWithSubCategories extends ICategory {
   subCategories?: ICategoryWithSubCategories[];
 }
 
+interface ICategoryFilter {
+  isActive?: boolean;
+  parentCategoryId?: string | null; // null means top-level categories
+}
 
-export type { ICategory, ICategoryWithSubCategories };
+
+export type { ICategory, ICategoryFilter, ICategoryWithSubCategories };
+

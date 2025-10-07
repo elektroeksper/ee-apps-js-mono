@@ -1,5 +1,5 @@
 
-import { categoriesService } from '@/services/categories.service';
+import { categoriesService } from '@/services/category.service';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
