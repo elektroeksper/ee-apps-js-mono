@@ -3,7 +3,10 @@
 import { getAuthErrorMessage } from '@/config/firebase-error-messages'
 import { GOOGLE_MAPS_CONFIG } from '@/config/maps'
 import { useAuth } from '@/contexts/AuthContext'
-import { usePublicMainCategories } from '@/hooks/useCategoryQueries'
+import {
+  usePublicMainCategories,
+  usePublicSubCategories,
+} from '@/hooks/useCategoryQueries'
 import {
   businessRegisterSchema,
   transformToBusinessRegisterData,
@@ -37,6 +40,17 @@ export const BusinessRegisterForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>(
+    []
+  )
+
+  // Fetch subcategories when main category is selected
+  const {
+    data: subCategoriesResult,
+    isLoading: subCategoriesLoading,
+    error: subCategoriesError,
+    refetch: refetchSubCategories,
+  } = usePublicSubCategories(selectedCategory)
 
   // Google Maps states
   const [addressText, setAddressText] = useState('')
@@ -166,8 +180,24 @@ export const BusinessRegisterForm: React.FC = () => {
   }
 
   const handleCategorySelect = (categoryId: string) => {
+    console.log('🔥 Category selected:', categoryId)
     setSelectedCategory(categoryId)
     setValue('mainCategoryId', categoryId as any)
+
+    // Reset subcategories when main category changes
+    setSelectedSubCategories([])
+    setValue('subCategoryIds', [])
+  }
+
+  const handleSubCategoryToggle = (subCategoryId: string) => {
+    console.log('🔥 Subcategory toggled:', subCategoryId)
+    const updatedSubCategories = selectedSubCategories.includes(subCategoryId)
+      ? selectedSubCategories.filter(id => id !== subCategoryId)
+      : [...selectedSubCategories, subCategoryId]
+
+    setSelectedSubCategories(updatedSubCategories)
+    setValue('subCategoryIds', updatedSubCategories as any)
+    console.log('🔥 Updated subcategories:', updatedSubCategories)
   }
 
   // Handle place selection from autocomplete
@@ -580,6 +610,137 @@ export const BusinessRegisterForm: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Subcategory Selection Section */}
+        {selectedCategory && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-3">
+                Alt Kategoriler (İsteğe Bağlı)
+              </label>
+              <p className="text-sm text-gray-600 mb-4">
+                İşletmenizin faaliyet gösterdiği alt kategorileri seçin.
+              </p>
+
+              {subCategoriesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner size="small" />
+                  <span className="ml-2 text-sm text-gray-600">
+                    Alt kategoriler yükleniyor...
+                  </span>
+                </div>
+              ) : subCategoriesError ? (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-sm text-red-600">
+                    Alt kategoriler yüklenirken hata oluştu.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => refetchSubCategories()}
+                    className="mt-2 text-sm text-red-700 underline"
+                  >
+                    Tekrar dene
+                  </button>
+                </div>
+              ) : !subCategoriesResult?.success ? (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-sm text-red-600">
+                    {subCategoriesResult?.error ||
+                      'Alt kategoriler yüklenemedi.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => refetchSubCategories()}
+                    className="mt-2 text-sm text-red-700 underline"
+                  >
+                    Sayfayı yenile
+                  </button>
+                </div>
+              ) : !subCategoriesResult.data ||
+                subCategoriesResult.data.length === 0 ? (
+                <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                  <p className="text-sm text-gray-600">
+                    Bu kategori için alt kategori bulunmuyor.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {subCategoriesResult.data.map((subCategory: ICategory) => {
+                    const isSelected = selectedSubCategories.includes(
+                      subCategory.id || ''
+                    )
+
+                    return (
+                      <label
+                        key={subCategory.id}
+                        className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
+                          isSelected
+                            ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+                            : 'border-gray-300 hover:bg-gray-50 hover:shadow-sm'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() =>
+                            handleSubCategoryToggle(subCategory.id || '')
+                          }
+                          className="sr-only"
+                        />
+
+                        {/* Checkbox visual indicator */}
+                        <div
+                          className={`w-5 h-5 border-2 rounded flex items-center justify-center mr-3 ${
+                            isSelected
+                              ? 'bg-indigo-600 border-indigo-600'
+                              : 'border-gray-300'
+                          }`}
+                        >
+                          {isSelected && (
+                            <svg
+                              className="w-3 h-3 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
+
+                        {/* Subcategory Info */}
+                        <div className="flex-1">
+                          <span
+                            className={`text-sm font-medium ${
+                              isSelected ? 'text-indigo-700' : 'text-gray-900'
+                            }`}
+                          >
+                            {subCategory.name}
+                          </span>
+
+                          {subCategory.description && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {subCategory.description}
+                            </p>
+                          )}
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+
+              {errors.subCategoryIds && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.subCategoryIds.message}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Personal Information Section */}
         <div className="space-y-4">

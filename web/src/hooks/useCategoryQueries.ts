@@ -1,7 +1,8 @@
 /**
- * Category Query Hooks
+ * Category Query Hooks - Client-side operations only
  * React Query hooks for category entity operations
- * Uses API routes for admin panel operations
+ * All operations use API routes to enable client-side usage
+ * For server-side admin operations, use useCategoryQueriesServer.ts
  */
 
 import {
@@ -12,8 +13,8 @@ import {
 } from '@/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-// API functions for server-side operations (admin)
-const categoryApi = {
+// Admin API functions (client-side compatible - uses API routes)
+const adminCategoryApi = {
   getAll: async (filter: ICategoryFilter = {}): Promise<IOperationResult<ICategory[]>> => {
     const params = new URLSearchParams();
     if (filter.parentCategoryId !== undefined) {
@@ -104,25 +105,44 @@ const categoryApi = {
 // API functions for public operations (no auth required)
 const publicCategoryApi = {
   getMainCategories: async (): Promise<IOperationResult<ICategory[]>> => {
-    const response = await fetch('/api/categories');
+    console.log('🔍 publicCategoryApi: Fetching main categories');
+    const response = await fetch('/api/categories?parentCategoryId=null');
     const result: IApiResponse<ICategory[]> = await response.json();
 
     if (result.success && result.data) {
-      // Filter for main categories (no parent) and active ones, then sort by order
-      const mainCategories = result.data
-        .filter(category => !category.parentCategoryId && category.isActive !== false)
-        .sort((a, b) => {
-          if (a.order && b.order) {
-            return a.order - b.order;
-          }
-          if (a.order) return -1;
-          if (b.order) return 1;
-          return a.name.localeCompare(b.name);
-        });
-
-      return { success: true, data: mainCategories };
+      console.log(`🔍 publicCategoryApi: Retrieved ${result.data.length} main categories`);
+      return { success: true, data: result.data };
     } else {
+      console.error('🔍 publicCategoryApi: Failed to fetch main categories', result.error);
       return { success: false, error: result.error || 'Failed to fetch categories' };
+    }
+  },
+
+  getSubCategories: async (parentCategoryId: string): Promise<IOperationResult<ICategory[]>> => {
+    console.log('🔍 publicCategoryApi: Fetching subcategories for parent:', parentCategoryId);
+    const response = await fetch(`/api/categories?parentCategoryId=${encodeURIComponent(parentCategoryId)}`);
+    const result: IApiResponse<ICategory[]> = await response.json();
+
+    if (result.success && result.data) {
+      console.log(`🔍 publicCategoryApi: Retrieved ${result.data.length} subcategories for parent ${parentCategoryId}`);
+      return { success: true, data: result.data };
+    } else {
+      console.error('🔍 publicCategoryApi: Failed to fetch subcategories', result.error);
+      return { success: false, error: result.error || 'Failed to fetch subcategories' };
+    }
+  },
+
+  getAllActiveCategories: async (): Promise<IOperationResult<ICategory[]>> => {
+    console.log('🔍 publicCategoryApi: Fetching all active categories');
+    const response = await fetch('/api/categories?all=true');
+    const result: IApiResponse<ICategory[]> = await response.json();
+
+    if (result.success && result.data) {
+      console.log(`🔍 publicCategoryApi: Retrieved ${result.data.length} total active categories`);
+      return { success: true, data: result.data };
+    } else {
+      console.error('🔍 publicCategoryApi: Failed to fetch all categories', result.error);
+      return { success: false, error: result.error || 'Failed to fetch all categories' };
     }
   },
 };
@@ -138,10 +158,13 @@ export const categoryKeys = {
   // Public category keys
   public: ['categories', 'public'] as const,
   publicMain: () => [...categoryKeys.public, 'main'] as const,
+  publicSub: (parentId: string) => [...categoryKeys.public, 'sub', parentId] as const,
+  publicAll: () => [...categoryKeys.public, 'all'] as const,
 }
 
 /**
- * Get all categories with optional filtering
+ * Get all categories with optional filtering - for admin panel
+ * Uses API endpoint to enable client-side usage
  */
 export function useCategories(filter?: ICategoryFilter) {
   console.log('🔍 useCategories: Hook called with filter', filter)
@@ -149,7 +172,7 @@ export function useCategories(filter?: ICategoryFilter) {
     queryKey: categoryKeys.list(filter),
     queryFn: () => {
       console.log('🔍 useCategories: Query function executing with filter', filter)
-      return categoryApi.getAll(filter || {})
+      return adminCategoryApi.getAll(filter || {})
     },
     select: (data: IOperationResult<ICategory[]>) => {
       console.log('🔍 useCategories: Select function called with data', data)
@@ -186,7 +209,7 @@ export function useAllCategories() {
 }
 
 /**
- * Create a new category - Admin operation using server-side service
+ * Create a new category - Admin operation using API route (client-side compatible)
  */
 export function useCreateCategory() {
   const queryClient = useQueryClient()
@@ -194,7 +217,7 @@ export function useCreateCategory() {
   return useMutation({
     mutationFn: (category: Partial<ICategory>) => {
       console.log('🔥 useCreateCategory: Creating category', category)
-      return categoryApi.create(category)
+      return adminCategoryApi.create(category)
     },
     onSuccess: (result) => {
       console.log('🔥 useCreateCategory: Category created successfully', result)
@@ -207,7 +230,7 @@ export function useCreateCategory() {
 }
 
 /**
- * Update an existing category - Admin operation using server-side service
+ * Update an existing category - Admin operation using API route (client-side compatible)
  */
 export function useUpdateCategory() {
   const queryClient = useQueryClient()
@@ -221,7 +244,7 @@ export function useUpdateCategory() {
       category: Partial<ICategory>
     }) => {
       console.log('🔥 useUpdateCategory: Updating category', categoryId, category)
-      return categoryApi.update(categoryId, category)
+      return adminCategoryApi.update(categoryId, category)
     },
     onSuccess: (result, { categoryId }) => {
       console.log('🔥 useUpdateCategory: Category updated successfully', result)
@@ -237,7 +260,7 @@ export function useUpdateCategory() {
 }
 
 /**
- * Delete a category - Admin operation using server-side service
+ * Delete a category - Admin operation using API route (client-side compatible)
  */
 export function useDeleteCategory() {
   const queryClient = useQueryClient()
@@ -245,7 +268,7 @@ export function useDeleteCategory() {
   return useMutation({
     mutationFn: (categoryId: string) => {
       console.log('🔥 useDeleteCategory: Deleting category', categoryId)
-      return categoryApi.delete(categoryId)
+      return adminCategoryApi.delete(categoryId)
     },
     onSuccess: (result) => {
       console.log('🔥 useDeleteCategory: Category deleted successfully', result)
@@ -258,7 +281,7 @@ export function useDeleteCategory() {
 }
 
 /**
- * Check if a category has subcategories - Admin operation
+ * Check if a category has subcategories - Admin operation using API route (client-side compatible)
  */
 export function useCheckHasSubCategories(categoryId: string | undefined) {
   return useQuery({
@@ -268,7 +291,7 @@ export function useCheckHasSubCategories(categoryId: string | undefined) {
         return { success: true, data: false } as IOperationResult<boolean>
       }
       console.log('🔥 useCheckHasSubCategories: Checking subcategories for', categoryId)
-      return categoryApi.checkHasSubCategories(categoryId)
+      return adminCategoryApi.checkHasSubCategories(categoryId)
     },
     enabled: !!categoryId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -276,7 +299,7 @@ export function useCheckHasSubCategories(categoryId: string | undefined) {
 }
 
 /**
- * Validate subcategory activation - Admin operation
+ * Validate subcategory activation - Admin operation using API route (client-side compatible)
  */
 export function useValidateSubCategoryActivation(categoryId: string | undefined) {
   return useQuery({
@@ -286,7 +309,7 @@ export function useValidateSubCategoryActivation(categoryId: string | undefined)
         return { success: true, data: { canActivate: true } } as IOperationResult<{ canActivate: boolean; parentName?: string }>
       }
       console.log('🔥 useValidateSubCategoryActivation: Validating activation for', categoryId)
-      return categoryApi.validateSubCategoryActivation(categoryId)
+      return adminCategoryApi.validateSubCategoryActivation(categoryId)
     },
     enabled: !!categoryId,
     staleTime: 1 * 60 * 1000, // 1 minute (shorter cache for validation)
@@ -313,6 +336,54 @@ export function usePublicMainCategories() {
       return data
     },
     staleTime: 10 * 60 * 1000, // 10 minutes (longer cache for public data)
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  })
+}
+
+/**
+ * Get subcategories for a specific parent - for public use
+ * Uses public API that doesn't require authentication
+ */
+export function usePublicSubCategories(parentCategoryId: string | undefined) {
+  return useQuery({
+    queryKey: categoryKeys.publicSub(parentCategoryId || ''),
+    queryFn: () => {
+      if (!parentCategoryId) {
+        return Promise.resolve({ success: true, data: [] } as IOperationResult<ICategory[]>)
+      }
+      console.log('🔍 usePublicSubCategories: Fetching subcategories for parent:', parentCategoryId)
+      return publicCategoryApi.getSubCategories(parentCategoryId)
+    },
+    enabled: !!parentCategoryId,
+    select: (data: IOperationResult<ICategory[]>) => {
+      console.log('🔍 usePublicSubCategories: Select function called with data', data)
+      return data
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  })
+}
+
+/**
+ * Get all active categories (both main and sub) for public use
+ * Uses public API that doesn't require authentication
+ */
+export function usePublicAllCategories() {
+  return useQuery({
+    queryKey: categoryKeys.publicAll(),
+    queryFn: () => {
+      console.log('🔍 usePublicAllCategories: Fetching all active categories for public use')
+      return publicCategoryApi.getAllActiveCategories()
+    },
+    select: (data: IOperationResult<ICategory[]>) => {
+      console.log('🔍 usePublicAllCategories: Select function called with data', data)
+      return data
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
