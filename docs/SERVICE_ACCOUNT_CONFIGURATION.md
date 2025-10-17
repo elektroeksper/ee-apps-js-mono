@@ -54,28 +54,30 @@ const env = isDev ? 'dev' : 'prod'
 
 ## Deployment Commands
 
-### Deploy to Development
+### Deploy to Development Environment
 ```bash
 ./deploy-apphosting.sh dev
 ```
-- Uses `ee-dev-apps` project
-- Loads `admin-service-account-dev.json`
+- Uses `admin-service-account-dev.json`
+- Deploys to `ee-dev-apps` project
+- Service account is automatically copied to `web/functions/` during deployment
 
-### Deploy to Test
+### Deploy to Test Environment
 ```bash
 ./deploy-apphosting.sh test
 ```
-- Uses `ee-dev-apps` project ⚠️
-- Loads `admin-service-account-dev.json`
-- Backend hosted in `ee-prod-apps` but uses dev credentials
+- Uses `admin-service-account-dev.json` (shares dev data)
+- Deploys to `ee-dev-apps` project
+- Service account is automatically copied to `web/functions/` during deployment
 
-### Deploy to Live
+### Deploy to Live/Production Environment
 ```bash
 ./deploy-apphosting.sh live
 ```
-- Uses `ee-prod-apps` project
-- Loads `admin-service-account-prod.json`
-- **Requires confirmation** before deployment
+- Uses `admin-service-account-prod.json`
+- Deploys to `ee-prod-apps` project
+- Service account is automatically copied to `web/functions/` during deployment
+- **Requires confirmation**
 
 ## Important Notes
 
@@ -122,6 +124,39 @@ During Firebase App Hosting deployment, service accounts are NOT bundled. Instea
    - Admin operations requiring service account credentials
 
 ## Troubleshooting
+
+### "Error uploading documents: Error: Permission iam.serviceAccounts.signBlob denied"
+
+**Problem**: Service account lacks permissions to generate signed URLs for Storage.
+
+**Solution**: Grant the necessary IAM roles:
+
+```bash
+# Grant Service Account Token Creator role (for self-signing)
+gcloud iam service-accounts add-iam-policy-binding firebase-admin@ee-dev-apps.iam.gserviceaccount.com \
+  --member="serviceAccount:firebase-admin@ee-dev-apps.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountTokenCreator" \
+  --project=ee-dev-apps
+
+# Grant Storage Admin role (for file uploads)
+gcloud projects add-iam-policy-binding ee-dev-apps \
+  --member="serviceAccount:firebase-admin@ee-dev-apps.iam.gserviceaccount.com" \
+  --role="roles/storage.admin"
+```
+
+For production:
+```bash
+# Grant Service Account Token Creator role
+gcloud iam service-accounts add-iam-policy-binding firebase-admin@ee-prod-apps.iam.gserviceaccount.com \
+  --member="serviceAccount:firebase-admin@ee-prod-apps.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountTokenCreator" \
+  --project=ee-prod-apps
+
+# Grant Storage Admin role
+gcloud projects add-iam-policy-binding ee-prod-apps \
+  --member="serviceAccount:firebase-admin@ee-prod-apps.iam.gserviceaccount.com" \
+  --role="roles/storage.admin"
+```
 
 ### "Cannot sign data without `client_email`" Error
 

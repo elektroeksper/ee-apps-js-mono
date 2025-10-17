@@ -141,6 +141,9 @@ web/firebase.json
 # Temporary YAML backup files
 *.yaml.backup
 
+# Temporary service account files copied for deployment
+web/functions/admin-service-account-*.json
+
 # Shared generated files
 shared-generated/
 */shared-generated/

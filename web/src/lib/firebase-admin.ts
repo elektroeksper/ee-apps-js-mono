@@ -48,14 +48,21 @@ if (!admin.apps.length) {
     const isDev = projectId === 'ee-dev-apps'
     const env = isDev ? 'dev' : 'prod'
 
-    // Service account files are in the functions directory, not web/src/lib
-    // We need to go up from web directory to project root, then into functions
-    const serviceAccountFile = path.join(
-      process.cwd(), // This is the web directory when running npm run dev
-      '..',           // Go up to project root
-      'functions',    // Enter functions directory
-      `admin-service-account-${env}.json`
-    )
+    // Service account files can be in different locations:
+    // 1. Local development: ../functions/ (from project root)
+    // 2. Deployed App Hosting: ./functions/ (copied during deployment)
+    const possiblePaths = [
+      path.join(process.cwd(), '..', 'functions', `admin-service-account-${env}.json`), // Local dev (from web/)
+      path.join(process.cwd(), 'functions', `admin-service-account-${env}.json`),       // Deployed (in web/functions/)
+    ]
+
+    let serviceAccountFile = ''
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        serviceAccountFile = testPath
+        break
+      }
+    }
 
     try {
       console.log(`🔍 Environment: ${env} (${projectId})`)

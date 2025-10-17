@@ -24,6 +24,15 @@ cleanup() {
         rm web/firebase.json
         echo "✅ Removed temporary firebase.json"
     fi
+    # Remove copied service account files
+    if [ -f "web/functions/admin-service-account-dev.json" ]; then
+        rm web/functions/admin-service-account-dev.json
+        echo "✅ Removed dev service account file"
+    fi
+    if [ -f "web/functions/admin-service-account-prod.json" ]; then
+        rm web/functions/admin-service-account-prod.json
+        echo "✅ Removed prod service account file"
+    fi
 }
 
 # Set trap to run cleanup on script exit (success, error, or interruption)
@@ -149,8 +158,23 @@ echo "🔨 Building and copying shared types..."
 node scripts/build-shared-types.js
 echo "✅ Shared types built and copied to all packages"
 
+# Copy service account file to web directory for deployment
+echo "🔐 Copying service account file for deployment..."
+if [ ! -d "web/functions" ]; then
+    mkdir -p web/functions
+fi
+
+if [ "$SELECTED_ENV" == "LIVE" ]; then
+    cp functions/admin-service-account-prod.json web/functions/admin-service-account-prod.json
+    echo "✅ Copied prod service account file"
+else
+    # Both DEV and TEST use dev service account
+    cp functions/admin-service-account-dev.json web/functions/admin-service-account-dev.json
+    echo "✅ Copied dev service account file"
+fi
+
 # Verify shared types are available for deployment
-echo "� Verifying shared types for deployment..."
+echo "🔍 Verifying shared types for deployment..."
 cd web
 node scripts/verify-shared-types.js
 cd ..

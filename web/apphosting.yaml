@@ -1,4 +1,4 @@
-# Settings for Backend (on Cloud Run) - DEV Environment
+# Settings for Backend (on Cloud Run) - TEST Environment
 # See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
   minInstances: 0
@@ -14,17 +14,19 @@ build:
   commands:
     # Install pnpm globally
     - npm install -g pnpm@latest
-    # Install dependencies with frozen lockfile for consistency
+    # Install dependencies with frozen lockfile (standalone web lockfile)
     - pnpm install --frozen-lockfile
-    # Build the Next.js application for standalone server deployment (no export)
-    - NEXT_OUTPUT_STANDALONE=true pnpm run build
+    # Verify shared types are present (should be copied before deployment)
+    - node scripts/verify-shared-types.js
+    # Build the Next.js application
+    - pnpm run build
 
-# Environment variables and secrets - DEV ENVIRONMENT
+# Environment variables and secrets - TEST ENVIRONMENT
 env:
   # Configure environment variables.
   # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
   - variable: NODE_ENV
-    value: development
+    value: production
     availability:
       - BUILD
       - RUNTIME
@@ -33,30 +35,17 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  # Force standalone build without static export
-  - variable: NEXT_OUTPUT_STANDALONE
-    value: "true"
-    availability:
-      - BUILD
-      - RUNTIME
-  # Disable Next.js static export during build
-  - variable: NEXT_DISABLE_STATIC_EXPORT
-    value: "true"
-    availability:
-      - BUILD
-      - RUNTIME
-
   - variable: NEXT_PUBLIC_REST_API_ENDPOINT
-    value: https://ee-next-dev-1--ee-dev-apps.europe-west4.hosted.app/api
+    value: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app/api
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://ee-next-dev-1--ee-dev-apps.europe-west4.hosted.app/
+    value: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app/
     availability:
       - BUILD
       - RUNTIME
-  # Firebase Configuration - DEV PROJECT (ee-dev-apps)
+  # Firebase Configuration - TEST ENVIRONMENT (using ee-dev-apps for testing)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyAvWTu0V1AZ26UdwZgl2U1lGKLTFH6XC-s
     availability:
@@ -104,7 +93,7 @@ env:
       - RUNTIME
   # Google Maps API Key
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    value: AIzaSyAu5DyNA6axIBr8BFb3NrOmO8VM_WZa5VM
+    value: AIzaSyC06eYgOwcqm-CodnC_-jkilscQ7cLDQoQ
     availability:
       - BUILD
       - RUNTIME
