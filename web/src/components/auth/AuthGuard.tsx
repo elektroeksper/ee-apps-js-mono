@@ -101,8 +101,7 @@ export function AuthGuard({
       !loading &&
       appUser &&
       !isProfileComplete &&
-      router.pathname !== '/setup' &&
-      router.pathname !== '/verification'
+      router.pathname !== '/setup'
     ) {
       console.log('🚨 AuthGuard Profile Redirect:', {
         reason: 'Profile incomplete',
@@ -123,9 +122,7 @@ export function AuthGuard({
       isProfileComplete &&
       appUser.accountType === 'business' &&
       requireProfileComplete &&
-      router.pathname !== '/home' &&
-      router.pathname !== '/verification' &&
-      router.pathname !== '/setup'
+      router.pathname !== '/setup' // Only skip check when already on setup page
     ) {
       // Check business verification status by fetching business data
       const checkBusinessVerificationStatus = async () => {
@@ -173,22 +170,22 @@ export function AuthGuard({
               } else if (
                 verificationStatus === BusinessVerificationStatus.VERIFIED
               ) {
-                console.log('🚨 AuthGuard Business Redirect:', {
-                  reason: 'Business verified - redirect to home',
-                  redirectTo: '/home',
-                  pathname: router.pathname,
-                })
-                router.replace('/home')
+                // Verified businesses can access any page - no redirect needed
+                console.log(
+                  '✅ AuthGuard: Business verified - allowing access to',
+                  router.pathname
+                )
+                // If on an unallowed page for some reason, do nothing (allow access)
+                return
               } else if (
                 verificationStatus === BusinessVerificationStatus.PENDING
               ) {
                 console.log('🚨 AuthGuard Business Redirect:', {
-                  reason:
-                    'Business pending approval - redirect to verification',
-                  redirectTo: '/verification',
+                  reason: 'Business pending approval - redirect to setup',
+                  redirectTo: '/setup',
                   pathname: router.pathname,
                 })
-                router.replace('/verification')
+                router.replace('/setup')
               } else {
                 // No documents or unverified status - redirect to setup
                 console.log('🚨 AuthGuard Business Redirect:', {

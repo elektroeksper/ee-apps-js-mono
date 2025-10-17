@@ -80,10 +80,20 @@ export async function createUserProfile(
       }
     }
 
+    // Sync isAdmin field from custom claims
+    let isAdmin = false
+    try {
+      const userRecord = await auth.getUser(userId)
+      isAdmin = userRecord.customClaims?.admin === true
+    } catch (error) {
+      logger.warn('Could not fetch custom claims for user:', userId)
+    }
+
     // Prepare user data with timestamps
     const userDoc = {
       ...userData,
       id: userId,
+      isAdmin, // Sync from custom claims
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }
@@ -192,9 +202,10 @@ export async function setAdminRole(
     // Set custom claims (single source of truth)
     await auth.setCustomUserClaims(userId, { admin: true })
 
-    // No longer writing isAdmin flag into user document (avoid duplication)
+    // Sync isAdmin field in Firestore document (read-only cache)
     const userRef = db.collection('users').doc(userId)
     await userRef.update({
+      isAdmin: true,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     })
 
@@ -207,6 +218,48 @@ export async function setAdminRole(
     return {
       success: false,
       error: 'Failed to set admin role',
+      code: 500,
+    }
+  }
+}
+
+// Remove admin role from a user
+export async function removeAdminRole(
+  userId: string
+): Promise<IOperationResult<void>> {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: 'User ID is required',
+        code: 400,
+      }
+    }
+
+    // Get current claims and remove admin
+    const userRecord = await auth.getUser(userId)
+    const currentClaims = userRecord.customClaims || {}
+    const { admin, ...newClaims } = currentClaims
+
+    // Set custom claims without admin (single source of truth)
+    await auth.setCustomUserClaims(userId, newClaims)
+
+    // Sync isAdmin field in Firestore document (read-only cache)
+    const userRef = db.collection('users').doc(userId)
+    await userRef.update({
+      isAdmin: false,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    })
+
+    return {
+      success: true,
+      code: 200,
+    }
+  } catch (error) {
+    logger.error('Error removing admin role:', error)
+    return {
+      success: false,
+      error: 'Failed to remove admin role',
       code: 500,
     }
   }

@@ -103,7 +103,8 @@ async function handleGetBusiness(
     // Get user record for custom claims
     const userRecord = await adminAuth.getUser(userId)
     const userClaims = userRecord.customClaims || {}
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin'
+    const directAdmin = (decodedToken as any).admin === true
+    const isAdmin = userClaims.admin === true || directAdmin
     console.log('👤 Business API: User permissions - isAdmin:', isAdmin)
 
     // Get business document
@@ -231,6 +232,7 @@ async function handleUpdateBusiness(
       'website',
       'companySize',
       'documents',
+      'verification',
       'mainCategoryId',
       'subCategoryIds',
     ]
@@ -291,7 +293,8 @@ async function handleDeleteBusiness(
     // Get user record for custom claims
     const userRecord = await adminAuth.getUser(userId)
     const userClaims = userRecord.customClaims || {}
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin'
+    const directAdmin = (decodedToken as any).admin === true
+    const isAdmin = userClaims.admin === true || directAdmin
 
     // Get business document
     const businessDoc = await adminDb

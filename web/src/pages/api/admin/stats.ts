@@ -85,10 +85,8 @@ export default async function handler(
     })
 
     // Check if user has admin privileges - check multiple locations
-    const isAdminFromCustomClaims =
-      userClaims.admin === true || userClaims.role === 'admin'
-    const isAdminFromDirect =
-      decodedResult.user.admin === true || decodedResult.user.role === 'admin'
+    const isAdminFromCustomClaims = userClaims.admin === true
+    const isAdminFromDirect = (decodedResult.user as any).admin === true
     const isAdmin = isAdminFromCustomClaims || isAdminFromDirect
 
     console.log('DEBUG - Admin Check:', {
@@ -96,11 +94,8 @@ export default async function handler(
       isAdminFromCustomClaims,
       isAdminFromDirect,
       adminClaimValue: userClaims.admin,
-      roleClaimValue: userClaims.role,
       adminClaimType: typeof userClaims.admin,
-      roleClaimType: typeof userClaims.role,
-      directAdminValue: decodedResult.user.admin,
-      directRoleValue: decodedResult.user.role,
+      directAdminValue: (decodedResult.user as any).admin,
     })
 
     if (!isAdmin) {

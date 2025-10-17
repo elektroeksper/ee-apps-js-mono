@@ -91,9 +91,9 @@ const BusinessApprovalGuard: React.FC<BusinessApprovalGuardProps> = ({
                 verificationStatus === BusinessVerificationStatus.PENDING
               ) {
                 console.log(
-                  'BusinessApprovalGuard: Business pending approval, redirecting to verification'
+                  'BusinessApprovalGuard: Business pending approval, redirecting to setup'
                 )
-                router.replace('/verification')
+                router.replace('/setup')
                 return
               }
               // If VERIFIED, continue to render children

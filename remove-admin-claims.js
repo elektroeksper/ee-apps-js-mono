@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-// Script to set admin claims for one or more users
+// Script to remove admin claims from one or more users
 // Usage: 
-//   node set-admin-claims.js                                    (uses default email)
-//   node set-admin-claims.js email1@example.com                 (single email)
-//   node set-admin-claims.js email1@example.com email2@example.com  (multiple emails)
+//   node remove-admin-claims.js                                 (uses default email)
+//   node remove-admin-claims.js email1@example.com              (single email)
+//   node remove-admin-claims.js email1@example.com email2@example.com  (multiple emails)
 
 import { cert, initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
@@ -25,20 +25,20 @@ const auth = getAuth(app)
 const db = getFirestore(app)
 
 // Default email if no arguments provided
-const DEFAULT_EMAIL = 'elektroeksper@gmail.com'
+const DEFAULT_EMAIL = 'gltknky@gmail.com'
 
 // Get emails from command line arguments or use default
 const args = process.argv.slice(2)
 const emailsToUpdate = args.length > 0 ? args : [DEFAULT_EMAIL]
 
 console.log(`\n${'='.repeat(60)}`)
-console.log(`SET ADMIN CLAIMS`)
+console.log(`REMOVE ADMIN CLAIMS`)
 console.log(`${'='.repeat(60)}`)
 console.log(`Processing ${emailsToUpdate.length} email(s)...\n`)
 
-async function setAdminClaimsForEmail(email) {
+async function removeAdminClaimsForEmail(email) {
   console.log(`\n${'─'.repeat(60)}`)
-  console.log(`Setting admin claims for: ${email}`)
+  console.log(`Removing admin claims for: ${email}`)
   console.log(`${'─'.repeat(60)}`)
 
   try {
@@ -52,21 +52,21 @@ async function setAdminClaimsForEmail(email) {
     const currentClaims = user.customClaims || {}
     console.log(`\nCurrent Claims:`, JSON.stringify(currentClaims, null, 2))
 
-    // Set admin claim
-    const newClaims = { ...currentClaims, admin: true }
+    // Remove admin claim
+    const { admin, ...newClaims } = currentClaims
     await auth.setCustomUserClaims(user.uid, newClaims)
 
-    console.log(`\n✅ Successfully set admin claims!`)
+    console.log(`\n✅ Successfully removed admin claims!`)
     console.log(`New Claims:`, JSON.stringify(newClaims, null, 2))
 
     // Update Firestore user document with isAdmin field (read-only cache)
     try {
       const userRef = db.collection('users').doc(user.uid)
       await userRef.update({
-        isAdmin: true,
+        isAdmin: false,
         updatedAt: new Date().toISOString(),
       })
-      console.log(`✅ Updated Firestore user document with isAdmin: true`)
+      console.log(`✅ Updated Firestore user document with isAdmin: false`)
     } catch (firestoreError) {
       console.warn(`⚠️  Could not update Firestore document: ${firestoreError.message}`)
       console.warn(`   (This is okay if the user document doesn't exist yet)`)
@@ -78,15 +78,15 @@ async function setAdminClaimsForEmail(email) {
     const isAdmin = verifyingClaims.admin === true
 
     console.log(`\n🔍 Verification:`)
-    console.log(`Admin Status: ${isAdmin ? '✅ IS ADMIN' : '❌ NOT ADMIN'}`)
+    console.log(`Admin Status: ${isAdmin ? '⚠️ STILL ADMIN' : '✅ NOT ADMIN'}`)
 
-    if (isAdmin) {
-      console.log(`\n🎉 User ${email} now has admin privileges!`)
+    if (!isAdmin) {
+      console.log(`\n🎉 Admin privileges removed from ${email}!`)
     }
 
     return { email, success: true }
   } catch (error) {
-    console.error(`\n❌ Error setting admin claims for ${email}:`, error.message)
+    console.error(`\n❌ Error removing admin claims for ${email}:`, error.message)
     return { email, success: false, error: error.message }
   }
 }
@@ -95,7 +95,7 @@ async function processAllEmails() {
   const results = []
 
   for (const email of emailsToUpdate) {
-    const result = await setAdminClaimsForEmail(email)
+    const result = await removeAdminClaimsForEmail(email)
     results.push(result)
   }
 

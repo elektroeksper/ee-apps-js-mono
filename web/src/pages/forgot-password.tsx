@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div className="relative z-10 max-w-md w-full space-y-8">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+          <div className="bg-white backdrop-blur-lg rounded-2xl shadow-2xl p-8">
             {/* Logo */}
             <div className="flex justify-center items-center mb-8">
               <div className="bg-gradient-to-br from-orange-600 to-red-600 p-4 rounded-xl shadow-lg">

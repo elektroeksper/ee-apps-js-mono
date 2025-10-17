@@ -58,15 +58,16 @@ export default async function handler(
     const userRecord = await adminAuth.getUser(user.uid)
     const freshClaims = userRecord.customClaims || {}
 
-    // Check admin status
-    const isAdmin = freshClaims.admin === true || freshClaims.role === 'admin'
+    // Check admin status - check both direct property and customClaims
+    const directAdmin = (user as any).admin === true
+    const claimsAdmin = freshClaims.admin === true
+    const isAdmin = directAdmin || claimsAdmin
 
     console.log('Admin Check Results:', {
       hasCustomClaims: !!user.customClaims,
       tokenAdminClaim: tokenClaims.admin,
-      tokenRoleClaim: tokenClaims.role,
+      directAdmin: directAdmin,
       freshAdminClaim: freshClaims.admin,
-      freshRoleClaim: freshClaims.role,
       isAdmin: isAdmin,
     })
 
@@ -80,10 +81,11 @@ export default async function handler(
         freshClaims: freshClaims,
         isAdmin: isAdmin,
         adminClaimValue: freshClaims.admin,
-        roleClaimValue: freshClaims.role,
+        directAdminValue: directAdmin,
         claimsComparison: {
           tokenAdmin: tokenClaims.admin,
           freshAdmin: freshClaims.admin,
+          directAdmin: directAdmin,
           areEqual: tokenClaims.admin === freshClaims.admin,
         },
         tokenIssuedAt: new Date(user.iat * 1000).toISOString(),

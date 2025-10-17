@@ -73,7 +73,16 @@ async function handleUpdateVerificationStatus(
 
     // Check if user has admin privileges
     const userClaims = decodedResult.user.customClaims || {}
-    const isAdmin = userClaims.admin === true || userClaims.role === 'admin'
+    const directAdmin = (decodedResult.user as any).admin === true
+    const claimsAdmin = userClaims.admin === true
+    const isAdmin = directAdmin || claimsAdmin
+
+    console.log('🔐 Admin permission check:', {
+      directAdmin,
+      claimsAdmin,
+      isAdmin,
+      userEmail: decodedResult.user.email,
+    })
 
     if (!isAdmin) {
       return res

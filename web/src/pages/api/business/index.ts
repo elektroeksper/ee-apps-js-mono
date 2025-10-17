@@ -63,8 +63,7 @@ async function handleGetBusinesses(req: NextApiRequest, res: NextApiResponse) {
     const userClaims = userRecord.customClaims || {}
     const isAdmin =
       userClaims.admin === true ||
-      userClaims.role === 'admin' ||
-      decodedResult.user.admin === true
+      (decodedResult.user as any).admin === true
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Insufficient permissions' })

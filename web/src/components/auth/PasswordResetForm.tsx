@@ -47,7 +47,8 @@ export function PasswordResetForm({
   const onSubmit = async (data: PasswordResetFormData) => {
     try {
       clearErrors()
-      const result = await authService.resetPassword(data.email, `/login`)
+      const continueUrl = `${window.location.origin}/login`
+      const result = await authService.resetPassword(data.email, continueUrl)
       if (!result.success) {
         throw new Error(
           result.error || 'Şifre sıfırlama e-postası gönderilemedi'
@@ -74,7 +75,8 @@ export function PasswordResetForm({
   const handleResendEmail = async () => {
     if (!sentToEmail) return
     try {
-      await authService.resetPassword(sentToEmail, `/login`)
+      const continueUrl = `${window.location.origin}/login`
+      await authService.resetPassword(sentToEmail, continueUrl)
     } catch (e) {
       // swallow; user can try again later
     }

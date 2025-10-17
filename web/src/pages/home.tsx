@@ -1,5 +1,4 @@
-import { AuthGuard, BusinessApprovalGuard } from '@/components/auth'
-import ProfileCompletionGuard from '@/components/auth/ProfileCompletionGuard'
+import { AuthGuard } from '@/components/auth'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
@@ -297,12 +296,8 @@ function DashboardContent() {
 
 export default function HomePage() {
   return (
-    <AuthGuard requireAuth={true}>
-      <ProfileCompletionGuard requireComplete={true}>
-        <BusinessApprovalGuard requireApproval={true}>
-          <DashboardContent />
-        </BusinessApprovalGuard>
-      </ProfileCompletionGuard>
+    <AuthGuard requireAuth={true} requireProfileComplete={true}>
+      <DashboardContent />
     </AuthGuard>
   )
 }

@@ -18,6 +18,7 @@ interface IAppUser {
   id: string
   firstName: string
   lastName: string
+  isAdmin: boolean
   displayName: string // Add this
   email: string
   phoneNumber?: string

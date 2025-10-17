@@ -164,7 +164,14 @@ export async function verifyIdToken(token: string) {
     )
     return { success: false, error: 'Invalid token' }
   }
-} // Utility function to check admin claims
+}
+
+/**
+ * Utility function to check if a user has admin privileges
+ * Checks custom claims from Firebase Auth (source of truth)
+ * @param uid - User ID
+ * @returns true if user has admin claim, false otherwise
+ */
 export async function isUserAdmin(uid: string): Promise<boolean> {
   try {
     const user = await adminAuth.getUser(uid)
@@ -172,6 +179,48 @@ export async function isUserAdmin(uid: string): Promise<boolean> {
   } catch (error) {
     console.error('Error checking admin claims:', error)
     return false
+  }
+}
+
+/**
+ * Helper function to check admin status from decoded token and fresh claims
+ * This is the recommended pattern for admin checks in API routes
+ * @param decodedToken - Decoded Firebase token (from verifyIdToken or verifySessionCookie)
+ * @param uid - User ID to fetch fresh claims
+ * @returns Object with admin status and details
+ */
+export async function checkAdminStatus(
+  decodedToken: any,
+  uid: string
+): Promise<{
+  isAdmin: boolean
+  fromToken: boolean
+  fromClaims: boolean
+}> {
+  try {
+    // Check direct property from token (may be at root level)
+    const fromToken = (decodedToken as any).admin === true
+
+    // Fetch fresh custom claims from Firebase Auth (source of truth)
+    const userRecord = await adminAuth.getUser(uid)
+    const userClaims = userRecord.customClaims || {}
+    const fromClaims = userClaims.admin === true
+
+    // Admin if either location has the claim
+    const isAdmin = fromToken || fromClaims
+
+    return {
+      isAdmin,
+      fromToken,
+      fromClaims,
+    }
+  } catch (error) {
+    console.error('Error checking admin status:', error)
+    return {
+      isAdmin: false,
+      fromToken: false,
+      fromClaims: false,
+    }
   }
 }
 

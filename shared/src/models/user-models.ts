@@ -7,6 +7,7 @@ class AppUser implements IAppUser {
   id: string
   email: string
   firstName: string
+  isAdmin: boolean = false
   lastName: string
   displayName: string
   photoURL?: string | undefined

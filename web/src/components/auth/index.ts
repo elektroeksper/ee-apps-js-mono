@@ -5,7 +5,7 @@
 
 export { AuthGuard } from './AuthGuard'
 export { AuthInitializer } from './AuthInitializer'
-export { default as BusinessApprovalGuard } from './BusinessApprovalGuard'
+// export { default as BusinessApprovalGuard } from './BusinessApprovalGuard' // DEPRECATED: Functionality now in AuthGuard
 export { EmailVerificationBanner } from './EmailVerificationBanner'
 export { default as EmailVerificationHandler } from './EmailVerificationHandler'
 export { LoginForm } from './LoginForm'
@@ -13,3 +13,4 @@ export { PasswordChangeForm } from './PasswordChangeForm'
 export { PasswordResetForm } from './PasswordResetForm'
 export { default as PasswordResetHandler } from './PasswordResetHandler'
 export { RegisterForm } from './RegisterForm'
+// Note: ProfileCompletionGuard is also deprecated - use AuthGuard with requireProfileComplete prop
