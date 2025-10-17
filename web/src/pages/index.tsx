@@ -189,7 +189,7 @@ export default function LandingPage({ appIndexVideos }: LandingPageProps) {
                 </div>
                 <div>
                   <p className="text-gray-700 italic mb-4">
-                    "Elektro Ekper sayesinde evimizin tüm elektrik işlerini
+                    "Elektro Eksper sayesinde evimizin tüm elektrik işlerini
                     güvenle hallettik. Hızlı ve profesyonel hizmet!"
                   </p>
                   <p className="font-semibold text-gray-900">Ahmet Y.</p>
@@ -216,7 +216,7 @@ export default function LandingPage({ appIndexVideos }: LandingPageProps) {
                 <div>
                   <p className="text-gray-700 italic mb-4">
                     "İşyerimizin tüm elektronik cihaz bakımlarını Elektro
-                    Ekper'e emanet ediyoruz. Çok memnunuz!"
+                    Eksper'e emanet ediyoruz. Çok memnunuz!"
                   </p>
                   <p className="font-semibold text-gray-900">Mehmet K.</p>
                   <p className="text-sm text-gray-500">Ankara</p>
@@ -255,7 +255,7 @@ export default function LandingPage({ appIndexVideos }: LandingPageProps) {
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-bold mb-4">Elektro Ekper</h3>
+              <h3 className="text-lg font-bold mb-4">Elektro Eksper</h3>
               <p className="text-gray-400">
                 Güvenilir elektrik ve elektronik hizmetleri platformu
               </p>
@@ -362,7 +362,7 @@ export default function LandingPage({ appIndexVideos }: LandingPageProps) {
           </div>
           <div className="mt-8 pt-8 border-t border-gray-700 text-center">
             <p className="text-gray-400">
-              © 2024 Elektro Ekper. Tüm hakları saklıdır.
+              © 2024 Elektro Eksper. Tüm hakları saklıdır.
             </p>
           </div>
         </div>

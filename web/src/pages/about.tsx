@@ -96,7 +96,8 @@ const AboutPage = ({
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-6">Hakkımızda</h1>
           <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-            Elektro Ekper olarak elektrik alanında güvenilir çözümler sunuyoruz.
+            Elektro Eksper olarak elektrik alanında güvenilir çözümler
+            sunuyoruz.
           </p>
         </div>
       </div>

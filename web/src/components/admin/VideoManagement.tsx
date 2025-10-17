@@ -47,7 +47,7 @@ const VIDEO_LOCATIONS = {
 const mockVideos: IVideoItem[] = [
   {
     id: '1',
-    title: 'Welcome to Elektro Ekper',
+    title: 'Welcome to Elektro Eksper',
     youtubeVideoId: 'dQw4w9WgXcQ',
     location: 'app-index',
     autoStart: false,

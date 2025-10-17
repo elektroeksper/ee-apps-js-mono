@@ -72,7 +72,7 @@ export default function Navbar() {
             <div className="flex items-center">
               <span className="text-3xl font-bold text-blue-600">EE</span>
               <span className="ml-2 text-xl font-semibold text-gray-900">
-                Elektro Ekper
+                Elektro Eksper
               </span>
             </div>
           </Link>

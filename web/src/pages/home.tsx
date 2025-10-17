@@ -20,7 +20,7 @@ function DashboardContent() {
             !
           </h1>
           <p className="text-gray-600 mb-4">
-            Elektro Ekper kontrol panelinize hoş geldiniz. Buradan tüm
+            Elektro Eksper kontrol panelinize hoş geldiniz. Buradan tüm
             hizmetlerimizi yönetebilirsiniz.
           </p>
 
