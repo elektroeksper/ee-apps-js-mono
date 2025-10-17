@@ -86,7 +86,7 @@ const AboutPage = ({
   brandingInfo,
   contactInfo,
 }: AboutPageProps) => {
-  const businessName = brandingInfo?.businessName || 'Electro Expert'
+  const businessName = brandingInfo?.businessName || 'Elektro Eksper'
 
   return (
     <div className="min-h-screen bg-gradient-services">
@@ -96,7 +96,7 @@ const AboutPage = ({
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-6">Hakkımızda</h1>
           <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-            ElectroExpert olarak elektrik alanında güvenilir çözümler sunuyoruz.
+            Elektro Ekper olarak elektrik alanında güvenilir çözümler sunuyoruz.
           </p>
         </div>
       </div>

@@ -76,7 +76,7 @@ const ContactPage = ({ contactInfo, brandingInfo }: ContactPageProps) => {
 
   const defaultContact = {
     phone: '+1 (555) 123-4567',
-    email: 'info@electroexpert.com',
+    email: 'info@elektroeksper.com',
     address: '123 Electric Ave, City, State 12345',
     workingHours: 'Mon-Fri: 8:00 AM - 6:00 PM, Sat: 9:00 AM - 4:00 PM',
     socialMedia: {
@@ -88,7 +88,7 @@ const ContactPage = ({ contactInfo, brandingInfo }: ContactPageProps) => {
   }
 
   const contact = contactInfo || defaultContact
-  const businessName = brandingInfo?.businessName || 'Electro Expert'
+  const businessName = brandingInfo?.businessName || 'Elektro Eksper'
 
   return (
     <div className="min-h-screen bg-gray-50">

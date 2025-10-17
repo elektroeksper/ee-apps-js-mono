@@ -208,7 +208,7 @@ export default function VerifyEmailPage() {
               <p className="text-sm text-gray-600">
                 Yardıma mı ihtiyacınız var?{' '}
                 <a
-                  href="mailto:support@electroexpert.com"
+                  href="mailto:support@elektroeksper.com"
                   className="font-medium text-emerald-600 hover:text-emerald-700"
                 >
                   Destek ile İletişime Geçin

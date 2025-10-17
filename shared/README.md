@@ -1,6 +1,6 @@
 # Firebase Auth Error Messages - Shared Package
 
-A centralized Firebase authentication error message system providing consistent Turkish error messages across all projects in the Electro Expert monorepo.
+A centralized Firebase authentication error message system providing consistent Turkish error messages across all projects in the Elektro Eksper monorepo.
 
 ## 📦 Package Contents
 
@@ -268,4 +268,4 @@ To add new error messages:
 
 ---
 
-**Made with ❤️ for the Electro Expert monorepo**
+**Made with ❤️ for the Elektro Eksper monorepo**

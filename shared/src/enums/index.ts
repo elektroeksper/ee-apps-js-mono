@@ -1,4 +1,4 @@
-// Common enums for the Electro Expert application
+// Common enums for the Elektro Eksper application
 
 enum AccountType {
   INDIVIDUAL = 'individual',
@@ -143,5 +143,6 @@ export {
   ProductCategory,
   StorageDocumentStatus,
   StorageDocumentType,
-  TaxNumberType,
-}
+  TaxNumberType
+};
+

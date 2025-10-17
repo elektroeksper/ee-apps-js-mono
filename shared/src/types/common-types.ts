@@ -1,4 +1,4 @@
-// Common shared types for the Electro Expert application
+// Common shared types for the Elektro Eksper application
 import { Timestamp } from 'firebase/firestore'
 
 type SystemSettingsKey =

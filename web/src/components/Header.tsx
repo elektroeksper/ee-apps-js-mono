@@ -65,7 +65,7 @@ export default function Header() {
             <div className="flex items-center">
               <span className="text-3xl font-bold text-blue-600">EE</span>
               <span className="ml-2 text-xl font-semibold text-gray-900">
-                ElectroExpert
+                Elektro Ekper
               </span>
             </div>
           </Link>

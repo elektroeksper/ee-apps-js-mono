@@ -76,7 +76,7 @@ export default function IndexVideoAndLoginSection({
                     className="absolute top-0 left-0 w-full h-full"
                     src={`https://www.youtube.com/embed/${primaryVideo.youtubeVideoId}${primaryVideo.autoStart ? '?autoplay=1' : ''}${primaryVideo.loop ? '&loop=1&playlist=' + primaryVideo.youtubeVideoId : ''}`}
                     title={
-                      primaryVideo.title || 'ElectroExpert Tanıtım Videosu'
+                      primaryVideo.title || 'Elektro Ekper Tanıtım Videosu'
                     }
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

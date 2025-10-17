@@ -45,34 +45,34 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  # Firebase Configuration - Updated for ee-prod-apps
+  # Firebase Configuration - TEST ENVIRONMENT (using ee-dev-apps for testing)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: AIzaSyD3OOwXGouAHWl2xmePZmmXCXQJFXX4E5o
+    value: AIzaSyAvWTu0V1AZ26UdwZgl2U1lGKLTFH6XC-s
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: ee-prod-apps.firebaseapp.com
+    value: ee-dev-apps.firebaseapp.com
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: ee-prod-apps
+    value: ee-dev-apps
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: ee-prod-apps.firebasestorage.app
+    value: ee-dev-apps.firebasestorage.app
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "81027156593"
+    value: "1048760160741"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: 1:81027156593:web:9b6718fe1e1ac2355ee9d0
+    value: 1:1048760160741:web:854dafd82afdd5b17b9f0c
     availability:
       - BUILD
       - RUNTIME
@@ -87,7 +87,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_API_BASE_URL
-    value: https://europe-west1-ee-prod-apps.cloudfunctions.net
+    value: https://europe-west1-ee-dev-apps.cloudfunctions.net
     availability:
       - BUILD
       - RUNTIME

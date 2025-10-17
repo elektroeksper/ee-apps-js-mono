@@ -228,9 +228,11 @@ echo "✅ Using ${APPHOSTING_CONFIG} as apphosting.yaml"
 
 # Deploy using standard firebase deploy command from web directory
 # This ensures only the web directory content is uploaded
-if [ "$SELECTED_ENV" == "DEV" ]; then
+if [ "$SELECTED_ENV" == "DEV" ] || [ "$SELECTED_ENV" == "TEST" ]; then
+    # Both dev and test environments use ee-dev-apps project
     firebase deploy --only apphosting --project ee-dev-apps
 else
+    # Live environment uses ee-prod-apps project
     firebase deploy --only apphosting --project ee-prod-apps
 fi
 
@@ -249,7 +251,7 @@ echo "✅ Original configuration files restored"
 echo ""
 echo "🎉 Deployment completed successfully!"
 echo "🌐 Your app is available at: ${SELECTED_URL}"
-if [ "$SELECTED_ENV" == "DEV" ]; then
+if [ "$SELECTED_ENV" == "DEV" ] || [ "$SELECTED_ENV" == "TEST" ]; then
     echo "📊 Monitor deployment at: https://console.firebase.google.com/project/ee-dev-apps/apphosting"
 else
     echo "📊 Monitor deployment at: https://console.firebase.google.com/project/ee-prod-apps/apphosting"
@@ -265,6 +267,6 @@ elif [ "$SELECTED_ENV" == "DEV" ]; then
 else
     echo "   Config: web/apphosting.test.yaml"
 fi
-echo "   Project: $([ "$SELECTED_ENV" == "DEV" ] && echo "ee-dev-apps" || echo "ee-prod-apps")"
+echo "   Project: $([ "$SELECTED_ENV" == "LIVE" ] && echo "ee-prod-apps" || echo "ee-dev-apps")"
 echo "   Source: Local"
 echo "   URL: ${SELECTED_URL}"

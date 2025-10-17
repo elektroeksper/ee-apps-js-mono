@@ -1,4 +1,4 @@
-# Electro Expert - Monorepo
+# Elektro Eksper - Monorepo
 
 A modern electronics e-commerce platform built with a monorepo architecture using Next.js, Firebase, and TypeScript.
 

@@ -36,26 +36,66 @@ if (!admin.apps.length) {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     })
   } else {
-    // Use environment-specific service account file (for development)
+    // Use environment-specific service account file
+    // Environment mapping:
+    //   - ee-dev-apps project  → admin-service-account-dev.json (for dev and test environments)
+    //   - ee-prod-apps project → admin-service-account-prod.json (for live environment)
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ee-prod-apps'
-    const serviceAccountFile = projectId === 'ee-dev-apps'
-      ? './src/lib/admin-service-account-dev.json'
-      : './src/lib/admin-service-account-prod.json'
+    const path = require('path')
+    const fs = require('fs')
+
+    // Determine environment based on project ID
+    const isDev = projectId === 'ee-dev-apps'
+    const env = isDev ? 'dev' : 'prod'
+
+    // Service account files are in the functions directory, not web/src/lib
+    // We need to go up from web directory to project root, then into functions
+    const serviceAccountFile = path.join(
+      process.cwd(), // This is the web directory when running npm run dev
+      '..',           // Go up to project root
+      'functions',    // Enter functions directory
+      `admin-service-account-${env}.json`
+    )
 
     try {
-      const serviceAccount = require(serviceAccountFile)
+      console.log(`🔍 Environment: ${env} (${projectId})`)
+      console.log(`🔍 Attempting to load service account from: ${serviceAccountFile}`)
+      console.log(`🔍 Current working directory: ${process.cwd()}`)
+
+      // Check if file exists
+      if (!fs.existsSync(serviceAccountFile)) {
+        throw new Error(`Service account file does not exist: ${serviceAccountFile}`)
+      }
+
+      // Read and parse the service account file
+      const serviceAccountContent = fs.readFileSync(serviceAccountFile, 'utf8')
+      const serviceAccount = JSON.parse(serviceAccountContent)
+
+      // Verify it has the required fields
+      if (!serviceAccount.client_email || !serviceAccount.private_key) {
+        throw new Error('Service account file is missing required fields (client_email or private_key)')
+      }
+
       app = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: projectId,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`,
       })
-      console.log(`✅ Firebase Admin initialized with service account file for ${projectId}`)
+      console.log(`✅ Firebase Admin initialized with ${env} service account for ${projectId}`)
+      console.log(`✅ Using service account: ${serviceAccount.client_email}`)
+      console.log(`✅ Storage bucket: ${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`}`)
     } catch (fileError) {
-      console.error(`❌ Service account file not found (${serviceAccountFile}):`, fileError)
-      // Fallback to default credentials
+      console.error(`❌ Failed to load service account file:`, fileError)
+      console.error(`❌ Working directory: ${process.cwd()}`)
+      console.error(`❌ Attempted path: ${serviceAccountFile}`)
+
+      // Fallback to Application Default Credentials (ADC)
+      console.log('⚠️ Falling back to Application Default Credentials (ADC)')
       app = admin.initializeApp({
         projectId: projectId,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`,
       })
-      console.log('⚠️ Firebase Admin initialized with default credentials')
+      console.log('⚠️ Warning: ADC cannot generate signed URLs. Document uploads may fail.')
     }
   }
 } else {
