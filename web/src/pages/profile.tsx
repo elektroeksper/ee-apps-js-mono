@@ -330,8 +330,15 @@ function ProfileContent() {
       const businessId = businessInfo?.businessId
 
       if (!businessId) {
+        console.error(
+          '❌ No businessId found in user.businessInfo:',
+          businessInfo
+        )
         return
       }
+
+      console.log('🔍 Fetching business data for ID:', businessId)
+      console.log('📊 Current user data:', JSON.stringify(appUser, null, 2))
 
       setBusinessDataLoading(true)
       try {
@@ -371,18 +378,26 @@ function ProfileContent() {
           const result = await response.json()
           if (result.success && result.data) {
             setLatestBusinessData(result.data)
-            console.log('🔍 Profile: Latest business data fetched:', {
-              verificationStatus: result.data.verification?.status,
-            })
+            console.log(
+              '✅ Latest business data fetched:',
+              JSON.stringify(result.data, null, 2)
+            )
+          } else {
+            console.error(
+              '❌ Business API returned unsuccessful result:',
+              result
+            )
           }
         } else {
           console.error(
-            '🔍 Profile: Failed to fetch business data:',
-            response.status
+            '❌ Profile: Failed to fetch business data. Status:',
+            response.status,
+            'Response:',
+            await response.text()
           )
         }
       } catch (error) {
-        console.error('Error fetching latest business data:', error)
+        console.error('❌ Error fetching latest business data:', error)
       } finally {
         setBusinessDataLoading(false)
       }
@@ -681,13 +696,43 @@ function ProfileContent() {
             <div className="text-right">
               <p className="text-sm text-gray-500">Üye Olma Tarihi</p>
               <p className="text-lg font-semibold text-gray-900">
-                {appUser.createdAt
-                  ? (appUser.createdAt instanceof Date
-                      ? appUser.createdAt
-                      : appUser.createdAt.toDate?.() ||
-                        new Date(appUser.createdAt.seconds * 1000)
-                    ).toLocaleDateString('tr-TR')
-                  : 'Bilinmiyor'}
+                {(() => {
+                  // Try to get date from businessInfo.joinedAt for business users
+                  if (isBusinessAccount && businessInfo?.joinedAt) {
+                    const joinedAt = businessInfo.joinedAt as any
+                    if (joinedAt instanceof Date) {
+                      return joinedAt.toLocaleDateString('tr-TR')
+                    }
+                    if (joinedAt.toDate) {
+                      return joinedAt.toDate().toLocaleDateString('tr-TR')
+                    }
+                    if (joinedAt._seconds || joinedAt.seconds) {
+                      const seconds = joinedAt._seconds || joinedAt.seconds
+                      return new Date(seconds * 1000).toLocaleDateString(
+                        'tr-TR'
+                      )
+                    }
+                  }
+
+                  // Fall back to user createdAt or business createdAt
+                  const createdAt =
+                    appUser.createdAt || latestBusinessData?.createdAt
+                  if (!createdAt) return 'Bilinmiyor'
+
+                  const createdAtAny = createdAt as any
+                  if (createdAt instanceof Date) {
+                    return createdAt.toLocaleDateString('tr-TR')
+                  }
+                  if (createdAtAny.toDate) {
+                    return createdAtAny.toDate().toLocaleDateString('tr-TR')
+                  }
+                  if (createdAtAny._seconds || createdAtAny.seconds) {
+                    const seconds =
+                      createdAtAny._seconds || createdAtAny.seconds
+                    return new Date(seconds * 1000).toLocaleDateString('tr-TR')
+                  }
+                  return 'Bilinmiyor'
+                })()}
               </p>
             </div>
           </div>
@@ -771,13 +816,48 @@ function ProfileContent() {
                       <FiClock className="h-4 w-4 text-white" />
                     </div>
                     <p className="text-lg font-medium text-gray-900">
-                      {appUser.createdAt
-                        ? (appUser.createdAt instanceof Date
-                            ? appUser.createdAt
-                            : appUser.createdAt.toDate?.() ||
-                              new Date(appUser.createdAt.seconds * 1000)
-                          ).toLocaleDateString('tr-TR')
-                        : 'Bilinmiyor'}
+                      {(() => {
+                        // Try to get date from businessInfo.joinedAt for business users
+                        if (isBusinessAccount && businessInfo?.joinedAt) {
+                          const joinedAt = businessInfo.joinedAt as any
+                          if (joinedAt instanceof Date) {
+                            return joinedAt.toLocaleDateString('tr-TR')
+                          }
+                          if (joinedAt.toDate) {
+                            return joinedAt.toDate().toLocaleDateString('tr-TR')
+                          }
+                          if (joinedAt._seconds || joinedAt.seconds) {
+                            const seconds =
+                              joinedAt._seconds || joinedAt.seconds
+                            return new Date(seconds * 1000).toLocaleDateString(
+                              'tr-TR'
+                            )
+                          }
+                        }
+
+                        // Fall back to user createdAt or business createdAt
+                        const createdAt =
+                          appUser.createdAt || latestBusinessData?.createdAt
+                        if (!createdAt) return 'Bilinmiyor'
+
+                        const createdAtAny = createdAt as any
+                        if (createdAt instanceof Date) {
+                          return createdAt.toLocaleDateString('tr-TR')
+                        }
+                        if (createdAtAny.toDate) {
+                          return createdAtAny
+                            .toDate()
+                            .toLocaleDateString('tr-TR')
+                        }
+                        if (createdAtAny._seconds || createdAtAny.seconds) {
+                          const seconds =
+                            createdAtAny._seconds || createdAtAny.seconds
+                          return new Date(seconds * 1000).toLocaleDateString(
+                            'tr-TR'
+                          )
+                        }
+                        return 'Bilinmiyor'
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -852,7 +932,9 @@ function ProfileContent() {
                         <FiFileText className="h-4 w-4 text-white" />
                       </div>
                       <p className="text-lg font-medium text-gray-900">
-                        {businessInfo?.businessName || 'Belirtilmemiş'}
+                        {latestBusinessData?.businessName ||
+                          businessInfo?.businessName ||
+                          'Belirtilmemiş'}
                       </p>
                     </div>
                   </div>
@@ -867,25 +949,27 @@ function ProfileContent() {
                         <FiFileText className="h-4 w-4 text-white" />
                       </div>
                       <p className="text-lg font-medium text-gray-900">
-                        {businessInfo?.taxNumber || 'Belirtilmemiş'}
+                        {latestBusinessData?.taxNumber || 'Belirtilmemiş'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Trade Registry Number */}
-                  <div className="p-4 bg-gradient-to-br from-gray-50 to-purple-50 rounded-xl border border-gray-100">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Ticaret Sicil No
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                        <FiFileText className="h-4 w-4 text-white" />
+                  {/* Tax Office */}
+                  {latestBusinessData?.taxOffice && (
+                    <div className="p-4 bg-gradient-to-br from-gray-50 to-cyan-50 rounded-xl border border-gray-100">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Vergi Dairesi
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+                          <FiFileText className="h-4 w-4 text-white" />
+                        </div>
+                        <p className="text-lg font-medium text-gray-900">
+                          {latestBusinessData.taxOffice}
+                        </p>
                       </div>
-                      <p className="text-lg font-medium text-gray-900">
-                        {businessInfo?.tradeRegistryNumber || 'Belirtilmemiş'}
-                      </p>
                     </div>
-                  </div>
+                  )}
 
                   {/* Business Phone */}
                   <div className="p-4 bg-gradient-to-br from-gray-50 to-green-50 rounded-xl border border-gray-100">
@@ -897,23 +981,75 @@ function ProfileContent() {
                         <FiFileText className="h-4 w-4 text-white" />
                       </div>
                       <p className="text-lg font-medium text-gray-900">
-                        {businessInfo?.businessPhone || 'Belirtilmemiş'}
+                        {latestBusinessData?.phone || 'Belirtilmemiş'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Business Address */}
-                  {businessInfo?.businessAddress && (
-                    <div className="md:col-span-2 p-4 bg-gradient-to-br from-gray-50 to-indigo-50 rounded-xl border border-gray-100">
+                  {/* Business Email */}
+                  {latestBusinessData?.email && (
+                    <div className="p-4 bg-gradient-to-br from-gray-50 to-pink-50 rounded-xl border border-gray-100">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        İşletme Adresi
+                        İşletme E-posta
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-600 rounded-lg flex items-center justify-center">
+                          <FiFileText className="h-4 w-4 text-white" />
+                        </div>
+                        <p className="text-lg font-medium text-gray-900">
+                          {latestBusinessData.email}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Website */}
+                  {latestBusinessData?.website && (
+                    <div className="p-4 bg-gradient-to-br from-gray-50 to-teal-50 rounded-xl border border-gray-100">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Web Sitesi
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                          <FiFileText className="h-4 w-4 text-white" />
+                        </div>
+                        <p className="text-lg font-medium text-gray-900 truncate">
+                          {latestBusinessData.website}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Business Address */}
+                  {latestBusinessData?.addresses &&
+                    latestBusinessData.addresses.length > 0 && (
+                      <div className="md:col-span-2 p-4 bg-gradient-to-br from-gray-50 to-indigo-50 rounded-xl border border-gray-100">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          İşletme Adresi
+                        </label>
+                        <div className="flex items-start space-x-2">
+                          <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center mt-1">
+                            <FiFileText className="h-4 w-4 text-white" />
+                          </div>
+                          <p className="text-lg font-medium text-gray-900 leading-relaxed">
+                            {formatAddress(latestBusinessData.addresses[0])}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Description */}
+                  {latestBusinessData?.description && (
+                    <div className="md:col-span-2 p-4 bg-gradient-to-br from-gray-50 to-violet-50 rounded-xl border border-gray-100">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        İşletme Açıklaması
                       </label>
                       <div className="flex items-start space-x-2">
-                        <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center mt-1">
+                        <div className="w-8 h-8 bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg flex items-center justify-center mt-1">
                           <FiFileText className="h-4 w-4 text-white" />
                         </div>
                         <p className="text-lg font-medium text-gray-900 leading-relaxed">
-                          {formatAddress(businessInfo.businessAddress)}
+                          {latestBusinessData.description}
                         </p>
                       </div>
                     </div>
