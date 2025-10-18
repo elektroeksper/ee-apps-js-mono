@@ -101,6 +101,7 @@ export function AuthGuard({
       !loading &&
       appUser &&
       !isProfileComplete &&
+      requireProfileComplete &&
       router.pathname !== '/setup'
     ) {
       console.log('🚨 AuthGuard Profile Redirect:', {
@@ -111,9 +112,17 @@ export function AuthGuard({
       })
       router.replace('/setup')
     }
-  }, [mounted, loading, appUser, isProfileComplete, router])
+  }, [
+    mounted,
+    loading,
+    appUser,
+    isProfileComplete,
+    requireProfileComplete,
+    router,
+  ])
 
   // Handle business user redirects when profile is complete but they need approval handling
+  // Only check business verification for /home route
   useEffect(() => {
     if (
       mounted &&
@@ -122,7 +131,7 @@ export function AuthGuard({
       isProfileComplete &&
       appUser.accountType === 'business' &&
       requireProfileComplete &&
-      router.pathname !== '/setup' // Only skip check when already on setup page
+      router.pathname === '/home' // Only check verification for home page
     ) {
       // Check business verification status by fetching business data
       const checkBusinessVerificationStatus = async () => {

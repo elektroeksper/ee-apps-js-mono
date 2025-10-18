@@ -296,7 +296,7 @@ function DashboardContent() {
 
 export default function HomePage() {
   return (
-    <AuthGuard requireAuth={true} requireProfileComplete={true}>
+    <AuthGuard requireAuth={true} requireProfileComplete={false}>
       <DashboardContent />
     </AuthGuard>
   )

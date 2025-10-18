@@ -150,9 +150,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Business profile is complete if:
       // 1. Has basic info AND
-      // 2. Has company name
+      // 2. Has a business ID (business exists in businesses collection)
+      // Note: Business name and documents are stored in the businesses collection
       // Note: Document verification is handled by AuthGuard
-      const result = !!businessInfo.businessName
+      const result = !!businessInfo.businessId
 
       console.log('🔍 isProfileComplete DEBUG:', {
         userId: appUser.id,
@@ -160,7 +161,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         lastName: appUser.lastName,
         isEmailVerified: appUser.isEmailVerified,
         hasBasicInfo,
-        businessName: businessInfo.businessName,
+        businessId: businessInfo.businessId,
         businessInfo,
         isProfileComplete: result,
       })

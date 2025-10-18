@@ -135,7 +135,10 @@ export default function AdminLayout({ children, title }: IAdminLayoutProps) {
         {/* Sidebar footer */}
         <div className="border-t border-slate-200 p-4">
           <button
-            onClick={() => logout()}
+            onClick={async () => {
+              await logout()
+              router.push('/')
+            }}
             className="flex items-center w-full px-3 py-2 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
             <FiLogOut className="h-5 w-5 mr-3" />

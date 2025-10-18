@@ -7,11 +7,11 @@ import { authService } from '@/services/auth.service'
 import { NextRouter } from 'next/router'
 
 /**
- * Logout user and redirect to login page with proper URL update
+ * Logout user and redirect to root page with proper URL update
  */
 export async function logoutAndRedirect(
   router: NextRouter,
-  redirectTo: string = '/login'
+  redirectTo: string = '/'
 ): Promise<void> {
   try {
     console.log('🚪 Logging out user and redirecting...')

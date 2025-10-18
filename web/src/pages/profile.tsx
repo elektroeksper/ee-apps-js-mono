@@ -458,7 +458,7 @@ function ProfileContent() {
   }
 
   const handleLogout = async () => {
-    await logoutAndRedirect(router, '/login')
+    await logoutAndRedirect(router, '/')
   }
 
   if (authLoading) {
