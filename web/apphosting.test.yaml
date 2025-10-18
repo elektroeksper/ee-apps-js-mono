@@ -35,13 +35,26 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # Force standalone build without static export
+  - variable: NEXT_OUTPUT_STANDALONE
+    value: "true"
+    availability:
+      - BUILD
+      - RUNTIME
+  # Disable Next.js static export during build
+  - variable: NEXT_DISABLE_STATIC_EXPORT
+    value: "true"
+    availability:
+      - BUILD
+      - RUNTIME
+
   - variable: NEXT_PUBLIC_REST_API_ENDPOINT
-    value: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app/api
+    value: https://ee-next-test--ee-dev-apps.europe-west4.hosted.app/api
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://ee-next-test--ee-prod-apps.europe-west4.hosted.app/
+    value: https://ee-next-test--ee-dev-apps.europe-west4.hosted.app/
     availability:
       - BUILD
       - RUNTIME
@@ -93,7 +106,7 @@ env:
       - RUNTIME
   # Google Maps API Key
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    value: AIzaSyC06eYgOwcqm-CodnC_-jkilscQ7cLDQoQ
+    value: AIzaSyAu5DyNA6axIBr8BFb3NrOmO8VM_WZa5VM
     availability:
       - BUILD
       - RUNTIME
