@@ -24,6 +24,24 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+    // Allow local images from public directory and common image paths
+    localPatterns: [
+      {
+        pathname: '/imgs/**',
+      },
+      {
+        pathname: '/images/**',
+      },
+      {
+        pathname: '/logos/**',
+      },
+      {
+        pathname: '/assets/**',
+      },
+      {
+        pathname: '/*.{png,jpg,jpeg,gif,webp,avif,svg}',
+      },
+    ],
   },
   async rewrites() {
     // Temporarily disable Firebase Functions proxy since we're using Next.js API routes

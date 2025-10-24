@@ -70,7 +70,11 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <div className="flex items-center">
-              <span className="text-3xl font-bold text-blue-600">EE</span>
+              <img
+                src="/imgs/logo.png"
+                alt="Elektro Eksper Logo"
+                className="h-8 w-12"
+              />
               <span className="ml-2 text-xl font-semibold text-gray-900">
                 Elektro Eksper
               </span>
