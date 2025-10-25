@@ -86,7 +86,7 @@ export async function createUserProfile(
       const userRecord = await auth.getUser(userId)
       isAdmin = userRecord.customClaims?.admin === true
     } catch (error) {
-      logger.warn('Could not fetch custom claims for user:', userId)
+      logger.warn('Could not fetch custom claims for user:', userId, error)
     }
 
     // Prepare user data with timestamps

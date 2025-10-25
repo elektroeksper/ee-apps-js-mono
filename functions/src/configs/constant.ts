@@ -3,3 +3,4 @@ export const FUNCTION_OPTIONS = {
 }
 
 export const ADMIN_USERS = ['elektroeksper@gmail.com']
+//Test@EE234!

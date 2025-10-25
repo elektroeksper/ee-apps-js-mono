@@ -62,6 +62,13 @@ service cloud.firestore {
       }
     }
     
+    // Public read access to categories
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        request.auth.token.admin == true;
+    }
+    
     // Public read access to products
     match /products/{productId} {
       allow read: if true;

@@ -41,16 +41,14 @@ trap cleanup EXIT
 # Define backend targets
 LIVE_BACKEND="ee-next-live"
 TEST_BACKEND="ee-next-test"
-DEV_BACKEND="ee-next-dev-1"
 LIVE_URL="https://ee-next-live--ee-prod-apps.europe-west4.hosted.app"
 TEST_URL="https://ee-next-test--ee-prod-apps.europe-west4.hosted.app"
-DEV_URL="https://ee-next-dev-1--ee-dev-apps.europe-west4.hosted.app"
 
 # Function to select target
 select_target() {
     echo ""
     echo "📋 Available deployment targets:"
-    echo "  1) Dev Environment (${DEV_BACKEND})"
+    echo "  1) Dev Environment (ee-next-dev-1)"
     echo "  2) Test Environment (${TEST_BACKEND})"
     echo "  3) Live Environment (${LIVE_BACKEND})"
     echo ""
@@ -59,8 +57,8 @@ select_target() {
         read -p "🎯 Select deployment target (1 for dev, 2 for test, 3 for live): " choice
         case $choice in
             1)
-                SELECTED_BACKEND=$DEV_BACKEND
-                SELECTED_URL=$DEV_URL
+                SELECTED_BACKEND="ee-next-dev-1"
+                SELECTED_URL="https://ee-next-dev-1--ee-dev-apps.europe-west4.hosted.app"
                 SELECTED_ENV="DEV"
                 break
                 ;;
@@ -93,8 +91,8 @@ select_target() {
 
 # Check if target is provided as argument
 if [ "$1" == "dev" ]; then
-    SELECTED_BACKEND=$DEV_BACKEND
-    SELECTED_URL=$DEV_URL
+    SELECTED_BACKEND="ee-next-dev-1"
+    SELECTED_URL="https://ee-next-dev-1--ee-dev-apps.europe-west4.hosted.app"
     SELECTED_ENV="DEV"
     echo "🎯 Using DEV environment (provided as argument)"
 elif [ "$1" == "test" ]; then
@@ -262,13 +260,6 @@ fi
 
 # Return to root directory
 cd ..
-
-# Return to root directory
-cd ..
-
-echo ""
-echo "🎉 Deployment completed successfully!"
-fi
 
 echo "✅ Original configuration files restored"
 
