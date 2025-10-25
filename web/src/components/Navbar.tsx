@@ -73,7 +73,7 @@ export default function Navbar() {
               <img
                 src="/imgs/logo.png"
                 alt="Elektro Eksper Logo"
-                className="h-8 w-12"
+                className="h-12 w-16"
               />
               <span className="ml-2 text-xl font-semibold text-gray-900">
                 Elektro Eksper
