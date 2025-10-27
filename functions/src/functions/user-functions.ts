@@ -1,4 +1,5 @@
 import { IOperationResult } from "@shared"
+import { UserRecord } from "firebase-admin/auth"
 import { logger } from "firebase-functions/v2"
 import { onCall } from "firebase-functions/v2/https"
 import { ADMIN_USERS } from "../configs/constant"
@@ -14,8 +15,16 @@ export const setAdminsClaims = onCall(
         try {
           const userRecord = await auth.getUserByEmail(email)
           if (userRecord) {
+            // Set admin claim and verify email
             await auth.setCustomUserClaims(userRecord.uid, { admin: true })
-            logger.info(`Set admin claim for user: ${email}`)
+
+            // Update user to mark email as verified
+            if (!userRecord.emailVerified) {
+              await auth.updateUser(userRecord.uid, { emailVerified: true })
+              logger.info(`Set admin claim and verified email for user: ${email}`)
+            } else {
+              logger.info(`Set admin claim for user: ${email}`)
+            }
           } else {
             logger.warn(`User not found for email: ${email}`)
           }
@@ -75,6 +84,45 @@ export const checkUserClaims = onCall(
       return {
         success: true,
         data: { claims: userClaims },
+        code: 200,
+      }
+    } catch (error) {
+      logger.error('Error checking admin claims:', error)
+      return {
+        success: false,
+        error: 'Failed to check admin claims',
+        code: 500,
+      }
+    }
+  }
+)
+
+export const getUserProfile = onCall(
+  async (request): Promise<IOperationResult<UserRecord>> => {
+    try {
+      const { userId } = request.data as {
+        userId: string
+      };
+      if (!userId) {
+        return {
+          success: false,
+          error: 'userId is required',
+          code: 400,
+        }
+      }
+
+      const user = await auth.getUser(userId)
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not found',
+          code: 404,
+        }
+      }
+
+      return {
+        success: true,
+        data: user,
         code: 200,
       }
     } catch (error) {

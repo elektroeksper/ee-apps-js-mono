@@ -133,6 +133,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isProfileComplete = useMemo(() => {
     if (!appUser) return false
 
+    if (isAdmin) return true
+
     // Basic required fields for all users
     const hasBasicInfo = !!(
       appUser.firstName &&

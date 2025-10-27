@@ -4,14 +4,13 @@ import { setGlobalOptions } from 'firebase-functions/v2'
 setGlobalOptions({ region: 'europe-west1', maxInstances: 10 })
 
 import { initMainCategories } from '@functions/category-functions'
-import { checkUserClaims, setAdminsClaims } from './functions/user-functions'
+import { checkUserClaims, getUserProfile, setAdminsClaims } from './functions/user-functions'
 import {
   onBusinessVerificationStatusChange, onUserDocumentUpdate
 } from './triggers'
 
 // Export the business verification status change trigger
 export {
-  checkUserClaims, initMainCategories, onBusinessVerificationStatusChange, onUserDocumentUpdate,
-  setAdminsClaims
+  checkUserClaims, getUserProfile, initMainCategories, onBusinessVerificationStatusChange, onUserDocumentUpdate, setAdminsClaims
 }
 

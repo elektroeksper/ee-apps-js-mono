@@ -89,9 +89,9 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  # Google Maps API Key - PRODUCTION (TODO: Create separate production key)
+  # Google Maps API Key - PRODUCTION
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    value: AIzaSyC06eYgOwcqm-CodnC_-jkilscQ7cLDQoQ
+    value: AIzaSyBCN0FiQy_ScgvQn6WddBP0FDZwl60efko
     availability:
       - BUILD
       - RUNTIME
