@@ -312,7 +312,13 @@ function DocumentUploadModal({
 }
 
 function ProfileContent() {
-  const { appUser, isLoading: authLoading, refreshUser, isAdmin } = useAuth()
+  const {
+    appUser,
+    fireUser,
+    isLoading: authLoading,
+    refreshUser,
+    isAdmin,
+  } = useAuth()
   const router = useRouter()
   const [showDocumentModal, setShowDocumentModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -580,7 +586,7 @@ function ProfileContent() {
                 <FiUser className="h-12 w-12 text-white" />
               </div>
               <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-md">
-                {appUser.isEmailVerified ? (
+                {fireUser?.emailVerified ? (
                   <FiCheck className="h-4 w-4 text-white" />
                 ) : (
                   <FiX className="h-4 w-4 text-white" />
@@ -630,12 +636,12 @@ function ProfileContent() {
 
                 <span
                   className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
-                    appUser.isEmailVerified
+                    fireUser?.emailVerified
                       ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-md'
                       : 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
                   }`}
                 >
-                  {appUser.isEmailVerified ? (
+                  {fireUser?.emailVerified ? (
                     <>
                       <FiCheck className="h-4 w-4 mr-2" />
                       E-posta Doğrulandı
@@ -774,12 +780,12 @@ function ProfileContent() {
                   <div className="flex items-center space-x-2">
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        appUser.isEmailVerified
+                        fireUser?.emailVerified
                           ? 'bg-gradient-to-r from-green-500 to-emerald-600'
                           : 'bg-gradient-to-r from-red-500 to-pink-600'
                       }`}
                     >
-                      {appUser.isEmailVerified ? (
+                      {fireUser?.emailVerified ? (
                         <FiCheck className="h-4 w-4 text-white" />
                       ) : (
                         <FiX className="h-4 w-4 text-white" />

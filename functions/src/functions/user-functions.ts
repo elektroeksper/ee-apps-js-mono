@@ -1,9 +1,10 @@
 import { IOperationResult } from "@shared"
+import * as admin from 'firebase-admin'
 import { UserRecord } from "firebase-admin/auth"
 import { logger } from "firebase-functions/v2"
 import { onCall } from "firebase-functions/v2/https"
 import { ADMIN_USERS } from "../configs/constant"
-import { auth } from "../utils/firebase-admin"
+import { auth, db } from "../utils/firebase-admin"
 
 // Set admin claims for predefined admin users
 export const setAdminsClaims = onCall(
@@ -15,15 +16,30 @@ export const setAdminsClaims = onCall(
         try {
           const userRecord = await auth.getUserByEmail(email)
           if (userRecord) {
-            // Set admin claim and verify email
+            // Set admin claim in Firebase Auth (source of truth for roles)
             await auth.setCustomUserClaims(userRecord.uid, { admin: true })
 
-            // Update user to mark email as verified
+            // Verify email in Firebase Auth (source of truth for email verification)
             if (!userRecord.emailVerified) {
               await auth.updateUser(userRecord.uid, { emailVerified: true })
-              logger.info(`Set admin claim and verified email for user: ${email}`)
+              logger.info(`Set admin claim and verified email in Firebase Auth for: ${email}`)
             } else {
-              logger.info(`Set admin claim for user: ${email}`)
+              logger.info(`Set admin claim in Firebase Auth for: ${email}`)
+            }
+
+            // Sync to Firestore user document (denormalized cache for quick reads)
+            const userRef = db.collection('users').doc(userRecord.uid)
+            const userDoc = await userRef.get()
+
+            if (userDoc.exists) {
+              await userRef.update({
+                isEmailVerified: true, // Cache from Firebase Auth
+                isAdmin: true, // Cache from custom claims
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              })
+              logger.info(`Synced Firestore cache for: ${email}`)
+            } else {
+              logger.warn(`Firestore user document not found for: ${email}`)
             }
           } else {
             logger.warn(`User not found for email: ${email}`)

@@ -44,6 +44,7 @@ export function AuthGuard({
   // Direct consumption of AuthContext - Firebase listener is in AuthProvider
   const {
     appUser,
+    fireUser,
     isLoading,
     error,
     isAdmin,
@@ -321,8 +322,8 @@ export function AuthGuard({
     )
   }
 
-  // Check email verification requirement
-  if (requireEmailVerification && appUser && !appUser.isEmailVerified) {
+  // Check email verification requirement (read from Firebase Auth - source of truth)
+  if (requireEmailVerification && fireUser && !fireUser.emailVerified) {
     return (
       fallback || (
         <div className="min-h-screen flex items-center justify-center">
@@ -436,7 +437,7 @@ export function ProtectedRoute({
   redirectTo?: string
 }) {
   const router = useRouter()
-  const { appUser, isLoading } = useAuth()
+  const { appUser, fireUser, isLoading } = useAuth()
   if (isLoading) return <>{children}</>
   if (!appUser) {
     if (typeof window !== 'undefined')
@@ -445,10 +446,11 @@ export function ProtectedRoute({
       )
     return null
   }
+  // Check email verification from Firebase Auth (source of truth)
   if (
     requireEmailVerification &&
-    appUser &&
-    !appUser.isEmailVerified &&
+    fireUser &&
+    !fireUser.emailVerified &&
     router.pathname !== '/auth/verify-email'
   ) {
     const isBusinessUser =
