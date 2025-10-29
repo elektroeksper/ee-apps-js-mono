@@ -69,8 +69,32 @@ export class StorageClientService implements IStorageService {
     category: DocumentCategory
   ): Promise<IDocument> {
     try {
+      // Compress images to reduce payload size (client-side only)
+      let fileToUpload = file
+      let compressionAttempted = false
+
+      if (this.isImageFile(file.name) && typeof window !== 'undefined') {
+        const originalSizeMB = (file.size / 1024 / 1024).toFixed(2)
+
+        if (category === 'place-photos') {
+          console.log(`🔄 Compressing place photo: ${file.name} (${originalSizeMB}MB)`)
+          compressionAttempted = true
+          fileToUpload = await this.compressImage(file, 800) // 800KB limit for place photos
+        } else {
+          // Other image categories - larger limit
+          console.log(`🔄 Compressing image: ${file.name} (${originalSizeMB}MB)`)
+          compressionAttempted = true
+          fileToUpload = await this.compressImage(file, 1000) // 1MB limit for other images
+        }
+
+        if (compressionAttempted && fileToUpload.size !== file.size) {
+          const compressedSizeMB = (fileToUpload.size / 1024 / 1024).toFixed(2)
+          console.log(`✅ Compressed from ${originalSizeMB}MB to ${compressedSizeMB}MB`)
+        }
+      }
+
       // Convert file to base64 for transmission
-      const fileData = await this.fileToBase64(file)
+      const fileData = await this.fileToBase64(fileToUpload)
 
       // Get ID token for authentication
       const idToken = await authService.getIdToken(true) // Force refresh
@@ -88,14 +112,17 @@ export class StorageClientService implements IStorageService {
         headers,
         credentials: 'include', // Include session cookies
         body: JSON.stringify({
-          fileName: file.name,
+          fileName: fileToUpload.name,
           category,
           fileData,
           metadata: {
             originalName: file.name,
             uploadedBy: userId,
-            size: file.size,
-            type: file.type,
+            size: fileToUpload.size,
+            type: fileToUpload.type,
+            originalSize: file.size,
+            compressed: compressionAttempted && fileToUpload.size !== file.size,
+            environment: typeof window !== 'undefined' ? 'client' : 'server',
           },
         }),
       })
@@ -300,6 +327,108 @@ export class StorageClientService implements IStorageService {
     }
 
     return { valid: true }
+  }
+
+  /**
+   * Compress image if it's too large (client-side only)
+   */
+  async compressImage(file: File, maxSizeKB: number = 500): Promise<File> {
+    return new Promise((resolve) => {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        console.warn('Image compression not available in server environment, using original file')
+        resolve(file)
+        return
+      }
+
+      if (!this.isImageFile(file.name)) {
+        resolve(file) // Not an image, return as-is
+        return
+      }
+
+      // Check if file is already small enough
+      if (file.size <= maxSizeKB * 1024) {
+        resolve(file) // Already small enough, no compression needed
+        return
+      }
+
+      try {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        const img = new Image()
+
+        if (!ctx) {
+          console.warn('Canvas context not available, using original file')
+          resolve(file)
+          return
+        }
+
+        img.onload = () => {
+          try {
+            // Calculate new dimensions (max 1920x1080 for place photos)
+            let { width, height } = img
+            const maxDimension = 1920
+
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = (height * maxDimension) / width
+                width = maxDimension
+              } else {
+                width = (width * maxDimension) / height
+                height = maxDimension
+              }
+            }
+
+            canvas.width = width
+            canvas.height = height
+
+            // Draw and compress
+            ctx.drawImage(img, 0, 0, width, height)
+
+            // Start with quality 0.8 and reduce if needed
+            let quality = 0.8
+            const tryCompress = () => {
+              canvas.toBlob(
+                (blob) => {
+                  if (blob && blob.size <= maxSizeKB * 1024) {
+                    // Size is acceptable
+                    const compressedFile = new File([blob], file.name, {
+                      type: 'image/jpeg',
+                      lastModified: Date.now(),
+                    })
+                    resolve(compressedFile)
+                  } else if (quality > 0.1) {
+                    // Try with lower quality
+                    quality -= 0.1
+                    tryCompress()
+                  } else {
+                    // Can't compress further, return original
+                    console.warn('Could not compress image to target size, using original')
+                    resolve(file)
+                  }
+                },
+                'image/jpeg',
+                quality
+              )
+            }
+            tryCompress()
+          } catch (compressionError) {
+            console.error('Error during image compression:', compressionError)
+            resolve(file)
+          }
+        }
+
+        img.onerror = () => {
+          console.error('Error loading image for compression')
+          resolve(file)
+        }
+
+        img.src = URL.createObjectURL(file)
+      } catch (error) {
+        console.error('Error setting up image compression:', error)
+        resolve(file)
+      }
+    })
   }
 
   /**
