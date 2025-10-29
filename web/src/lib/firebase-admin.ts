@@ -96,13 +96,26 @@ if (!admin.apps.length) {
       console.error(`❌ Working directory: ${process.cwd()}`)
       console.error(`❌ Attempted path: ${serviceAccountFile}`)
 
-      // Fallback to Application Default Credentials (ADC)
-      console.log('⚠️ Falling back to Application Default Credentials (ADC)')
-      app = admin.initializeApp({
-        projectId: projectId,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`,
-      })
-      console.log('⚠️ Warning: ADC cannot generate signed URLs. Document uploads may fail.')
+      // Try to use FIREBASE_SERVICE_ACCOUNT_KEY environment variable as backup
+      if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        try {
+          console.log('🔄 Trying FIREBASE_SERVICE_ACCOUNT_KEY environment variable...')
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+          app = admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            projectId: projectId,
+            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`,
+          })
+          console.log(`✅ Firebase Admin initialized with environment service account`)
+          console.log(`✅ Using service account: ${serviceAccount.client_email}`)
+        } catch (envError) {
+          console.error('❌ Failed to use FIREBASE_SERVICE_ACCOUNT_KEY:', envError)
+          throw new Error(`Cannot initialize Firebase Admin: ${fileError instanceof Error ? fileError.message : 'Unknown error'}. Service account file not found and FIREBASE_SERVICE_ACCOUNT_KEY not valid.`)
+        }
+      } else {
+        // Don't fall back to ADC for storage operations
+        throw new Error(`Cannot initialize Firebase Admin: ${fileError instanceof Error ? fileError.message : 'Unknown error'}. Service account file not found and FIREBASE_SERVICE_ACCOUNT_KEY not set.`)
+      }
     }
   }
 } else {
