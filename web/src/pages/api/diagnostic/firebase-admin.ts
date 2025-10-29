@@ -26,11 +26,12 @@ export default async function handler(
         method: 'unknown',
         projectId: 'unknown',
         storageBucket: 'unknown',
+        error: null as string | null,
       },
       storageTest: {
         canAccessBucket: false,
         canListFiles: false,
-        error: null,
+        error: null as string | null,
       }
     }
 
@@ -50,11 +51,11 @@ export default async function handler(
       }
 
       diagnostics.serviceAccount.projectId = options.projectId || 'unknown'
-      diagnostics.serviceAccount.storageBucket = options.storageBucket || 'unknown'
     } catch (credError) {
       console.error('Error getting service account info:', credError)
-      diagnostics.serviceAccount.error = credError.message
+      diagnostics.serviceAccount.error = credError instanceof Error ? credError.message : String(credError)
     }
+
 
     // Test storage access
     try {
@@ -71,7 +72,7 @@ export default async function handler(
       }
     } catch (storageError) {
       console.error('Storage test error:', storageError)
-      diagnostics.storageTest.error = storageError.message
+      diagnostics.storageTest.error = storageError instanceof Error ? storageError.message : String(storageError)
     }
 
     console.log('📊 Diagnostics complete:', diagnostics)
