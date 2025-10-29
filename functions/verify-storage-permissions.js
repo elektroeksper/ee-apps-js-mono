@@ -12,20 +12,20 @@ const { getStorage } = require('firebase-admin/storage');
 // Test storage permissions for a given environment
 async function testStoragePermissions(environment) {
   console.log(`\n🧪 Testing storage permissions for ${environment.toUpperCase()} environment...`);
-  
+
   try {
     // Determine project and service account based on environment
-    const projectConfig = environment === 'dev' 
+    const projectConfig = environment === 'dev'
       ? {
-          projectId: 'ee-dev-apps',
-          storageBucket: 'ee-dev-apps.firebasestorage.app',
-          serviceAccountFile: './admin-service-account-dev.json'
-        }
+        projectId: 'ee-dev-apps',
+        storageBucket: 'ee-dev-apps.firebasestorage.app',
+        serviceAccountFile: './admin-service-account-dev.json'
+      }
       : {
-          projectId: 'ee-prod-apps', 
-          storageBucket: 'ee-prod-apps.firebasestorage.app',
-          serviceAccountFile: './admin-service-account-prod.json'
-        };
+        projectId: 'ee-prod-apps',
+        storageBucket: 'ee-prod-apps.firebasestorage.app',
+        serviceAccountFile: './admin-service-account-prod.json'
+      };
 
     console.log(`📝 Project: ${projectConfig.projectId}`);
     console.log(`🪣 Storage Bucket: ${projectConfig.storageBucket}`);
@@ -83,7 +83,7 @@ async function testStoragePermissions(environment) {
     console.log('\n📋 Test 3: Testing file creation permissions...');
     const testFileName = `test-permissions-${Date.now()}.txt`;
     const testFilePath = `permission-test/${testFileName}`;
-    
+
     try {
       const file = bucket.file(testFilePath);
       await file.save('This is a test file to verify storage permissions.', {
@@ -133,7 +133,7 @@ async function main() {
   console.log('==============================================');
 
   const environment = process.argv[2];
-  
+
   if (environment && ['dev', 'prod'].includes(environment)) {
     // Test specific environment
     const success = await testStoragePermissions(environment);
@@ -141,14 +141,14 @@ async function main() {
   } else if (!environment) {
     // Test both environments
     console.log('Testing both development and production environments...');
-    
+
     const devSuccess = await testStoragePermissions('dev');
     const prodSuccess = await testStoragePermissions('prod');
-    
+
     console.log('\n📊 Summary:');
     console.log(`   DEV Environment: ${devSuccess ? '✅ PASSED' : '❌ FAILED'}`);
     console.log(`   PROD Environment: ${prodSuccess ? '✅ PASSED' : '❌ FAILED'}`);
-    
+
     if (devSuccess && prodSuccess) {
       console.log('\n🎉 All environments have proper storage permissions!');
       process.exit(0);
