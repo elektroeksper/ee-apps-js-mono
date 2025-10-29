@@ -7,6 +7,7 @@ import {
   FiMapPin,
   FiMessageCircle,
   FiPhone,
+  FiYoutube,
 } from 'react-icons/fi'
 
 interface ContactPageProps {
@@ -21,6 +22,7 @@ interface ContactPageProps {
       twitter?: string
       linkedin?: string
       whatsapp?: string
+      youtube?: string
     }
     mapUrl?: string
   }
@@ -75,14 +77,16 @@ const ContactPage = ({ contactInfo, brandingInfo }: ContactPageProps) => {
   }
 
   const defaultContact = {
-    phone: '+1 (555) 123-4567',
+    phone: '+90 505 449 85 63',
     email: 'info@elektroeksper.com',
-    address: '123 Electric Ave, City, State 12345',
-    workingHours: 'Mon-Fri: 8:00 AM - 6:00 PM, Sat: 9:00 AM - 4:00 PM',
+    address: 'Demetevler Mahallesi. 398. Cadde, No:4/B, Yenimahalle / Ankara',
+    workingHours:
+      'Pazartesi-Cuma: 8:00 AM - 6:00 PM, Cumartesi: 9:00 AM - 4:00 PM',
     socialMedia: {
       facebook: undefined,
       instagram: undefined,
       whatsapp: undefined,
+      youtube: '@AltayTeknoloji',
     },
     mapUrl: undefined,
   }
@@ -237,6 +241,16 @@ const ContactPage = ({ contactInfo, brandingInfo }: ContactPageProps) => {
                           className="flex items-center justify-center w-10 h-10 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                         >
                           <FiMessageCircle className="w-5 h-5" />
+                        </a>
+                      )}
+                      {contact.socialMedia.youtube && (
+                        <a
+                          href={`https://www.youtube.com/${contact.socialMedia.youtube}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-10 h-10 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          <FiYoutube className="w-5 h-5" />
                         </a>
                       )}
                     </div>
@@ -411,7 +425,6 @@ const ContactPage = ({ contactInfo, brandingInfo }: ContactPageProps) => {
           </div>
         </div>
       )}
-
       {/* Emergency Contact */}
       <div
         className="py-16 bg-red-600 text-white"
