@@ -67,7 +67,7 @@ cd functions && ./deploy-prod.sh
 
 # Select target:
 # 1) Test Environment (ee-next-test)
-# 2) Live Environment (electro-expert-next)
+# 2) Live Environment (electro-eksper-next)
 ```
 
 ## 📊 Success Indicators
@@ -111,7 +111,7 @@ If deployment fails:
 After successful deployment:
 
 - **Test Environment**: https://ee-next-test--elektro-ekspert-apps.europe-west4.hosted.app
-- **Production Environment**: https://electro-expert-next--elektro-ekspert-apps.europe-west4.hosted.app
+- **Production Environment**: https://electro-eksper-next--elektro-ekspert-apps.europe-west4.hosted.app
 
 ## 📝 Post-Deployment Verification
 

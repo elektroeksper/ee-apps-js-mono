@@ -84,7 +84,7 @@ const getEmailConfig = (): EmailConfig => {
       refreshToken: process.env.GMAIL_REFRESH_TOKEN || '',
       accessToken: process.env.GMAIL_ACCESS_TOKEN,
     },
-    defaultFrom: process.env.DEFAULT_FROM_EMAIL || 'noreply@elektroexpert.com',
+    defaultFrom: process.env.DEFAULT_FROM_EMAIL || 'noreply@elektroeksper.com',
   }
 }
 
@@ -278,7 +278,7 @@ export const EmailTemplates = {
             </ul>
 
             <p>Hemen başlamak için aşağıdaki butona tıklayın:</p>
-            <a href="https://elektroexpert.com/home" class="button">Panelime Git</a>
+            <a href="https://elektroeksper.com/home" class="button">Panelime Git</a>
 
             <p>Herhangi bir sorunuz varsa, destek ekibimizle iletişime geçmekten çekinmeyin.</p>
             
@@ -287,7 +287,7 @@ export const EmailTemplates = {
           </div>
           <div class="footer">
             <p>Bu e-posta ElektroExpert tarafından gönderilmiştir.<br>
-            <a href="mailto:destek@elektroexpert.com">destek@elektroexpert.com</a></p>
+            <a href="mailto:destek@elektroeksper.com">destek@elektroeksper.com</a></p>
           </div>
         </div>
       </body>
@@ -305,9 +305,9 @@ export const EmailTemplates = {
       - Müşteri değerlendirmelerini takip etme
       - Gelişmiş analitik raporlara erişim
 
-      Paneline gitmek için: https://elektroexpert.com/home
+      Paneline gitmek için: https://elektroeksper.com/home
 
-      Herhangi bir sorunuz varsa, destek@elektroexpert.com adresinden bizimle iletişime geçebilirsiniz.
+      Herhangi bir sorunuz varsa, destek@elektroeksper.com adresinden bizimle iletişime geçebilirsiniz.
 
       İyi çalışmalar!
       ElektroExpert Ekibi
@@ -352,16 +352,15 @@ export const EmailTemplates = {
             
             <p>Maalesef mevcut durumda hesabınızı onaylayamıyoruz.</p>
             
-            ${
-              reason
-                ? `
+            ${reason
+        ? `
             <div class="reason-box">
               <strong>İnceleme Notları:</strong><br>
               ${reason}
             </div>
             `
-                : ''
-            }
+        : ''
+      }
 
             <p><strong>Sonraki Adımlar:</strong></p>
             <ul>
@@ -372,7 +371,7 @@ export const EmailTemplates = {
             </ul>
 
             <p>Hesabınıza giriş yaparak belgelerinizi güncellemeye devam edebilirsiniz:</p>
-            <a href="https://elektroexpert.com/profile" class="button">Profilimi Düzenle</a>
+            <a href="https://elektroeksper.com/profile" class="button">Profilimi Düzenle</a>
 
             <p>Herhangi bir sorunuz varsa, destek ekibimiz size yardımcı olmaktan memnuniyet duyar.</p>
             
@@ -381,7 +380,7 @@ export const EmailTemplates = {
           </div>
           <div class="footer">
             <p>Bu e-posta ElektroExpert tarafından gönderilmiştir.<br>
-            <a href="mailto:destek@elektroexpert.com">destek@elektroexpert.com</a></p>
+            <a href="mailto:destek@elektroeksper.com">destek@elektroeksper.com</a></p>
           </div>
         </div>
       </body>
@@ -402,9 +401,9 @@ export const EmailTemplates = {
       - Destek ekibimizle iletişime geçebilirsiniz
       - Düzeltmeleri yaparak tekrar başvurabilirsiniz
 
-      Profilinizi düzenlemek için: https://elektroexpert.com/profile
+      Profilinizi düzenlemek için: https://elektroeksper.com/profile
 
-      Herhangi bir sorunuz varsa, destek@elektroexpert.com adresinden bizimle iletişime geçebilirsiniz.
+      Herhangi bir sorunuz varsa, destek@elektroeksper.com adresinden bizimle iletişime geçebilirsiniz.
 
       Saygılarımızla,
       ElektroExpert Ekibi

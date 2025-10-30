@@ -123,7 +123,7 @@ async function testPendingEmail() {
         </div>
         <div class="footer">
           <p>Bu e-posta ElektroExpert tarafından gönderilmiştir.<br>
-          <a href="mailto:destek@elektroexpert.com">destek@elektroexpert.com</a></p>
+          <a href="mailto:destek@elektroeksper.com">destek@elektroeksper.com</a></p>
         </div>
       </div>
     </body>

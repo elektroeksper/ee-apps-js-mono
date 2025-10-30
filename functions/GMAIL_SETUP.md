@@ -17,7 +17,7 @@
 
    ```bash
    EMAIL_PROVIDER=smtp
-   DEFAULT_FROM_EMAIL=noreply@elektroexpert.com
+   DEFAULT_FROM_EMAIL=noreply@elektroeksper.com
    SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
    SMTP_SECURE=false
@@ -41,6 +41,6 @@
 
 For production, consider using:
 
-- Your own domain email (info@elektroexpert.com)
+- Your own domain email (info@elektroeksper.com)
 - SendGrid for better deliverability
 - Amazon SES for cost-effectiveness

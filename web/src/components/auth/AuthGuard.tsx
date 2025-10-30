@@ -95,7 +95,7 @@ export function AuthGuard({
     }
   }, [mounted, loading, requireAuth, appUser, router, redirectTo])
 
-  // Handle profile completion redirect
+  // Handle profile completion redirect (exclude business users - they have their own logic)
   useEffect(() => {
     if (
       mounted &&
@@ -103,13 +103,15 @@ export function AuthGuard({
       appUser &&
       !isProfileComplete &&
       requireProfileComplete &&
-      router.pathname !== '/setup'
+      router.pathname !== '/setup' &&
+      appUser.accountType !== 'business' // Exclude business users from general profile completion check
     ) {
       console.log('🚨 AuthGuard Profile Redirect:', {
         reason: 'Profile incomplete',
         redirectTo: '/setup',
         pathname: router.pathname,
         isProfileComplete,
+        accountType: appUser.accountType,
       })
       router.replace('/setup')
     }
@@ -123,8 +125,18 @@ export function AuthGuard({
   ])
 
   // Handle business user redirects when profile is complete but they need approval handling
-  // Only check business verification for /home route
+  // Check business verification for specific routes that business users should access
   useEffect(() => {
+    const businessAllowedRoutes = [
+      '/home',
+      '/profile',
+      '/profile/edit',
+      '/business/dashboard',
+    ]
+    const isBusinessAllowedRoute = businessAllowedRoutes.includes(
+      router.pathname
+    )
+
     if (
       mounted &&
       !loading &&
@@ -132,7 +144,7 @@ export function AuthGuard({
       isProfileComplete &&
       appUser.accountType === 'business' &&
       requireProfileComplete &&
-      router.pathname === '/home' // Only check verification for home page
+      isBusinessAllowedRoute
     ) {
       // Check business verification status by fetching business data
       const checkBusinessVerificationStatus = async () => {
@@ -180,12 +192,27 @@ export function AuthGuard({
               } else if (
                 verificationStatus === BusinessVerificationStatus.VERIFIED
               ) {
-                // Verified businesses can access any page - no redirect needed
+                // Verified businesses can access allowed routes
                 console.log(
-                  '✅ AuthGuard: Business verified - allowing access to',
-                  router.pathname
+                  '✅ AuthGuard: Business verified - checking route access'
                 )
-                // If on an unallowed page for some reason, do nothing (allow access)
+                if (
+                  router.pathname === '/home' ||
+                  router.pathname === '/setup'
+                ) {
+                  console.log('🚀 Redirecting verified business to dashboard')
+                  router.replace('/business/dashboard')
+                  return
+                } else if (
+                  router.pathname === '/profile' ||
+                  router.pathname === '/profile/edit'
+                ) {
+                  console.log(
+                    '✅ Allowing verified business access to profile/edit'
+                  )
+                  return
+                }
+                // Allow access to other pages for verified businesses
                 return
               } else if (
                 verificationStatus === BusinessVerificationStatus.PENDING
@@ -249,6 +276,36 @@ export function AuthGuard({
     router,
     requireProfileComplete,
   ])
+
+  // Handle business users trying to access routes not in businessAllowedRoutes
+  useEffect(() => {
+    const businessAllowedRoutes = [
+      '/home',
+      '/profile',
+      '/profile/edit',
+      '/business/dashboard',
+      '/setup', // Allow setup page for business users
+    ]
+    const isBusinessAllowedRoute = businessAllowedRoutes.includes(
+      router.pathname
+    )
+
+    if (
+      mounted &&
+      !loading &&
+      appUser &&
+      appUser.accountType === 'business' &&
+      requireProfileComplete &&
+      !isBusinessAllowedRoute
+    ) {
+      console.log('🚨 AuthGuard Business Route Redirect:', {
+        reason: 'Business user accessing non-allowed route',
+        redirectTo: '/business/dashboard',
+        pathname: router.pathname,
+      })
+      router.replace('/business/dashboard')
+    }
+  }, [mounted, loading, appUser, router, requireProfileComplete])
 
   // Show loading spinner while checking authentication or during hydration
   if (!mounted || loading) {
@@ -340,8 +397,12 @@ export function AuthGuard({
     )
   }
 
-  // Check profile completion requirement
-  if (requireProfileComplete && !isProfileComplete) {
+  // Check profile completion requirement (exclude business users - they have their own verification logic)
+  if (
+    requireProfileComplete &&
+    !isProfileComplete &&
+    appUser?.accountType !== 'business'
+  ) {
     return (
       fallback || (
         <div className="min-h-screen flex items-center justify-center">

@@ -2,11 +2,11 @@
 
 ## Current Setup
 
-After removing the `electro-expert-next` Firebase app, the configuration has been simplified to use a single Firebase app for both environments.
+After removing the `electro-eksper-next` Firebase app, the configuration has been simplified to use a single Firebase app for both environments.
 
 ### Firebase App Configuration
 
-**Single Firebase App**: `electro-expert-app`
+**Single Firebase App**: `electro-eksper-app`
 
 - **App ID**: `1:494385427557:web:27ee4a7bd96966c0e5028c`
 - **Measurement ID**: `G-NS7WV19N5L`
@@ -66,7 +66,7 @@ Both backends are ready and fully configured for local deployments!
 
 ## Firebase App Usage
 
-Since we're using a single Firebase app (`electro-expert-app`) for both environments:
+Since we're using a single Firebase app (`electro-eksper-app`) for both environments:
 
 - ✅ **Simplified configuration management**
 - ✅ **Same authentication and Firestore access**

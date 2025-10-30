@@ -239,7 +239,7 @@ async function sendBusinessPendingEmail(
           </ul>
 
           <p>Hesabınıza giriş yaparak güncel durumu takip edebilirsiniz:</p>
-          <a href="https://elektroexpert.com/verification" class="button">Durumu Takip Et</a>
+          <a href="https://elektroeksper.com/verification" class="button">Durumu Takip Et</a>
 
           <p>Herhangi bir sorunuz varsa, destek ekibimiz size yardımcı olmaktan memnuniyet duyar.</p>
           
@@ -248,7 +248,7 @@ async function sendBusinessPendingEmail(
         </div>
         <div class="footer">
           <p>Bu e-posta ElektroExpert tarafından gönderilmiştir.<br>
-          <a href="mailto:destek@elektroexpert.com">destek@elektroexpert.com</a></p>
+          <a href="mailto:destek@elektroeksper.com">destek@elektroeksper.com</a></p>
         </div>
       </div>
     </body>
@@ -272,9 +272,9 @@ async function sendBusinessPendingEmail(
     - Sorularınız için destek ekibimizle iletişime geçebilirsiniz
     - Hesap durumunuzu takip edebilirsiniz
 
-    Durumu takip etmek için: https://elektroexpert.com/verification
+    Durumu takip etmek için: https://elektroeksper.com/verification
 
-    Herhangi bir sorunuz varsa, destek@elektroexpert.com adresinden bizimle iletişime geçebilirsiniz.
+    Herhangi bir sorunuz varsa, destek@elektroeksper.com adresinden bizimle iletişime geçebilirsiniz.
 
     Teşekkürler,
     ElektroExpert Ekibi

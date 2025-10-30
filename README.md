@@ -24,7 +24,7 @@ This monorepo contains the following packages:
 
 ```bash
 git clone <your-repo-url>
-cd electro-expert-new
+cd electro-eksper-new
 ```
 
 2. Install dependencies:
@@ -89,7 +89,7 @@ pnpm shared:dev
    pnpm build:shared
    ```
 
-2. **Web Development**: The web application imports shared types from `@electro-expert/shared`:
+2. **Web Development**: The web application imports shared types from `@electro-eksper/shared`:
 
    ```typescript
    import { User, ProductCategory } from '@s/hared-generated'
@@ -168,7 +168,7 @@ Shared types are copied to functions at build time via the build script. The fun
 ## 📁 Project Structure
 
 ```
-electro-expert/
+electro-eksper/
 ├── web/                    # Next.js frontend
 │   ├── src/
 │   │   ├── components/     # React components

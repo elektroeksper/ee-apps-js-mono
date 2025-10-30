@@ -22,18 +22,18 @@ Cloud Run containers fail to start because the Functions Framework cannot load r
 ```
 Could not load the function, shutting down.
     at Object.<anonymous> (/workspace/lib/triggers/user-triggers.js:4:18)
-    - Cannot find module '@electro-expert/shared'
+    - Cannot find module '@electro-eksper/shared'
 ```
 
 **Root Cause:**
-- TypeScript imports using package names (`@electro-expert/shared`) instead of relative paths
+- TypeScript imports using package names (`@electro-eksper/shared`) instead of relative paths
 - Shared dependencies not properly packaged with the deployed function
 - Module resolution fails in the Cloud Run environment
 
 **Solution:**
 ```typescript
 // ❌ WRONG - Package name imports fail in Cloud Run
-import { IAppUser } from '@electro-expert/shared'
+import { IAppUser } from '@electro-eksper/shared'
 
 // ✅ CORRECT - Relative path imports work reliably
 import { IAppUser } from '../shared-generated'
